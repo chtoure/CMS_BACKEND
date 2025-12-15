@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+//      Partie Authentification
+
+model User {
+  id              Int         @id @default(autoincrement())
+  full_name       String
+  email           String      @unique
+  password_hash   String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  role_id         Int?         
+  role            Role?        @relation(fields: [role_id], references: [id])
+}
+
+
+
+model Role {
+  id              Int         @id @default(autoincrement())
+  name            String      @unique
+  users           User[]
+  permissions     RolePermission[] 
+}
+
+
+
+model Permission {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  roles     RolePermission[]
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
+  @@unique([roleId, permissionId])  
+}
+
+
+
+//     Partie Mediatheque
+
+
+model Media {
+  id           Int        @id @default(autoincrement())
+  file_path    String
+  type         String
+  alt          String?
+}
+
+
+model Variable {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  value        String
+}
