@@ -1,7 +1,6 @@
 
 import type { AccessTokenPayload, RefreshTokenPayload } from "../Types/Auth.ts";
 import type { Role } from "../Types/Role.ts";
-import prisma from "../Utils/PrismaClient.ts";
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import type { SignOptions } from "jsonwebtoken";
