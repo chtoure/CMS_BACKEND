@@ -2,6 +2,9 @@
 import prisma from "../Utils/PrismaClient.ts";
 import type { User } from "../Types/User.ts";
 import type { UpdateUserPayload } from "../Types/UpdateUserPayload.ts";
+import * as bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
  
 
@@ -63,4 +66,18 @@ export default class UserService {
         })
     }
     
+
+    
+    // Hache un mot de passe en texte clair.
+    public async hashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, SALT_ROUNDS);
+    }
+
+
+
+    // Compare le mot de passe fourni avec le hachage stocké.
+    public async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(password, hashedPassword);
+    }
+
 }

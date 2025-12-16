@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { ObjectSchema } from 'joi';
-import { HTTP_STATUS_BAD_REQUEST } from '../Utils/Constantes/ConstantesHttp.js';
+import { HTTP_STATUS_BAD_REQUEST } from '../Utils/Constantes/ConstantesHttp.ts';
 
 const validateBody = (schema: ObjectSchema) => {
   return (req: Request, res: Response, next: NextFunction): void => {
