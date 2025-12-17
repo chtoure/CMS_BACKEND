@@ -1,4 +1,4 @@
 npm install
-npm run migration
+npm run migrate
 npm run generate
 npm run dev
