@@ -15,6 +15,6 @@ export interface User {
     role_id:number | null;
     createdAt: Date;
     updatedAt: Date;
-    role:Role | null;
+    role?:Role | null;
     
 }
