@@ -6,10 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 import type { SignOptions } from "jsonwebtoken";
 import type { StringValue } from "ms";
 import UserService from "./UserService.ts";
+import type { User } from "../Types/User.ts";
 
 interface Token {
     accessToken: string; 
     refreshToken: string;
+}
+
+interface TokenRefreshVerify {
+    payloadRefresh:RefreshTokenPayload;
+    user:User
 }
 
 const userService = new UserService();
@@ -17,41 +23,67 @@ const userService = new UserService();
 
 export default class AuthService{
 
-    
-    // Crée un Access Token et un Refresh Token pour un utilisateur donné.
-    async createTokens(userId: number, full_name: string, role: Role): Promise<Token | null> {
+    createAccesToken(userId: number, full_name: string, role: Role | null): string {
 
         // Recuperation des clés
         const ACCESS_SECRET:string = process.env.ACCESS_SECRET ?? "SECRET_ACCESS_KEY";
-        const REFRESH_SECRET:string = process.env.REFRESH_SECRET ?? "SECRET_REFRESH_KEY";
-
         const ACCESS_EXPIRY = (process.env.ACCESS_EXPIRY ?? "5m") as StringValue;
-        const REFRESH_EXPIRY = (process.env.REFRESH_EXPIRY ?? "10m") as StringValue;
 
-        // Definition des options jwt
+        // Definition d'option jwt
         const accessOptions: SignOptions = {
             expiresIn: ACCESS_EXPIRY
         };
 
-        const refreshOptions: SignOptions = {
+        //  Définition de Payload
+        const accessPayload: AccessTokenPayload = { sub: userId, full_name, role };
+
+        //  Création de JWT
+        const accessToken = jwt.sign(accessPayload, ACCESS_SECRET , accessOptions);
+
+        return accessToken;
+
+    }
+
+
+    async createRefreshToken(userId: number):Promise<string | null>{
+
+        // Recuperation des clés
+        const REFRESH_SECRET:string = process.env.REFRESH_SECRET ?? "SECRET_REFRESH_KEY";
+        const REFRESH_EXPIRY = (process.env.REFRESH_EXPIRY ?? "10m") as StringValue;
+
+        // Definition d'option jwt
+         const refreshOptions: SignOptions = {
             expiresIn: REFRESH_EXPIRY
         };
 
-        
-        //  Définition des Payloads
-        const accessPayload: AccessTokenPayload = { sub: userId, full_name, role };
+        //  Définition de Payload
         const refreshPayload: RefreshTokenPayload = { sub: userId, jti: uuidv4() };
 
         //  Création des JWT
-        const accessToken = jwt.sign(accessPayload, ACCESS_SECRET , accessOptions);
         const refreshToken = jwt.sign(refreshPayload, REFRESH_SECRET , refreshOptions);
-        
-        // refreshTokensDB Stockage du JTI du Refresh Token en BDD
+
+        // Stockage du JTI du Refresh Token en BDD
         const userMod= await userService.updateUser(userId, {"refreshToken":refreshToken});
         if (userMod==null) {
             console.log("Erreur Refresh token n'a pas été enregistrer");
             return null
         }
+        
+        return refreshToken;
+    }
+
+    
+    // Crée un Access Token et un Refresh Token pour un utilisateur donné.
+    async createTokens(userId: number, full_name: string, role: Role | null): Promise<Token | null> {
+
+        const accessToken = this.createAccesToken(userId,full_name,role);
+        const refreshToken = await this.createRefreshToken(userId);
+        
+        if (!accessToken || !refreshToken) {
+            console.log("AccesToken ou RefreshToken est ou sont null(s)");
+            return null
+        }
+
         return { accessToken, refreshToken };
     }
 
@@ -105,26 +137,26 @@ export default class AuthService{
 
 
     // Vérifie la validité du Refresh Token et s'il est présent en BDD.
-    public async verifyAndCheckRefreshToken(token: string): Promise<RefreshTokenPayload | null> {
+    public async verifyAndCheckRefreshToken(token: string): Promise<TokenRefreshVerify | null> {
        
         try {
             
             const REFRESH_SECRET = process.env.REFRESH_SECRET ?? "SECRET_REFRESH_KEY";
 
-            const decodedRefreshToken = jwt.verify(token, REFRESH_SECRET);
+            const payloadRefresh = jwt.verify(token, REFRESH_SECRET);
 
-            if (!AuthService.isRefreshTokenPayload(decodedRefreshToken)) {
+            if (!AuthService.isRefreshTokenPayload(payloadRefresh)) {
                     return null; // payload invalide, on sort
             }
 
             // Verfication du token en base 
             const user= await userService.getUserByToken(token);
-            if (user==null) {
+            if (!user) {
                 console.log("Erreur Refresh token n'a pas été trouver en bd");
                 return null
             }
 
-            return decodedRefreshToken; // payload non conforme
+            return {payloadRefresh,user}; 
         } catch {
             return null; // token invalide cryptographiquement
         }
@@ -143,7 +175,7 @@ export default class AuthService{
             if (AuthService.isRefreshTokenPayload(decoded)) {
                 console.log("Révoquer le token pour user:", decoded.sub);
                 const userRevoke= await userService.updateUser(decoded.sub, {"refreshToken":null});
-                if (userRevoke==null) {
+                if (!userRevoke) {
                     console.log("Erreur lors de la revokation de  Refresh token en bd");
                     return false
                 }

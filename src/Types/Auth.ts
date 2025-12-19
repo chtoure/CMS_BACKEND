@@ -16,7 +16,7 @@ export interface TokenPayload {
 // Contient les informations pour l'autorisation immédiate.
 
 export interface AccessTokenPayload extends TokenPayload {
-    role?: Role; // Rôle de l'utilisateur
+    role?: Role | null; // Rôle de l'utilisateur
     full_name: string; // Nom d'utilisateur (pour l'affichage)
 }
 

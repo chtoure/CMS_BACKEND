@@ -7,6 +7,7 @@ const HTTP_STATUS_BAD_REQUEST = 400; // Mauvaise requête (erreur de syntaxe ou 
 const HTTP_STATUS_UNAUTHORIZED = 401; // Authentification requise
 const HTTP_STATUS_FORBIDDEN = 403; // Accès interdit (même authentification échouée)
 const HTTP_STATUS_NOT_FOUND = 404; // Ressource non trouvée
+const HTTP_STATUS_CONFLICT= 409;  // Conflict ( Donnée deja utlisé )
 
 const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500; // Erreur interne du serveur
 const HTTP_STATUS_NOT_IMPLEMENTED = 501; // Fonctionnalité non implémentée
@@ -26,4 +27,5 @@ export {
     HTTP_STATUS_NOT_IMPLEMENTED,
     HTTP_STATUS_BAD_GATEWAY,
     HTTP_STATUS_SERVICE_UNAVAILABLE,
+    HTTP_STATUS_CONFLICT
 }
