@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts"
+    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "generate": "npx prisma generate",
+    "migrate": "npx prisma migrate dev "
   },
   "keywords": [],
   "author": "",
@@ -23,16 +25,19 @@
     "nodemon": "^3.1.11",
     "prisma": "^7.1.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.1.0",
     "@prisma/client": "^7.1.0",
+    "@types/multer": "^2.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
     "uuid": "^13.0.0"
   }
 }
