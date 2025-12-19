@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/index.ts\"",
+    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
     "generate": "npx prisma generate",
     "migrate": "npx prisma migrate dev "
   },
@@ -24,6 +24,7 @@
     "nodemon": "^3.1.11",
     "prisma": "^7.1.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

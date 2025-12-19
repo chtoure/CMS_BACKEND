@@ -1,11 +1,11 @@
 
-// Importation des modules
-import { Router } from "express";
 import type { Express } from "express";
 import validateBody from "../Middleware/ValidateBoody.ts";
 
 import UserController from "../Controllers/UserController.ts";
 import { UserSchema } from "../Utils/Validations/UserSchema.ts";
+import { mediaRoutes } from "./MediaRoute.ts";
+import { variableRoutes } from "./VariableRoute.ts";
 
 
 
@@ -23,5 +23,7 @@ export default (app:Express): void  => {
     app.put("/users/:id", validateBody(UserSchema), userController.updateUser)
     app.delete("/users/:id", userController.deleteUser);
 
+    mediaRoutes(app);
+    variableRoutes(app);
 
 }
