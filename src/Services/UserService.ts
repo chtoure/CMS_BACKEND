@@ -3,6 +3,7 @@ import prisma from "../Utils/PrismaClient.ts";
 import type { User } from "../Types/User.ts";
 import type { UpdateUserPayload } from "../Types/UpdateUserPayload.ts";
 import * as bcrypt from 'bcrypt';
+import type { Prisma } from "../generated/prisma/client.ts";
 
 const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
@@ -10,6 +11,18 @@ const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
 
 export default class UserService {
+
+
+    // Creation d'un utilisateur
+    public async createUser(data: Prisma.UserUncheckedCreateInput): Promise<User> {
+        return prisma.user.create({
+            data,
+            include: { role: true }
+        });
+    }
+
+
+
 
     // Recuperer tous les utilisateurs
     public async getAllUser(): Promise<User[]> {
