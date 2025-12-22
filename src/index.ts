@@ -3,6 +3,7 @@ import type { Express } from "express";
 import dotenv from "dotenv";
 import Routes from "./Routes/Routes.ts";
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import {corsOptions} from "./Utils/Constantes/CorsOptions.ts";
 
 
@@ -10,11 +11,15 @@ dotenv.config();
 
 const port: number = parseInt(process.env.PORT || "3000", 10);
 const app: Express = express();
-   
-app.use(express.json()); // Accepte les donnés du body
 
-app.use(cors(corsOptions)); // Implementation de cors
+// Accepte les donnés du body   
+app.use(express.json()); 
 
+// Implementation de cors
+app.use(cors(corsOptions)); 
+
+//lire les cookies 
+app.use(cookieParser());
 
 
 // Routes

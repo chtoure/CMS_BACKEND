@@ -166,7 +166,7 @@ export default class AuthController {
                 res.clearCookie('access_token');
                 res.clearCookie('refresh_token');
 
-                return res.sendStatus(HTTP_STATUS_NO_CONTENT);
+                return res.status(HTTP_STATUS_NO_CONTENT).send("Deconnexion réussie.");
 
             }
            
