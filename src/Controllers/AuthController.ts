@@ -1,7 +1,7 @@
 
 // Importation des modules
 import type { Request,Response } from "express";
-import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CONFLICT,HTTP_STATUS_CREATED,HTTP_STATUS_FORBIDDEN,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NO_CONTENT,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from "../Utils/Constantes/ConstantesHttp.ts";
+import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CONFLICT,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NO_CONTENT, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from "../Utils/Constantes/ConstantesHttp.ts";
 import UserService from "../Services/UserService.ts";
 import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
@@ -34,8 +34,10 @@ export default class AuthController {
             return res.status(status).json({
                 message: message,
                 user: {
-                    ...user,
-                    "accessToken":accessToken
+                    id: user.id,
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role?.name ?? null                    
                 }
             });
 
@@ -45,7 +47,7 @@ export default class AuthController {
         // Register ( Creation De Compte )
         public async register(req:Request,res:Response): Promise<Response> {
 
-            const { full_name, email, password, role }=req.body;
+            const { full_name, email, password }=req.body;
             try {
                 
                 // Verification de l'existance de l'utilisateur
@@ -91,12 +93,13 @@ export default class AuthController {
                 const user = await userService.getUserByEmail(email);
                 if (!user) {
                     console.log("Email Invalide");
-                    return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Identifiants invalides.' });
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides.' });
                 }
+                console.log("Utilisateur trouvé:", user);
                 const isPasswordValid = await userService.comparePassword(password,user.password_hash);
                 if (!isPasswordValid) {
                      console.log("Password Invalide");
-                    return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Identifiants invalides.' })
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides.' })
                 }
 
                 // Message de Retour 
@@ -129,7 +132,7 @@ export default class AuthController {
                     console.log("Le token est invalide ou révoqué. Supprimer les cookies pour forcer la reconnexion.");
                     res.clearCookie('access_token');
                     res.clearCookie('refresh_token');
-                    return res.status(HTTP_STATUS_FORBIDDEN).json({ message: 'Session invalide ou expirée. Veuillez vous reconnecter.' });
+                    return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Session invalide ou expirée. Veuillez vous reconnecter.' });
                 }
 
                 const {payloadRefresh,user} = decodedPayload;
@@ -149,6 +152,7 @@ export default class AuthController {
         }
 
 
+
         // Logout : Deconnexion 
         public async logout(req: Request, res: Response): Promise<Response> {
             const refreshToken = req.cookies.refresh_token as string;
@@ -160,16 +164,15 @@ export default class AuthController {
                     });
                 }
 
+            } catch (error) {
+                console.error('Erreur lors de la déconnexion:', error);
             } finally {
-                
                 // Suppression des cookies côté client
                 res.clearCookie('access_token');
                 res.clearCookie('refresh_token');
-
-                return res.sendStatus(HTTP_STATUS_NO_CONTENT);
-
             }
-           
+
+            return res.status(HTTP_STATUS_NO_CONTENT).send("Deconnexion réussie.");
         }
 
 }

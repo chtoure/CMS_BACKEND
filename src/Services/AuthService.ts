@@ -27,7 +27,7 @@ export default class AuthService{
 
         // Recuperation des clés
         const ACCESS_SECRET:string = process.env.ACCESS_SECRET ?? "SECRET_ACCESS_KEY";
-        const ACCESS_EXPIRY = (process.env.ACCESS_EXPIRY ?? "5m") as StringValue;
+        const ACCESS_EXPIRY = (process.env.ACCESS_EXPIRY ?? "15m") as StringValue;
 
         // Definition d'option jwt
         const accessOptions: SignOptions = {
@@ -49,7 +49,7 @@ export default class AuthService{
 
         // Recuperation des clés
         const REFRESH_SECRET:string = process.env.REFRESH_SECRET ?? "SECRET_REFRESH_KEY";
-        const REFRESH_EXPIRY = (process.env.REFRESH_EXPIRY ?? "10m") as StringValue;
+        const REFRESH_EXPIRY = (process.env.REFRESH_EXPIRY ?? "7d") as StringValue;
 
         // Definition d'option jwt
          const refreshOptions: SignOptions = {
@@ -123,13 +123,13 @@ export default class AuthService{
             const decodedAccessToken = jwt.verify(token, ACCESS_SECRET);
 
             if (AuthService.isAccessTokenPayload(decodedAccessToken)) {
-                return decodedAccessToken; // Retoourne les infos du token s'il est valide 
+                return decodedAccessToken; // Retourne les infos du token s'il est valide 
             }
 
             return null; // Le payLoad est invalide
         } catch (error) {
 
-            console.log("Le token est invalide ou expiré");
+            console.log("Le token est invalide ou expiré", error);
             return null; // Le token est invalide ou expiré
         }
     }
@@ -185,6 +185,7 @@ export default class AuthService{
 
             return false; // payload invalide ou non conforme
         } catch (error) {
+            console.error("Erreur lors de la révocation du refresh token:", error);
             return false;
         }
     }

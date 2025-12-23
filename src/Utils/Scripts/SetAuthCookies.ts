@@ -1,9 +1,9 @@
 
-import type { Request,Response } from "express";
+import type { Response } from "express";
 
 // Définition des durées des cookies (en millisecondes)
-const ACCESS_COOKIE_MAXAGE = 5 * 60 * 1000; // 5 minutes
-const REFRESH_COOKIE_MAXAGE = 10 * 60 * 1000; // 10 minutes
+const ACCESS_COOKIE_MAXAGE = 15 * 60 * 1000; // 15 minutes
+const REFRESH_COOKIE_MAXAGE = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 const isProd = process.env.NODE_ENV === 'production';
 
