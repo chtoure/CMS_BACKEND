@@ -1,0 +1,136 @@
+
+import type { Request,Response } from "express";
+import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import RoleService from "../Services/RoleService.ts";
+import PermissionService from "../Services/PermissionService.ts";
+
+
+const roleService = new RoleService();
+const permissionServ = new PermissionService();
+
+
+export default class RoleController {
+
+    // Methode : creation d'un role
+    async createRole(req:Request,res:Response){
+
+        const {name, permissionIds} = req.body;
+        try {
+
+            let role; 
+
+            if (!permissionIds || permissionIds.length == 0 ) {
+                role = await roleService.createRole({name});
+                res.status(HTTP_STATUS_CREATED).json(role);
+            }
+
+            role = await roleService.createRole({name},permissionIds);
+            res.status(HTTP_STATUS_CREATED).json(role);
+        } catch (error) {
+            console.error('Erreur lors de la creation d\'un role', error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de la creation d\'un role.' });
+        }
+
+    }
+
+
+
+    // Methode : Recuperer tous les roles
+    async getAllRoles(re:Request,res:Response){
+        try {
+            const roles = await roleService.getAllRoles();
+            res.status(HTTP_STATUS_OK).json(roles);
+        } catch (error) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
+        }
+    }
+
+
+    // Methode : Recuperer un role par son id
+    async getRoleById(req:Request,res:Response){
+        try {
+            const role =await roleService.getRoleById(Number(req.params.id));
+           res.status(HTTP_STATUS_OK).json(role);
+        } catch (error) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
+        }
+    }
+
+
+
+    // Methode : Modifier un role
+    async updateRole(req:Request,res:Response){
+
+        const {name, permissionIds} = req.body;
+        try {
+            let roleUpdated;
+
+            if (!permissionIds || permissionIds.length == 0 ) {
+                roleUpdated= await roleService.updateRole(Number(req.params.id),{name});
+                res.status(HTTP_STATUS_OK).json(roleUpdated);
+            }
+
+            roleUpdated = await roleService.updateRole(Number(req.params.id),{name},permissionIds);
+            res.status(HTTP_STATUS_OK).json(roleUpdated);
+        } catch (error) {
+            console.error('Erreur lors de la modification d\'un role', error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de la modification d\'un role.' });
+        }
+    }
+
+
+
+    // Methode : Supprimer un role
+    async deleteRole(req:Request,res:Response){
+        try {
+            const deletedRole = await roleService.deleteRole(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(deletedRole);
+        } catch (error) {
+            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de role", details: error });
+        }
+    }
+
+
+    //Methode: Ajouter des ou une permission(s) a un role deja existant
+    async addPermissionsToRole(req:Request,res:Response){
+
+        const {permissionIds} = req.body;
+        try {
+
+            if (!permissionIds || permissionIds.length == 0 ) {
+                return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: 'Aucune permission fournie pour l\'ajout au role' });
+            }
+
+            const roleExistant = await roleService.getRoleById(Number(req.params.id));
+            if (!roleExistant) {
+                return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: 'Role non existant' });
+            }
+
+            const roleUpdated = await roleService.addPermissionsToRole(roleExistant.id,req.body.permissionIds);
+            res.status(HTTP_STATUS_OK).json(roleUpdated);
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de permissions a un role', error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de l\'ajout de permissions a un role.' });
+        }
+    }
+
+
+    // Methode: Retirer une permission d'un role
+    async removePermissionFromRole(req:Request,res:Response){
+
+        const {permissionId} = req.body;
+        try {
+
+            const roleExistant = await roleService.getRoleById(Number(req.params.id));
+            if (!roleExistant) {
+                return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: 'Role non existant' });
+            }
+
+            const roleUpdated = await roleService.removePermissionFromRole(roleExistant.id,permissionId);
+            res.status(HTTP_STATUS_OK).json(roleUpdated);
+        } catch (error) {
+            console.error('Erreur lors du retrait de la permission du role', error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors du retrait de la permission du role.' });
+        }
+    }
+}
