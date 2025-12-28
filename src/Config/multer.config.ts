@@ -22,6 +22,10 @@ const storage = multer.diskStorage({
             finalDir = path.join(tempsDir, 'videos');
         }
 
+        if (!fs.existsSync(finalDir)) {
+            fs.mkdirSync(finalDir, { recursive: true });
+        }
+
         cb(null, finalDir);
     },
     filename: (req, file, cb) => {
