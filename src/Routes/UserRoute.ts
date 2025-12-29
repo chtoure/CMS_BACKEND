@@ -1,7 +1,9 @@
 
 import type { Express } from "express";
 import UserController from "../Controllers/UserController.ts";
-import { userRegisterSchema } from "../Utils/Validations/UserSchema.ts";
+import { userUpdateSchema } from "../Utils/Validations/UserSchema.ts";
+import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
+
 
 
 
@@ -13,7 +15,7 @@ export  function userRoutes(app:Express,validateBody:Function) : void {
     // Routes UserControllers
     app.get("/users", userController.getUsers.bind(userController));
     app.get("/users/:id", userController.getUser.bind(userController));
-    app.put("/users/:id", validateBody(userRegisterSchema), userController.updateUser.bind(userController));
+    app.put("/users/:id", AuthMiddleware, validateBody(userUpdateSchema), userController.updateUser.bind(userController));
     app.delete("/users/:id", userController.deleteUser.bind(userController));
 
 }

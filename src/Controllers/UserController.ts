@@ -41,11 +41,30 @@ export default class UserController {
 
 
     async updateUser(req:Request,res:Response){
+        const { password } = req.body;
 
         try {
+
+            if (password) {
+                // Hachage du password
+                const password_hash = await userService.hashPassword(password);
+                if (!password_hash) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({message:'Hachage du password echouer'});
+                }
+                req.body.password_hash = password_hash;
+                delete req.body.password;
+            }
             
             const user = await userService.updateUser(Number(req.params.id), req.body);
-            res.status(HTTP_STATUS_OK).json(user);
+            res.status(HTTP_STATUS_OK).json({
+                message: "Utilisateur mis à jour avec succès",
+                user: {
+                    id: user?.id,
+                    full_name: user?.full_name,
+                    email: user?.email,
+                    role: user?.role?.name ?? null                    
+                }
+            });
 
         } catch (error) {
             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour de l'utilisateur", details: error });
