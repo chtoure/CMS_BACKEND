@@ -36,4 +36,10 @@ export default class VariableService {
             orderBy: { name: 'asc' }
         });
     }
+
+    public async getVariableById(id: number) {
+        return prisma.variable.findUnique({
+            where : {id}
+        })
+    }
 }

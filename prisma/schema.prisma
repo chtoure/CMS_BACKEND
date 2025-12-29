@@ -95,5 +95,4 @@ model Variable {
   value         String     
   collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   collectionId  Int
-  @@unique([name, collectionId]) 
 }

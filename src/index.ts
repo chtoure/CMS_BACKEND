@@ -14,7 +14,6 @@ const app: Express = express();
 
 app.use(cors(corsOptions)); // Implementation de cors
 app.use('/media', express.static(path.join(process.cwd(), 'media')));
-app.use('/media', express.static(path.join(process.cwd(), 'media')));
 app.use(express.json()); // Accepte les donnés du body
 
 
