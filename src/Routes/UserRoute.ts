@@ -13,9 +13,9 @@ export  function userRoutes(app:Express,validateBody:Function) : void {
     const userController = new UserController();
 
     // Routes UserControllers
-    app.get("/users", userController.getUsers.bind(userController));
+    app.get("/users", AuthMiddleware, userController.getUsers.bind(userController));
     app.get("/users/:id", userController.getUser.bind(userController));
     app.put("/users/:id", AuthMiddleware, validateBody(userUpdateSchema), userController.updateUser.bind(userController));
-    app.delete("/users/:id", userController.deleteUser.bind(userController));
+    app.delete("/users/:id", AuthMiddleware, userController.deleteUser.bind(userController));
 
 }
