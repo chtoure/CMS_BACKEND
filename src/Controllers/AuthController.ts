@@ -6,11 +6,14 @@ import UserService from "../Services/UserService.ts";
 import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
 import type { User } from "../Types/User.ts";
+import RoleService from "../Services/RoleService.ts";
 
 
 // Instanciation des services
 const userService = new UserService();
 const authService = new AuthService();
+const roleService = new RoleService();
+
 
 
 
@@ -47,7 +50,9 @@ export default class AuthController {
         // Register ( Creation De Compte )
         public async register(req:Request,res:Response): Promise<Response> {
 
-            const { full_name, email, password }=req.body;
+            const { full_name, email, password, role }=req.body;
+            let roleData = null;
+            let passwordFinal = password;
             try {
                 
                 // Verification de l'existance de l'utilisateur
@@ -55,19 +60,31 @@ export default class AuthController {
                 if (userExist){
                     return res.status(HTTP_STATUS_CONFLICT).json({ message: 'Cet email est déjà utilisé.' });
                 }
+
+                if (!passwordFinal) {
+                    passwordFinal = "defaultPassword123"; // Valeur par défaut si aucun mot de passe n'est fourni
+                }  
+
                 // Hachage du password
-                const password_hash = await userService.hashPassword(password);
+                const password_hash = await userService.hashPassword(passwordFinal);
                 if (!password_hash) {
                     return res.status(HTTP_STATUS_BAD_REQUEST).json({message:'Hachage du password echouer'});
                 }
 
-                // Partier de Role : Avoir apres
+                // Partier de Role :
+                if (role) {
+                    roleData = await roleService.getRoleByName(role);
+                    if (!roleData) {
+                       roleData = await roleService.createRole({name:role}); 
+                    }
+                }
 
                 // Creation d'user 
                 const newUser = await userService.createUser({
                     full_name:full_name,
                     email:email,
-                    password_hash:password_hash
+                    password_hash:password_hash,
+                    role_id: roleData? roleData.id : null
                 });
 
                 // Message de Retour 

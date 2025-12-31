@@ -23,6 +23,7 @@ model User {
   password_hash   String
   refreshToken    String?     @unique
   role_id         Int?
+  islogin         Boolean     @default(false)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt         
   role            Role?        @relation(fields: [role_id], references: [id])

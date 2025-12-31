@@ -96,4 +96,10 @@ export default class UserService {
         return bcrypt.compare(password, hashedPassword);
     }
 
+    // Change mot de passe d'un utilisateur
+    public async changeUserPassword(userId: number, newPassword: string): Promise<User | null> {
+        const hashedPassword = await this.hashPassword(newPassword);
+        return this.updateUser(userId, { password_hash: hashedPassword });
+    }
+
 }

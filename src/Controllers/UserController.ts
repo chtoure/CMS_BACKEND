@@ -2,9 +2,12 @@
 import type { Request,Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import UserService from "../Services/UserService.ts";
+import RoleService from "../Services/RoleService.ts";
 
 
 const userService = new UserService();
+const roleService = new RoleService();
+
 
 
 
@@ -41,8 +44,8 @@ export default class UserController {
 
 
     async updateUser(req:Request,res:Response){
-        const { password } = req.body;
-
+        const { password , role } = req.body;
+        let roleData = null;
         try {
 
             if (password) {
@@ -53,6 +56,16 @@ export default class UserController {
                 }
                 req.body.password_hash = password_hash;
                 delete req.body.password;
+            }
+
+            // Partie de Role :
+            if (role) {
+                roleData = await roleService.getRoleByName(role);
+                if (!roleData) {
+                   roleData = await roleService.createRole({name:role}); 
+                }
+                req.body.role_id = roleData.id;
+                delete req.body.role;
             }
             
             const user = await userService.updateUser(Number(req.params.id), req.body);
@@ -81,6 +94,20 @@ export default class UserController {
 
         } catch (error) {
              res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de l'utilisateur", details: error });
+        }
+    }
+
+
+    async changePassword(req:Request,res:Response){
+
+        const { newPassword } = req.body;
+        try {
+            await userService.changeUserPassword(Number(req.params.id), newPassword);
+            res.status(HTTP_STATUS_OK).json({
+                message: "Mot de passe mis à jour avec succès"
+            });
+        } catch (error) {
+             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour du mot de passe", details: error });
         }
     }
 
