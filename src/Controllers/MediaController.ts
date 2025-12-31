@@ -123,46 +123,74 @@ export default class MediaController {
 
     async editImage(req: Request, res: Response) {
         try {
+
+            console.log("bonjour", req.body);
+            
             const { id } = req.params;
-            const { resize, grayscale, blur, sharpen, tint } = req.body;
+            const { geometry, adjustments, bgRemoved } = req.body;
 
             const media = await this.mediaService.getMediaById(Number(id));
             if (!media || media.type !== 'image') {
-                return res.status(404).json({ error: "Image non trouvée" });
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Image source non trouvée" });
             }
 
-            const absolutePath = path.join(process.cwd(), media.file_path);
-            const tempPath = absolutePath + '.tmp'; 
+            const originalAbsolutePath = path.join(process.cwd(), media.file_path);
+            
+            // Génération d'un nouveau nom de fichier pour ne pas écraser l'original
+            const fileExt = path.extname(media.file_path);
+            const fileName = path.basename(media.file_path, fileExt);
+            const newFileName = `${fileName}_edited_${Date.now()}${fileExt}`;
+            const newRelativePath = path.join('media/uploads/images/', newFileName);
+            const newAbsolutePath = path.join(process.cwd(), newRelativePath);
 
-            let pipeline = sharp(absolutePath);
+            // 2. Traitement avec Sharp
+            let pipeline = sharp(originalAbsolutePath);
 
-            pipeline = pipeline.rotate(); 
+            // --- Géométrie ---
+            if (geometry) {
+                if (geometry.rotation) pipeline = pipeline.rotate(geometry.rotation);
+                if (geometry.flipH) pipeline = pipeline.flip();
+                if (geometry.flipV) pipeline = pipeline.flop();
+                if (geometry.crop) {
+                    pipeline = pipeline.extract({
+                        left: geometry.crop.x,
+                        top: geometry.crop.y,
+                        width: geometry.crop.width,
+                        height: geometry.crop.height
+                    });
+                }
+            }
 
-            if (resize) {
-                pipeline = pipeline.resize({
-                    width: resize.width,
-                    height: resize.height,
-                    fit: 'cover',
-                    withoutEnlargement: true
+            // --- Ajustements ---
+            if (adjustments) {
+                // Sharp modulate: brightness et saturation sont des multiplicateurs (1.0 = normal)
+                pipeline = pipeline.modulate({
+                    brightness: adjustments.brightness,
+                    saturation: adjustments.saturation
                 });
+
+                if (adjustments.grayscale) pipeline = pipeline.grayscale();
+                if (adjustments.blur && adjustments.blur > 0) pipeline = pipeline.blur(adjustments.blur);
             }
 
-            if (grayscale) pipeline = pipeline.grayscale();
-            if (blur && blur > 0) pipeline = pipeline.blur(blur);
-            if (sharpen) pipeline = pipeline.sharpen();
-            
-            if (tint) {
-                pipeline = pipeline.tint({ r: tint.r, g: tint.g, b: tint.b });
-            }
-            
-            await pipeline.toFile(tempPath);
-            fs.renameSync(tempPath, absolutePath);
+            // 3. Sauvegarde du nouveau fichier sur le disque
+            await pipeline.toFile(newAbsolutePath);
 
-            return res.status(200).json({ message: "Image modifiée avec succès" });
+            // 4. Création d'une nouvelle entrée en BDD
+            const newMedia = await this.mediaService.createMedia({
+                alt: media.alt,
+                file_path: newRelativePath.replace(/\\/g, '/'),
+                type: 'image'
+            });
+
+            return res.status(HTTP_STATUS_OK).json({ 
+                message: "Nouvelle image créée avec succès", 
+                media: newMedia 
+            });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Erreur lors du traitement de l'image" });
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors du traitement de l'image" });
         }
     }
 }

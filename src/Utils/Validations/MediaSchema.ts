@@ -16,23 +16,27 @@ const mediaDeleteSchema = Joi.object({
 
 
 const imageEditSchema = Joi.object({
-    resize: Joi.object({
-        width: Joi.number().integer().min(1).max(3840).optional(),
-        height: Joi.number().integer().min(1).max(2160).optional(),
+    geometry: Joi.object({
+        rotation: Joi.number().integer().min(0).max(359).default(0),
+        flipH: Joi.boolean().default(false),
+        flipV: Joi.boolean().default(false),
+        crop: Joi.object({
+            x: Joi.number().integer().min(0).required(),
+            y: Joi.number().integer().min(0).required(),
+            width: Joi.number().integer().min(1).required(),
+            height: Joi.number().integer().min(1).required(),
+        }).optional()
     }).optional(),
 
-    grayscale: Joi.boolean().optional(),
-    sharpen: Joi.boolean().optional(),
-    rotate: Joi.boolean().optional(),
+    adjustments: Joi.object({
+        brightness: Joi.number().min(0).max(2).default(1),
+        contrast: Joi.number().min(0).max(2).default(1),
+        saturation: Joi.number().min(0).max(2).default(1),
+        blur: Joi.number().min(0).max(100).default(0),
+        grayscale: Joi.boolean().default(false)
+    }).optional(),
 
-    blur: Joi.number().min(0.3).max(100).optional(),
-
-    tint: Joi.object({
-        r: Joi.number().integer().min(0).max(255).required(),
-        g: Joi.number().integer().min(0).max(255).required(),
-        b: Joi.number().integer().min(0).max(255).required(),
-    }).optional()
+    bgRemoved: Joi.boolean().optional()
 }).min(1);
-
 
 export { mediaSchema, mediaDeleteSchema, imageEditSchema};
