@@ -7,6 +7,7 @@ import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
+import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 
 
 // Instanciation des services
@@ -40,7 +41,8 @@ export default class AuthController {
                     id: user.id,
                     full_name: user.full_name,
                     email: user.email,
-                    role: user.role?.name ?? null                    
+                    role: user.role?.name ?? null,
+                    isLoggedIn: user.isLoggedIn                   
                 }
             });
 
@@ -61,6 +63,14 @@ export default class AuthController {
                     return res.status(HTTP_STATUS_CONFLICT).json({ message: 'Cet email est déjà utilisé.' });
                 }
 
+                // Validation de l'email via MailboxLayer
+                const isEmailValid = await MailboxLayerService.checkExistence(email);
+                if (!isEmailValid.success) {
+                    console.log("Email non valide:", isEmailValid.message);
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: isEmailValid.message });
+                }
+
+                // Si le mot de passe n'est pas fourni, générer un mot de passe par défaut                
                 if (!passwordFinal) {
                     passwordFinal = "defaultPassword123"; // Valeur par défaut si aucun mot de passe n'est fourni
                 }  
@@ -84,11 +94,12 @@ export default class AuthController {
                     full_name:full_name,
                     email:email,
                     password_hash:password_hash,
-                    role_id: roleData? roleData.id : null
+                    role_id: roleData? roleData.id : null,
+                    isLoggedIn: false
                 });
 
                 // Message de Retour 
-                const message="Inscription réussie et connexion établie.";
+                const message="Inscription réussie .";
                 // Function : Creation de Tokens et Retour
                 return AuthController.handleAuthentification(res, newUser,message,HTTP_STATUS_CREATED) ;
 

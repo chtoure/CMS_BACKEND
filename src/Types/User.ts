@@ -16,5 +16,5 @@ export interface User {
     createdAt: Date;
     updatedAt: Date;
     role?:Role | null;
-    
+    isLoggedIn: boolean;    
 }

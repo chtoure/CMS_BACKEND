@@ -17,5 +17,5 @@ export  function userRoutes(app:Express,validateBody:Function) : void {
     app.get("/users/:id", userController.getUser.bind(userController));
     app.put("/users/:id", AuthMiddleware, validateBody(userUpdateSchema), userController.updateUser.bind(userController));
     app.delete("/users/:id", AuthMiddleware, userController.deleteUser.bind(userController));
-    app.put("/users/:id/change-password", AuthMiddleware, validateBody(changePasswordSchema), userController.changePassword.bind(userController));
+    app.put("/change-password/:id", AuthMiddleware, validateBody(changePasswordSchema), userController.changePassword.bind(userController));
 }
