@@ -64,7 +64,6 @@ model RolePermission {
 }
 
 
-
 //     Partie Mediatheque
 
 
@@ -76,8 +75,26 @@ model Media {
 }
 
 
+enum VariableType {
+  COLOR
+  NUMBER
+  STRING
+  BOOLEAN
+}
+
+model Collection {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  type        VariableType
+  variables   Variable[]   
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
 model Variable {
-  id           Int        @id @default(autoincrement())
-  name         String     @unique
-  value        String
+  id            Int        @id @default(autoincrement())
+  name          String
+  value         String     
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId  Int
 }
