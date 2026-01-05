@@ -99,7 +99,22 @@ export default class UserService {
     // Change mot de passe d'un utilisateur
     public async changeUserPassword(userId: number, newPassword: string): Promise<User | null> {
         const hashedPassword = await this.hashPassword(newPassword);
-        return this.updateUser(userId, { password_hash: hashedPassword });
+        return this.updateUser(userId, { password_hash: hashedPassword, isLoggedIn: true });
+    }
+
+
+    // Verifie le code de reinitialisation et la date d'expiration
+    public async verifyResetCode(userId: number, code: string): Promise<User | null> {
+        return prisma.user.findFirst({
+            where: {
+                id: userId,
+                resetCode: code,
+                codeExpiration: {
+                    gt: new Date() // Vérifie que la date d'expiration est dans le futur
+                }
+            },
+            include: { role: true }
+        });
     }
 
 }

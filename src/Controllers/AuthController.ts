@@ -7,7 +7,7 @@ import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
-import { use } from "react";
+import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 
 
 // Instanciation des services
@@ -42,7 +42,7 @@ export default class AuthController {
                     full_name: user.full_name,
                     email: user.email,
                     role: user.role?.name ?? null,
-                    islogin: user.islogin                   
+                    isLoggedIn: user.isLoggedIn                   
                 }
             });
 
@@ -63,6 +63,14 @@ export default class AuthController {
                     return res.status(HTTP_STATUS_CONFLICT).json({ message: 'Cet email est déjà utilisé.' });
                 }
 
+                // Validation de l'email via MailboxLayer
+                const isEmailValid = await MailboxLayerService.checkExistence(email);
+                if (!isEmailValid.success) {
+                    console.log("Email non valide:", isEmailValid.message);
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: isEmailValid.message });
+                }
+
+                // Si le mot de passe n'est pas fourni, générer un mot de passe par défaut                
                 if (!passwordFinal) {
                     passwordFinal = "defaultPassword123"; // Valeur par défaut si aucun mot de passe n'est fourni
                 }  
@@ -86,11 +94,12 @@ export default class AuthController {
                     full_name:full_name,
                     email:email,
                     password_hash:password_hash,
-                    role_id: roleData? roleData.id : null
+                    role_id: roleData? roleData.id : null,
+                    isLoggedIn: false
                 });
 
                 // Message de Retour 
-                const message="Inscription réussie et connexion établie.";
+                const message="Inscription réussie .";
                 // Function : Creation de Tokens et Retour
                 return AuthController.handleAuthentification(res, newUser,message,HTTP_STATUS_CREATED) ;
 
@@ -192,6 +201,34 @@ export default class AuthController {
             }
 
             return res.status(HTTP_STATUS_NO_CONTENT).send("Deconnexion réussie.");
+        }
+
+
+
+        // Reinitialisation du mot de passe (Forgot Password) && se connecter plus tard
+        public async reinitialisationPasswordLogin(req: Request, res: Response): Promise<Response> {
+            const { email, password } = req.body;
+            try {
+
+                // Haschage du nouveau mot de passe
+                const hashedPassword = await userService.hashPassword(password);
+                if (!hashedPassword) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Hachage du mot de passe a échoué.' });
+                }
+
+                // Mise à jour du mot de passe dans la base de données
+                const userModPassword = await userService.updateUser(Number(req.params.id), { password_hash: hashedPassword, isLoggedIn: true });
+                if (!userModPassword) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'La mise à jour du mot de passe a échoué.' });
+                }
+
+                // Appel de la methode login
+                return this.login(req, res);
+
+            } catch (error) {
+                console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la réinitialisation du mot de passe.' });
+            }
         }
 
 }

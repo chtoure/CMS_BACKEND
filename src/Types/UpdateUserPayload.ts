@@ -11,5 +11,7 @@ export interface UpdateUserPayload {
   password_hash?: string;
   refreshToken?: string | null ;
   roleId?: number;
-
+  isLoggedIn?: boolean;
+  resetCode?: string | null;
+  codeExpiration?: Date | null;    
 }

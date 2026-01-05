@@ -3,6 +3,7 @@ import type { Request,Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import UserService from "../Services/UserService.ts";
 import RoleService from "../Services/RoleService.ts";
+import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 
 
 const userService = new UserService();
@@ -44,8 +45,9 @@ export default class UserController {
 
 
     async updateUser(req:Request,res:Response){
-        const { password , role } = req.body;
+        const { password , email , role } = req.body;
         let roleData = null;
+        
         try {
 
             if (password) {
@@ -56,6 +58,22 @@ export default class UserController {
                 }
                 req.body.password_hash = password_hash;
                 delete req.body.password;
+            }
+
+            // Validation de l'email via MailboxLayer
+            if (email) {
+
+                // Verification de l'existance de l'utilisateur
+                const userExist = await userService.getUserByEmail(email);
+                if (!userExist){                   
+                    // Validation de l'email via MailboxLayer
+                    const isEmailValid = await MailboxLayerService.checkExistence(email);
+                    if (!isEmailValid.success) {
+                        console.log("Email non valide:", isEmailValid.message);
+                        return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: isEmailValid.message });
+                    }
+                }
+
             }
 
             // Partie de Role :
@@ -99,14 +117,23 @@ export default class UserController {
 
 
     async changePassword(req:Request,res:Response){
-
         const { newPassword } = req.body;
         try {
-            await userService.changeUserPassword(Number(req.params.id), newPassword);
+            
+            
+            const userChangedPassword = await userService.changeUserPassword(Number(req.params.id), newPassword);
             res.status(HTTP_STATUS_OK).json({
-                message: "Mot de passe mis à jour avec succès"
+                message: "Mot de passe mis à jour avec succès",
+                user: {
+                    id: userChangedPassword?.id,
+                    full_name: userChangedPassword?.full_name,
+                    email: userChangedPassword?.email,
+                    role: userChangedPassword?.role?.name ?? null,
+                    isLoggedIn: userChangedPassword?.isLoggedIn
+                }
             });
         } catch (error) {
+            console.log("Erreur lors de la mise à jour du mot de passe", error);
              res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour du mot de passe", details: error });
         }
     }
