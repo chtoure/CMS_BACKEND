@@ -5,6 +5,7 @@ import Routes from "./Routes/Routes.ts";
 import cors from 'cors';
 import {corsOptions} from "./Utils/Constantes/CorsOptions.ts";
 import path from "path";
+import cookieParser from "cookie-parser";
 
 
 dotenv.config();
@@ -15,10 +16,8 @@ const app: Express = express();
 app.use(cors(corsOptions)); // Implementation de cors
 app.use('/media', express.static(path.join(process.cwd(), 'media')));
 app.use(express.json()); // Accepte les donnés du body
-
-
-// Middleware authentication
-
+//lire les cookies 
+app.use(cookieParser());
 
 
 // Routes
@@ -29,3 +28,10 @@ app.listen(port, "0.0.0.0", () => {
   console.log("Couper le serveur avec Ctrl+C");
 });
  
+
+
+
+
+
+
+
