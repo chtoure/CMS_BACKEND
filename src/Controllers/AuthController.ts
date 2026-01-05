@@ -7,6 +7,7 @@ import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
+import { use } from "react";
 
 
 // Instanciation des services
@@ -40,7 +41,8 @@ export default class AuthController {
                     id: user.id,
                     full_name: user.full_name,
                     email: user.email,
-                    role: user.role?.name ?? null                    
+                    role: user.role?.name ?? null,
+                    islogin: user.islogin                   
                 }
             });
 

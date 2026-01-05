@@ -13,7 +13,7 @@ export  function authRoutes(app:Express,validateBody:Function) : void {
     const authController = new AuthController();
 
     //  Routes AuthControllers
-    app.post("/register",AuthMiddleware,validateBody(userRegisterSchema),authController.register.bind(authController));
+    app.post("/register",validateBody(userRegisterSchema),authController.register.bind(authController));
     app.post("/login",validateBody(userLoginSchema),authController.login.bind(authController));
     app.post("/logout",authController.logout.bind(authController));
     app.post("/refresh-token",authController.refreshToken.bind(authController));
