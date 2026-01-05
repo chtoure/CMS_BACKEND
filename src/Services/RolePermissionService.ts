@@ -23,16 +23,6 @@ export default class RolePermissionService {
     }
 
 
-    static async createRolePermsByRoleId(roleId:number, permissionIds:number[]): Promise<Prisma.BatchPayload>{
-        return prisma.rolePermission.createMany({
-            data: permissionIds.map(permissionId => ({
-                roleId,
-                permissionId
-            }))
-        })
-    }
-
-
     static async VerifyRolePermission(dataPermissions:Prisma.RolePermissionUncheckedCreateInput): Promise<RolePermission | null>{
         return prisma.rolePermission.findFirst({
             where:{
@@ -57,10 +47,5 @@ export default class RolePermissionService {
         })
     }
 
-    // Supprimer une relation (RolePermission) spécifique
-    static async deleteRolePermission(whereData:{roleId:number,permissionId:number}):Promise<Prisma.BatchPayload> {
-        return prisma.rolePermission.deleteMany({
-            where:whereData
-        })
-    }
+    
 }

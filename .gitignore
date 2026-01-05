@@ -2,12 +2,16 @@ node_modules
 
 # Keep environment variables out of version control
 .env
-dev.db
 
 /src/generated/prisma
 
 .devcontainer
 
 prisma/migrations
+
+prisma/dev.db
+.vscode
+media/uploads/images/*
+media/uploads/videos/*
 
 

@@ -3,8 +3,8 @@ import type { Express } from "express";
 import dotenv from "dotenv";
 import Routes from "./Routes/Routes.ts";
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
 import {corsOptions} from "./Utils/Constantes/CorsOptions.ts";
+import path from "path";
 
 
 dotenv.config();
@@ -12,14 +12,10 @@ dotenv.config();
 const port: number = parseInt(process.env.PORT || "3000", 10);
 const app: Express = express();
 
-// Accepte les donnés du body   
-app.use(express.json()); 
+app.use(cors(corsOptions)); // Implementation de cors
+app.use('/media', express.static(path.join(process.cwd(), 'media')));
+app.use(express.json()); // Accepte les donnés du body
 
-// Implementation de cors
-app.use(cors(corsOptions)); 
-
-//lire les cookies 
-app.use(cookieParser());
 
 // Middleware authentication
 

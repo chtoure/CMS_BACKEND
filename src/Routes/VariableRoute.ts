@@ -1,14 +1,30 @@
 import type { Express } from "express";
+import CollectionController from "../Controllers/CollectionController.ts";
+import VariableController from "../Controllers/VariableController.ts";
+import {  
+    variableCreateSchema, 
+    variableUpdateSchema, 
+    deleteMultipleSchema 
+} from "../Utils/Validations/VariableSchema.ts";
+import { collectionSchema } from "../Utils/Validations/CollectionSchema.ts";
+import validateBody from "../Middleware/ValidateBoody.ts";
 
+export function variableRoutes(app: Express): void {
+    
+    const collectionController = new CollectionController();
+    const variableController = new VariableController();
 
-export  function variableRoutes(app:Express) : void {
+    app.get("/collections", collectionController.getAllCollections.bind(collectionController));
+    
+    app.post("/collections", validateBody(collectionSchema), collectionController.createCollection.bind(collectionController));
+    
+    app.delete("/collections/:id", collectionController.deleteCollection.bind(collectionController));
 
-    console.log(app);
+    app.post("/variables", validateBody(variableCreateSchema), variableController.createVariable.bind(variableController));
+    
+    app.put("/variables/:id", validateBody(variableUpdateSchema), variableController.updateVariable.bind(variableController));
+    
+    app.delete("/variables/", validateBody(deleteMultipleSchema), variableController.deleteVariables.bind(variableController));
 
-    // const mediaController = new MediaController();
-
-    // app.get("/medias", mediaController.getMedias.bind(mediaController));
-    // app.get("/media/:id", mediaController.getMedia.bind(mediaController));
-    // app.delete("/media/:id", mediaController.deleteMedia.bind(mediaController));
-
+    app.delete("/variables/:id", variableController.deleteVariables.bind(variableController));
 }
