@@ -203,4 +203,32 @@ export default class AuthController {
             return res.status(HTTP_STATUS_NO_CONTENT).send("Deconnexion réussie.");
         }
 
+
+
+        // Reinitialisation du mot de passe (Forgot Password) && se connecter plus tard
+        public async reinitialisationPasswordLogin(req: Request, res: Response): Promise<Response> {
+            const { email, password } = req.body;
+            try {
+
+                // Haschage du nouveau mot de passe
+                const hashedPassword = await userService.hashPassword(password);
+                if (!hashedPassword) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Hachage du mot de passe a échoué.' });
+                }
+
+                // Mise à jour du mot de passe dans la base de données
+                const userModPassword = await userService.updateUser(Number(req.params.id), { password_hash: hashedPassword, isLoggedIn: true });
+                if (!userModPassword) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'La mise à jour du mot de passe a échoué.' });
+                }
+
+                // Appel de la methode login
+                return this.login(req, res);
+
+            } catch (error) {
+                console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la réinitialisation du mot de passe.' });
+            }
+        }
+
 }

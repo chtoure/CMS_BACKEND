@@ -102,4 +102,19 @@ export default class UserService {
         return this.updateUser(userId, { password_hash: hashedPassword, isLoggedIn: true });
     }
 
+
+    // Verifie le code de reinitialisation et la date d'expiration
+    public async verifyResetCode(userId: number, code: string): Promise<User | null> {
+        return prisma.user.findFirst({
+            where: {
+                id: userId,
+                resetCode: code,
+                codeExpiration: {
+                    gt: new Date() // Vérifie que la date d'expiration est dans le futur
+                }
+            },
+            include: { role: true }
+        });
+    }
+
 }
