@@ -98,31 +98,4 @@ export default class RoleService {
             where:{id}
         })
     }
-
-
-    // Retirer la permission d'un role (Je souhaite le gerer avec l'archivage)
-    public async removePermissionFromRole(roleId: number, permissionId: number) {
-        await RolePermissionService.deleteRolePermission({roleId,permissionId});
-        return this.getRoleById(roleId);
-
-    }
-
-
-
-    // Ajouter des ou une permission(s) a un role deja existant
-    public async addPermissionsToRole(roleId: number, permissionIds: number[]): Promise<Role | null> {
-        let addPermissions:number[] = [];
-        permissionIds.forEach(async permissionId => {
-            const existantRolePerms = await  RolePermissionService.VerifyRolePermission({roleId,permissionId});
-            if(!existantRolePerms){
-                addPermissions.push(permissionId);
-            }
-        });
-
-        if (addPermissions.length > 0) {
-            await RolePermissionService.createRolePermsByRoleId(roleId, addPermissions);
-        }
-
-        return this.getRoleById(roleId);
-    }
 }

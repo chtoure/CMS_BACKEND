@@ -23,13 +23,32 @@ export default class MediaService {
         })
     }
 
+    public async deleteMedias(ids:number[]):Promise< number | null >{
+        const result = await prisma.media.deleteMany({
+            where: {
+                id: { in: ids }
+            }
+        });
+        return result.count;
+    }
+
     public async getMediaById(id:number): Promise<Media | null>{
         return prisma.media.findUnique({
             where:{id}
         })
     }
 
-    public async getAllMedia(): Promise<Media[]>{
-        return prisma.media.findMany();
+    public async getMediaByIds(ids:number[]): Promise<Media[]>{
+        return prisma.media.findMany({
+            where:{
+                id: { in: ids }
+            }
+        });
+    }
+
+    public async getAllMedia(type:'video' | 'image' | null): Promise<Media[]>{
+        return prisma.media.findMany({
+            where: type ? { type } : {}
+        });
     }
 }

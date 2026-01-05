@@ -11,6 +11,11 @@ import { permissionRoutes } from "./PermissionRoute.ts";
 
 
 
+// Initialisation des des instaces des controlleurs
+const userController = new UserController();
+const authController = new AuthController();
+
+
 
 export default (app:Express): void  => {
 

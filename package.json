@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
     "generate": "npx prisma generate",
-    "migrate": "npx prisma migrate dev "
+    "migrate": "npx prisma migrate dev ",
+    "reset": "npx prisma migrate reset "
   },
   "keywords": [],
   "author": "",
@@ -15,7 +16,6 @@
   "type": "module",
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/joi": "^17.2.2",
@@ -35,12 +35,12 @@
     "@types/multer": "^2.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
+    "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   }
 }
