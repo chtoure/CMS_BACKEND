@@ -17,7 +17,7 @@ export default class UserService {
     public async createUser(data: Prisma.UserUncheckedCreateInput): Promise<User> {
         return prisma.user.create({
             data,
-            include: { role: true }
+            include: { role: true}
         });
     }
 

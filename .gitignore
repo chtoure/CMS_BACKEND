@@ -7,6 +7,8 @@ node_modules
 
 .devcontainer
 
+./dev.db
+
 prisma/migrations
 
 prisma/dev.db
