@@ -9,10 +9,48 @@ export default class CollectionService {
         });
     }
 
-    public async getAllCollections() {
+    // public async getAllCollections() {
+    //     return prisma.collection.findMany({
+    //         include: { 
+    //             variables: true 
+    //         },
+    //         orderBy: { createdAt: 'desc' }
+    //     });
+    // }
+
+
+    // CollectionService.ts
+
+    public async getAllCollections(search?: string) {
+        if (!search || search.trim() === "") {
+            return prisma.collection.findMany({
+                include: { variables: true },
+                orderBy: { createdAt: 'desc' }
+            });
+        }
+
+        const query = search.trim();
+
         return prisma.collection.findMany({
-            include: { 
-                variables: true 
+            where: {
+                variables: {
+                    some: {
+                        OR: [
+                            { name: { contains: query } }, // 'mode' supprimé ici
+                            { value: { contains: query } } // 'mode' supprimé ici
+                        ]
+                    }
+                }
+            },
+            include: {
+                variables: {
+                    where: {
+                        OR: [
+                            { name: { contains: query } },
+                            { value: { contains: query } }
+                        ]
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });

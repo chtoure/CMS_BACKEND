@@ -13,14 +13,40 @@ export default class CollectionController {
         this.collectionService = new CollectionService();
     }
 
+    // async getAllCollections(req: Request, res: Response) {
+    //     try {
+    //         const collections = await this.collectionService.getAllCollections();
+    //         return res.status(HTTP_STATUS_OK).json(collections);
+    //     } catch (error) {
+    //         return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+    //             error: "Erreur lors de la récupération des collections", 
+    //             details: error 
+    //         });
+    //     }
+    // }
+
+
+    // CollectionController.ts
+
     async getAllCollections(req: Request, res: Response) {
         try {
-            const collections = await this.collectionService.getAllCollections();
+            // Récupération du paramètre de recherche depuis l'URL (ex: /collections?search=primary)
+            const searchQuery = req.query.search as string | undefined;
+
+            console.log('ma recherche:', searchQuery);
+            
+
+            // On passe la recherche au service
+            const collections = await this.collectionService.getAllCollections(searchQuery);
+
+            console.log('ma collection:', collections);
+            
+            
             return res.status(HTTP_STATUS_OK).json(collections);
         } catch (error) {
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors de la récupération des collections", 
-                details: error 
+                details: error instanceof Error ? error.message : error 
             });
         }
     }
