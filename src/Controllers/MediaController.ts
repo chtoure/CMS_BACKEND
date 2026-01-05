@@ -121,65 +121,54 @@ export default class MediaController {
         }
     }
 
+    // MediaController.ts
+
     async editImage(req: Request, res: Response) {
         try {
-
-            console.log("bonjour", req.body);
-            
             const { id } = req.params;
-            const { geometry, adjustments, bgRemoved } = req.body;
+            const { geometry, adjustments } = req.body;
+
+            console.log(req.body);
 
             const media = await this.mediaService.getMediaById(Number(id));
-            if (!media || media.type !== 'image') {
-                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Image source non trouvée" });
-            }
+            if (!media) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Média non trouvé" });
 
             const originalAbsolutePath = path.join(process.cwd(), media.file_path);
             
-            // Génération d'un nouveau nom de fichier pour ne pas écraser l'original
+            // 1. Génération du nouveau chemin de fichier
             const fileExt = path.extname(media.file_path);
             const fileName = path.basename(media.file_path, fileExt);
             const newFileName = `${fileName}_edited_${Date.now()}${fileExt}`;
-            const newRelativePath = path.join('media/uploads/images/', newFileName);
+            const newRelativePath = path.join('media/uploads/images/', newFileName).replace(/\\/g, '/');
             const newAbsolutePath = path.join(process.cwd(), newRelativePath);
 
-            // 2. Traitement avec Sharp
-            let pipeline = sharp(originalAbsolutePath);
+            let pipeline = sharp(originalAbsolutePath).rotate(); // .rotate() sans argument redresse l'image selon l'EXIF
 
-            // --- Géométrie ---
-            if (geometry) {
-                if (geometry.rotation) pipeline = pipeline.rotate(geometry.rotation);
-                if (geometry.flipH) pipeline = pipeline.flip();
-                if (geometry.flipV) pipeline = pipeline.flop();
-                if (geometry.crop) {
-                    pipeline = pipeline.extract({
-                        left: geometry.crop.x,
-                        top: geometry.crop.y,
-                        width: geometry.crop.width,
-                        height: geometry.crop.height
-                    });
-                }
+            if (geometry && geometry.crop) {
+                pipeline = pipeline.extract({
+                    left: Math.round(geometry.crop.x),
+                    top: Math.round(geometry.crop.y),
+                    width: Math.round(geometry.crop.width),
+                    height: Math.round(geometry.crop.height)
+                });
             }
 
-            // --- Ajustements ---
             if (adjustments) {
-                // Sharp modulate: brightness et saturation sont des multiplicateurs (1.0 = normal)
                 pipeline = pipeline.modulate({
                     brightness: adjustments.brightness,
                     saturation: adjustments.saturation
                 });
-
                 if (adjustments.grayscale) pipeline = pipeline.grayscale();
-                if (adjustments.blur && adjustments.blur > 0) pipeline = pipeline.blur(adjustments.blur);
+                if (adjustments.blur) pipeline = pipeline.blur(adjustments.blur);
             }
 
-            // 3. Sauvegarde du nouveau fichier sur le disque
+            // 3. Sauvegarde physique du nouveau fichier (Correction ici)
             await pipeline.toFile(newAbsolutePath);
 
-            // 4. Création d'une nouvelle entrée en BDD
+            // 4. Création d'une nouvelle entrée en BDD (Correction du file_path)
             const newMedia = await this.mediaService.createMedia({
-                alt: media.alt,
-                file_path: newRelativePath.replace(/\\/g, '/'),
+                alt: `Edited ${media.alt || 'image'}`,
+                file_path: newRelativePath, // Pointer vers le NOUVEAU fichier
                 type: 'image'
             });
 
