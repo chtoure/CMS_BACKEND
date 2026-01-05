@@ -12,8 +12,6 @@ export interface User {
     email: string;
     password_hash: string;
     refreshToken?:  string | null;
-    role_id:number | null;
-    islogin: boolean | null;
     createdAt: Date;
     updatedAt: Date;
     role?:Role | null;

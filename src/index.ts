@@ -3,6 +3,7 @@ import type { Express } from "express";
 import dotenv from "dotenv";
 import Routes from "./Routes/Routes.ts";
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import {corsOptions} from "./Utils/Constantes/CorsOptions.ts";
 import path from "path";
 
@@ -12,13 +13,17 @@ dotenv.config();
 const port: number = parseInt(process.env.PORT || "3000", 10);
 const app: Express = express();
 
-app.use(cors(corsOptions)); // Implementation de cors
-app.use('/media', express.static(path.join(process.cwd(), 'media')));
-app.use(express.json()); // Accepte les donnés du body
+// Accepte les donnés du body   
+app.use(express.json()); 
 
+// Implementation de cors
+app.use(cors(corsOptions)); 
 
-// Middleware authentication
+//lire les cookies 
+app.use(cookieParser());
 
+// Rendre le dossier media public 
+app.use('/media', express.static(path.join(process.cwd(), 'media')))
 
 
 // Routes
