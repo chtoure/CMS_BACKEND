@@ -40,13 +40,11 @@ export default class MediaController {
 
     async getMedias(req: Request, res: Response) {
         try {
-            // 1. Récupération des paramètres de pagination
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
             const filter = req.query.type as 'video' | 'image' | null || null;
 
-            // 2. Appel au service pour les données et le total
             const [mediaList, totalCount] = await Promise.all([
                 this.mediaService.getAllMedia(filter, skip, limit),
                 this.mediaService.countMedia(filter)
@@ -55,13 +53,11 @@ export default class MediaController {
             const baseUrl = `${process.env.APP_URL}`;
             const totalPages = Math.ceil(totalCount / limit);
 
-            // 3. Transformation des chemins de fichiers
             const results = mediaList.map((media) => ({
                 ...media,
                 file_path: `${baseUrl}${media.file_path}`
             }));
 
-            // 4. Construction des URLs Next/Previous (Logique Django)
             const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
             const next = page < totalPages 
                 ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
@@ -70,7 +66,6 @@ export default class MediaController {
                 ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
                 : null;
 
-            // 5. Réponse formatée standardisée
             return res.status(HTTP_STATUS_OK).json({
                 count: totalCount,
                 next: next,
