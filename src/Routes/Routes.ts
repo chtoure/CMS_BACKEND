@@ -8,6 +8,7 @@ import { authRoutes } from "./AuthRoute.ts";
 import { userRoutes } from "./UserRoute.ts";
 import { roleRoutes } from "./RoleRoute.ts";
 import { permissionRoutes } from "./PermissionRoute.ts";
+import { parameterRoutes } from "./ParameterRoute.ts";
 
 
 
@@ -20,8 +21,9 @@ export default (app:Express): void  => {
     roleRoutes(app,validateBody);
     permissionRoutes(app,validateBody);
 
-    // Module Mediatheque && Variable
+    // Module Mediatheque && Variable && Parameter
     mediaRoutes(app);
     variableRoutes(app);
+    parameterRoutes(app);
 
 }
