@@ -38,23 +38,53 @@ export default class MediaController {
     }
 
 
-    async getMedias(req:Request,res:Response){
+    async getMedias(req: Request, res: Response) {
         try {
+            // 1. Récupération des paramètres de pagination
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const skip = (page - 1) * limit;
+            const filter = req.query.type as 'video' | 'image' | null || null;
 
-            const filter=req.query.type as 'video' | 'image' | null || null;
-            
-            const mediaList = await this.mediaService.getAllMedia(filter);
+            // 2. Appel au service pour les données et le total
+            const [mediaList, totalCount] = await Promise.all([
+                this.mediaService.getAllMedia(filter, skip, limit),
+                this.mediaService.countMedia(filter)
+            ]);
+
             const baseUrl = `${process.env.APP_URL}`;
+            const totalPages = Math.ceil(totalCount / limit);
 
-            const mediaWithUrls = mediaList.map((media) => ({
+            // 3. Transformation des chemins de fichiers
+            const results = mediaList.map((media) => ({
                 ...media,
                 file_path: `${baseUrl}${media.file_path}`
             }));
 
-            return res.status(HTTP_STATUS_OK).json(mediaWithUrls);
+            // 4. Construction des URLs Next/Previous (Logique Django)
+            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+            const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
+                : null;
+            const previous = page > 1 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
+                : null;
+
+            // 5. Réponse formatée standardisée
+            return res.status(HTTP_STATUS_OK).json({
+                count: totalCount,
+                next: next,
+                previous: previous,
+                total_pages: totalPages,
+                current_page: page,
+                results: results
+            });
 
         } catch (error) {
-            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la récupération des médias", details: error });
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors de la récupération des médias", 
+                details: error 
+            });
         }
     }
 
