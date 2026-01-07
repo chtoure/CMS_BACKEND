@@ -17,6 +17,25 @@ export default class VariableController {
         this.collectionService = new CollectionService();
     }
 
+    async getAllVariables(req: Request, res: Response) {
+        try {
+            const variables = await this.variableService.getAllVariables();
+            return res.status(HTTP_STATUS_OK).json(variables);
+        } catch (error) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur récupération variables", details: error });
+        }
+    }
+
+    async getVariableById(req: Request, res: Response) {
+        try {
+            const id = Number(req.params.id);
+            const variable = await this.variableService.getVariableById(id);
+            return res.status(HTTP_STATUS_OK).json(variable);
+        } catch (error) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur récupération variable", details: error });
+        }
+    }
+
     async createVariable(req: Request, res: Response) {
         try {
             const { name, value, collectionId } = req.body;
