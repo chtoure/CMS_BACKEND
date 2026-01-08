@@ -46,8 +46,39 @@ export default class PermissionService {
     }
 
 
-     // Recuperer tous les permissions
-    public async getAllPermissions(): Promise<Permission[]> {
+     // Recuperer tous les permissions avec pagination
+    public async getAllPermissions(
+        skip?: number, 
+        take?: number
+    ): Promise<Permission[]> {
+
+        const options: any = {
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
+
+        if (skip !== undefined) options.skip = skip;
+        if (take !== undefined) options.take = take;
+
+       const dataPerms = await prisma.permission.findMany(options);
+       return PermissionService.mapPermissions(dataPerms);
+    }
+
+     public async countPermissions(): Promise<number> {
+        return prisma.permission.count();
+    }
+
+
+     // Recuperer tous les permissions sans Pagination
+    public async getAllPermissionsNoPaginate(): Promise<Permission[]> {
        const dataPerms = await prisma.permission.findMany({
         include: {
             roles: {

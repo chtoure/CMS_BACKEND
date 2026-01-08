@@ -56,8 +56,44 @@ export default class RoleService {
     }
 
 
-    // Recuperer tous les roles
-    public async getAllRoles(): Promise<Role[]> {
+    // Recuperer tous les roles avec pagination
+    public async getAllRoles(
+        skip?: number, 
+        take?: number
+    ): Promise<Role[]> {
+
+        const options: any = {
+            include: {
+                users: true,
+                permissions: {
+                    include: {
+                        permission: true // On inclut l'objet Permission réel
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
+
+        if (skip !== undefined) options.skip = skip;
+        if (take !== undefined) options.take = take;
+
+        const roles = await prisma.role.findMany(options);
+
+        // On transforme (map) le résultat pour aplatir la structure
+        return RoleService.mapRoles(roles)
+
+    }
+
+     public async countRoles(): Promise<number> {
+        return prisma.role.count();
+    }
+
+
+
+    // Recuperer tous les roles sans pagination
+    public async getAllRolesNoPaginate(): Promise<Role[]> {
         const roles = await prisma.role.findMany({
             include: {
                 users: true,

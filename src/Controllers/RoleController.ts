@@ -34,9 +34,52 @@ export default class RoleController {
 
 
     // Methode : Recuperer tous les roles
-    async getAllRoles(re:Request,res:Response){
+    async getAllRoles(req:Request,res:Response){
         try {
-            const roles = await roleService.getAllRoles();
+            // Calculs de base pour la pagination
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const skip = (page - 1) * limit;
+
+            // Appel simultané pour les données et le total
+            const [roleList, totalCount] = await Promise.all([
+                roleService.getAllRoles(skip, limit),
+                roleService.countRoles()
+            ]);
+
+            const totalPages = Math.ceil(totalCount / limit);
+            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+
+            // Construction des liens de navigation
+            const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                : null;
+                
+            const previous = page > 1 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                : null;
+
+            // Réponse structurée
+            return res.status(HTTP_STATUS_OK).json({
+                count: totalCount,
+                next: next,
+                previous: previous,
+                total_pages: totalPages,
+                current_page: page,
+                results: roleList
+            });
+
+        } 
+        catch (error) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
+        }
+    }
+
+
+    // Methode : Recuperer tous les roles sans Pagination
+    async getAllRolesNoPaginate(re:Request,res:Response){
+        try {
+            const roles = await roleService.getAllRolesNoPaginate();
             res.status(HTTP_STATUS_OK).json(roles);
         } catch (error) {
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
