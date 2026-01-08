@@ -23,8 +23,52 @@ export default class PermissionController {
 
     // Methode : Recuperer tous les permissions
     async getAllPerms(req:Request,res:Response){
+
         try {
-            const dataPerms = await permissionService.getAllPermissions();
+
+            // Calculs de base pour la pagination
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const skip = (page - 1) * limit;
+
+            // Appel simultané pour les données et le total
+            const [permsListes, totalCount] = await Promise.all([
+                permissionService.getAllPermissions(skip, limit),
+                permissionService.countPermissions()
+            ]);
+
+            const totalPages = Math.ceil(totalCount / limit);
+            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+
+            // Construction des liens de navigation
+            const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                : null;
+                
+            const previous = page > 1 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                : null;
+
+            // Réponse structurée
+            return res.status(HTTP_STATUS_OK).json({
+                count: totalCount,
+                next: next,
+                previous: previous,
+                total_pages: totalPages,
+                current_page: page,
+                results: permsListes
+            });
+
+        } catch (error) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération des permissions', details: error });
+        }
+    }
+
+
+    // Methode : Recuperer tous les permissions sans Pagination
+    async getAllPermsNoPaginate(req:Request,res:Response){
+        try {
+            const dataPerms = await permissionService.getAllPermissionsNoPaginate();
             res.status(HTTP_STATUS_OK).json(dataPerms);
         } catch (error) {
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération des permissions', details: error });

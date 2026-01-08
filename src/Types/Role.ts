@@ -1,4 +1,5 @@
 
+import type { Permission } from "./Permission.ts";
 import type { RolePermission } from "./RolePermission.ts";
 import type { User } from "./User.ts";
 
@@ -10,8 +11,9 @@ export interface Role {
 
     id: number;
     name: string;
+    description?:  string | null;
     createdAt: Date;
     updatedAt: Date;
     users?: User[];
-    permissions?: RolePermission[];
+    permissions?: Permission[];
 }

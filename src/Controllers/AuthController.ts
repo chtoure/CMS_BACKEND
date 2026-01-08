@@ -8,7 +8,7 @@ import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
-
+import { EmailService } from "../Services/EmailService.ts";
 
 // Instanciation des services
 const userService = new UserService();
@@ -97,6 +97,14 @@ export default class AuthController {
                     role_id: roleData? roleData.id : null,
                     isLoggedIn: false
                 });
+
+
+                // Envoie du password par defaut a l'utilisateur
+                const isSend = await EmailService.sendVerificationCode(newUser.email,passwordFinal);
+
+                if (!isSend) {
+                    return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la création de l\'utilisateur.' });
+                }
 
                 // Message de Retour 
                 const message="Inscription réussie .";

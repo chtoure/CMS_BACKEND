@@ -41,7 +41,7 @@ export default class EmailController {
 
                 res.status(HTTP_STATUS_OK).json({
                     user:{
-                         id: updatedUser.id,
+                        id: updatedUser.id,
                         full_name: updatedUser.full_name,
                         email: updatedUser.email,
                         role: updatedUser.role?.name ?? null,

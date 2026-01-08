@@ -12,17 +12,17 @@ export default class RoleController {
     // Methode : creation d'un role
     async createRole(req:Request,res:Response){
 
-        const {name, permissionIds} = req.body;
+        const {name,description, permissionIds} = req.body;
         try {
 
             let role; 
 
             if (!permissionIds || permissionIds.length == 0 ) {
-                role = await roleService.createRole({name});
+                role = await roleService.createRole({name,description});
                 res.status(HTTP_STATUS_CREATED).json(role);
             }
 
-            role = await roleService.createRole({name},permissionIds);
+            role = await roleService.createRole({name,description},permissionIds);
             res.status(HTTP_STATUS_CREATED).json(role);
         } catch (error) {
             console.error('Erreur lors de la creation d\'un role', error);
@@ -34,9 +34,52 @@ export default class RoleController {
 
 
     // Methode : Recuperer tous les roles
-    async getAllRoles(re:Request,res:Response){
+    async getAllRoles(req:Request,res:Response){
         try {
-            const roles = await roleService.getAllRoles();
+            // Calculs de base pour la pagination
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const skip = (page - 1) * limit;
+
+            // Appel simultané pour les données et le total
+            const [roleList, totalCount] = await Promise.all([
+                roleService.getAllRoles(skip, limit),
+                roleService.countRoles()
+            ]);
+
+            const totalPages = Math.ceil(totalCount / limit);
+            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+
+            // Construction des liens de navigation
+            const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                : null;
+                
+            const previous = page > 1 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                : null;
+
+            // Réponse structurée
+            return res.status(HTTP_STATUS_OK).json({
+                count: totalCount,
+                next: next,
+                previous: previous,
+                total_pages: totalPages,
+                current_page: page,
+                results: roleList
+            });
+
+        } 
+        catch (error) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
+        }
+    }
+
+
+    // Methode : Recuperer tous les roles sans Pagination
+    async getAllRolesNoPaginate(re:Request,res:Response){
+        try {
+            const roles = await roleService.getAllRolesNoPaginate();
             res.status(HTTP_STATUS_OK).json(roles);
         } catch (error) {
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: 'Erreur lors de la récupération d\'un role', details: error });
@@ -59,16 +102,16 @@ export default class RoleController {
     // Methode : Modifier un role
     async updateRole(req:Request,res:Response){
 
-        const {name, permissionIds} = req.body;
+        const {name,description, permissionIds} = req.body;
         try {
             let roleUpdated;
 
             if (!permissionIds || permissionIds.length == 0 ) {
-                roleUpdated= await roleService.updateRole(Number(req.params.id),{name});
+                roleUpdated= await roleService.updateRole(Number(req.params.id),{name,description});
                 res.status(HTTP_STATUS_OK).json(roleUpdated);
             }
 
-            roleUpdated = await roleService.updateRole(Number(req.params.id),{name},permissionIds);
+            roleUpdated = await roleService.updateRole(Number(req.params.id),{name,description},permissionIds);
             res.status(HTTP_STATUS_OK).json(roleUpdated);
         } catch (error) {
             console.error('Erreur lors de la modification d\'un role', error);
@@ -131,4 +174,18 @@ export default class RoleController {
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors du retrait de la permission du role.' });
         }
     }
+
+    // recuperer les permission d'un role by id
+    async getPermissionByRoleId(req:Request,res:Response){
+        try {
+            const permissions = await roleService.getPermissions(Number(req.params.id));
+            if (!permissions) {
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Cet Role n'a pas de permissions" });
+            }
+            res.status(HTTP_STATUS_OK).json(permissions);
+        } catch (error) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de la recuperation des permission du role.' });
+        }
+    }
+
 }

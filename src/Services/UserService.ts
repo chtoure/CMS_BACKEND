@@ -25,15 +25,27 @@ export default class UserService {
 
 
     // Recuperer tous les utilisateurs
-    public async getAllUser(): Promise<User[]> {
-       return prisma.user.findMany({
-        include:{role:true},
-        orderBy: {
-            createdAt: 'desc' // 'desc' pour descendant (le plus récent en premier)
-        }
-       });
+    public async getAllUser(
+        skip?: number, 
+        take?: number
+    ): Promise<User[]> {
+
+        const options: any = {
+            include:{role:true},
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
+
+        if (skip !== undefined) options.skip = skip;
+        if (take !== undefined) options.take = take;
+
+       return prisma.user.findMany(options);
     }
 
+    public async countUsers(): Promise<number> {
+        return prisma.user.count();
+    }
 
 
     // Récupère un utilisateur par ID

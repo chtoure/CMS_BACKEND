@@ -10,6 +10,7 @@ export  function permissionRoutes(app:Express,validateBody:Function) : void {
 
     // Routes PermissionControllers
     app.get("/permissions", permissionController.getAllPerms.bind(permissionController));
+    app.get("/permissionsNoPaginate", permissionController.getAllPermsNoPaginate.bind(permissionController));
     app.get("/permissions/:id", permissionController.getPermsById.bind(permissionController));
     app.post("/permissions", validateBody(permissionSchema), permissionController.createPermission.bind(permissionController));
     app.put("/permissions/:id", validateBody(permissionSchema), permissionController.upadatePerms.bind(permissionController));

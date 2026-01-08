@@ -1,6 +1,6 @@
 
 import type { Request,Response } from "express";
-import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import UserService from "../Services/UserService.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
@@ -14,15 +14,47 @@ const roleService = new RoleService();
 
 export default class UserController {
 
-    async getUsers(req:Request,res:Response){
-
+   async getUsers(req: Request, res: Response) {
+    
         try {
-            
-            const users = await userService.getAllUser();
-            res.status(HTTP_STATUS_OK).json(users);
+            // Calculs de base pour la pagination
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const skip = (page - 1) * limit;
+
+            // Appel simultané pour les données et le total
+            const [userList, totalCount] = await Promise.all([
+                userService.getAllUser(skip, limit),
+                userService.countUsers()
+            ]);
+
+            const totalPages = Math.ceil(totalCount / limit);
+            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+
+            // Construction des liens de navigation
+            const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                : null;
+                
+            const previous = page > 1 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                : null;
+
+            // Réponse structurée
+            return res.status(HTTP_STATUS_OK).json({
+                count: totalCount,
+                next: next,
+                previous: previous,
+                total_pages: totalPages,
+                current_page: page,
+                results: userList
+            });
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: 'Erreur lors de la récupération des utilisateurs', details: error });
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors de la récupération des utilisateurs", 
+                details: error 
+            });
         }
     }
 

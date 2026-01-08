@@ -1,11 +1,33 @@
 
 import type { Prisma } from "../generated/prisma/client.ts";
+import type { Permission } from "../Types/Permission.ts";
 import type { Role } from "../Types/Role.ts";
 import prisma from "../Utils/PrismaClient.ts";
 import RolePermissionService from "./RolePermissionService.ts";
 
 
+
+
 export default class RoleService {
+
+
+  // Transforme la structure Prisma (table pivot) en structure plate (permissions directes)
+  static mapRoles(roles: any[]): Role[] {
+    return roles.map(role => ({
+      ...role,
+      // On extrait l'objet 'permission' de chaque entrée de la table pivot
+      permissions: role.permissions?.map((rp: any) => rp.permission) ?? []
+    }));
+  }
+
+
+   // Version pour un seul rôle
+   static mapSingleRole(role: any): Role {
+    return {
+      ...role,
+      permissions: role.permissions?.map((rp: any) => rp.permission) ?? []
+    };
+  }
 
 
     // Creation d'un role
@@ -13,7 +35,9 @@ export default class RoleService {
         const role = await prisma.role.create({
             data,
             include: {  
-                permissions:true,
+                permissions:{
+                    include:{permission:true}
+                },
                 users:true
              }
         });
@@ -28,42 +52,92 @@ export default class RoleService {
             await RolePermissionService.CreateRolePermissions(rolePermissionData);
         }
 
-        return role;
+        return RoleService.mapSingleRole(role);
     }
 
 
-    // Recuperer tous les roles
-    public async getAllRoles(): Promise<Role[]> {
-       return prisma.role.findMany({
-        include:{
-            permissions:true,
-            users:true
-        }
-       });
+    // Recuperer tous les roles avec pagination
+    public async getAllRoles(
+        skip?: number, 
+        take?: number
+    ): Promise<Role[]> {
+
+        const options: any = {
+            include: {
+                users: true,
+                permissions: {
+                    include: {
+                        permission: true // On inclut l'objet Permission réel
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
+
+        if (skip !== undefined) options.skip = skip;
+        if (take !== undefined) options.take = take;
+
+        const roles = await prisma.role.findMany(options);
+
+        // On transforme (map) le résultat pour aplatir la structure
+        return RoleService.mapRoles(roles)
+
+    }
+
+     public async countRoles(): Promise<number> {
+        return prisma.role.count();
+    }
+
+
+
+    // Recuperer tous les roles sans pagination
+    public async getAllRolesNoPaginate(): Promise<Role[]> {
+        const roles = await prisma.role.findMany({
+            include: {
+                users: true,
+                permissions: {
+                    include: {
+                        permission: true // On inclut l'objet Permission réel
+                    }
+                }
+            }
+        });
+
+        // On transforme (map) le résultat pour aplatir la structure
+        return RoleService.mapRoles(roles)
+
     }
 
 
     // Récupère un role par ID
     public async getRoleById(id: number): Promise<Role | null> {
-        return prisma.role.findUnique({
+        const role = await prisma.role.findUnique({
             where:{id},
             include:{
-                permissions:true,
+                 permissions:{
+                    include:{permission:true}
+                },
                 users:true
             }
         });
+        return RoleService.mapSingleRole(role);
     }
 
 
     // Récupère un role par name
     public async getRoleByName(name: string): Promise<Role | null> {
-        return prisma.role.findUnique({
+        const role = await prisma.role.findUnique({
             where:{name},
             include:{
-                permissions:true,
+                 permissions:{
+                    include:{permission:true}
+                },
                 users:true
             }
         });
+        return RoleService.mapSingleRole(role);
     }
 
     // Update Role
@@ -124,5 +198,21 @@ export default class RoleService {
         }
 
         return this.getRoleById(roleId);
+    }
+
+    // recuperer les permission d'un role by id
+    public async getPermissions(roleId: number): Promise<Permission[]> {
+        const roleWithPermissions = await prisma.role.findUnique({
+            where: { id: roleId },
+            include: {
+                permissions: {
+                    include: {
+                        permission: true 
+                    }
+                }
+            }
+        });
+
+        return roleWithPermissions?.permissions.map(rp => rp.permission) || [];
     }
 }

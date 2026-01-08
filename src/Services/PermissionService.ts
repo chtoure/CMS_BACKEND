@@ -6,12 +6,35 @@ import prisma from "../Utils/PrismaClient.ts";
 
 export default class PermissionService {
 
+    static mapPermissions(permissions: any[]): Permission[] {
+        return permissions.map(p => ({
+            ...p,
+            // On extrait l'objet 'role' de chaque entrée de la table pivot
+            roles: p.roles?.map((rp: any) => rp.role) ?? []
+        }));
+    }
+
+
+    static mapSinglePermission(permission: any): Permission {
+        return {
+            ...permission,
+            roles: permission.roles?.map((rp: any) => rp.role) ?? []
+        };
+    }
+
     // Creation d'une permission
     public async createPermission(data: Prisma.PermissionUncheckedCreateInput): Promise<Permission> {
-        return prisma.permission.create({
+        const perms = await prisma.permission.create({
             data,
-            include: { roles: true }
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(perms);
     }
 
 
@@ -23,48 +46,114 @@ export default class PermissionService {
     }
 
 
-     // Recuperer tous les permissions
-    public async getAllPermissions(): Promise<Permission[]> {
-       return prisma.permission.findMany({
-        include:{roles:true}
+     // Recuperer tous les permissions avec pagination
+    public async getAllPermissions(
+        skip?: number, 
+        take?: number
+    ): Promise<Permission[]> {
+
+        const options: any = {
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
+
+        if (skip !== undefined) options.skip = skip;
+        if (take !== undefined) options.take = take;
+
+       const dataPerms = await prisma.permission.findMany(options);
+       return PermissionService.mapPermissions(dataPerms);
+    }
+
+     public async countPermissions(): Promise<number> {
+        return prisma.permission.count();
+    }
+
+
+     // Recuperer tous les permissions sans Pagination
+    public async getAllPermissionsNoPaginate(): Promise<Permission[]> {
+       const dataPerms = await prisma.permission.findMany({
+        include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
        });
+       return PermissionService.mapPermissions(dataPerms);
     }
 
 
     // Récupère une permission par ID
     public async getPermissionById(id: number): Promise<Permission | null> {
-        return prisma.permission.findUnique({
+        const permission = await prisma.permission.findUnique({
             where:{id},
-            include:{roles:true}
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(permission);
     }
 
 
     // Récupère une permission par name
     public async getPermissionByName(name: string): Promise<Permission | null> {
-        return prisma.permission.findUnique({
+        const perms = await prisma.permission.findUnique({
             where:{name},
-            include:{roles:true}
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(perms);
     }
 
 
     // Modifier une permission
     public async updatePermission(id:number, userData:Prisma.PermissionUpdateInput): Promise<Permission | null> {
-        return prisma.permission.update({
+        const permission = await prisma.permission.update({
             where:{id},
             data:userData,
-            include:{roles:true}
-        })
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
+        });
+        return PermissionService.mapSinglePermission(permission);
     }
 
 
     // Supprimer un utilisateur 
     public async deletePermission(id:number):  Promise<Permission | null>{
-        return prisma.permission.delete({
+        const perm = await prisma.permission.delete({
             where:{id},
-            include:{roles:true}
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         })
+        return PermissionService.mapSinglePermission(perm);
     }
 
 
