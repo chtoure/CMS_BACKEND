@@ -5,7 +5,11 @@ import prisma from "../Utils/PrismaClient.ts";
 
 export default class ParameterService {
     public async getParameters() {
-        return prisma.parameter.findFirst()
+        return prisma.parameter.findFirst({
+            include: {
+                media: true
+            }
+        })
     }
 
     public async updateParameters(data: ParameterPayload) {

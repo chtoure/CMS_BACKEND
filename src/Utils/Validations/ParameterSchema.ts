@@ -15,11 +15,7 @@ const parameterSchema = Joi.object({
         'any.required': "Le titre du site est requis."
     }),
 
-    logo: Joi.string().required().messages({
-        'string.base': "Le chemin du logo doit être une chaîne de caractères.",
-        'string.empty': "Le logo est requis.",
-        'any.required': "Le logo est requis."
-    }),
+    mediaId: Joi.number().required(),
 
     description: Joi.string().allow(null, '').max(500).messages({
         'string.max': "La description ne doit pas dépasser 500 caractères."
