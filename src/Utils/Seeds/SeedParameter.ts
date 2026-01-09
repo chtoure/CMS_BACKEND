@@ -5,12 +5,12 @@ async function seedAddParameter() {
 
     const parameter = await prisma.parameter.upsert({
         where: { id: 1 },
-        update: {}, // Si les paramètres existent déjà, on ne touche à rien
+        update: {}, 
         create: {
             id: 1,
             entity_name: 'Compositor Enterprise',
             title: 'Mon Super CMS Compositor',
-            logo: 'media/defaults/logo-placeholder.png', // Chemin par défaut
+            mediaId: null,
             description: 'Bienvenue sur votre nouveau CMS sur-mesure. Commencez à composer vos pages dès maintenant.',
         },
     });

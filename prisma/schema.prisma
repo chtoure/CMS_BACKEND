@@ -74,6 +74,7 @@ model Media {
   file_path    String
   type         String
   alt          String?
+  parameter   Parameter[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -106,10 +107,11 @@ model Variable {
 }
 
 model Parameter {
-  id            Int      @id @default(1) 
+  id            Int      @id @default(autoincrement()) 
   entity_name   String   
   title         String   
-  logo          String    
+  media         Media?   @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId       Int?    
   description   String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

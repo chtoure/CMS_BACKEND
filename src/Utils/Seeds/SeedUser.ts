@@ -17,13 +17,24 @@ async function  seedAddUser() {
         update: {}, // Si l'utilisateur existe déjà, on ne fait rien
         create: {
             email: 'chabaneu7@gmail.com',
-            full_name: 'TAKPAA Wella Gilbo',
+            full_name: 'TAKPAA Wella Gilbert',
             password_hash: password_hash,
             isLoggedIn: false,
         },
     });
 
-    console.log({ user });
+    const user1 = await prisma.user.upsert({
+        where: { email: 'takpaagilbert@gmail.com' },
+        update: {},
+        create: {
+            email: 'takpaagilbert@gmail.com',
+            full_name: 'TAKPAA Wella Gilbert',
+            password_hash: password_hash,
+            isLoggedIn: false,
+        },
+    });
+
+    console.log({ user, user1 });
     console.log('Utilisateur créé avec succès !');
 
 }
