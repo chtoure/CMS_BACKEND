@@ -1,7 +1,7 @@
 interface ParameterPayload {
     entity_name: string;
     title: string;
-    logo: string;
+    mediaId: number;
     description?: string;
 }
 

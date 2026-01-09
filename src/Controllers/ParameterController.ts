@@ -21,8 +21,8 @@ export default class ParameterController {
                 return res.status(HTTP_STATUS_NOT_FOUND).json({ message: "Paramètres non configurés" });
             }
 
-            if (params.logo && !params.logo.startsWith('http')) {
-                params.logo = `${process.env.APP_URL}${params.logo}`;
+            if (params.media) {
+                params.media.file_path = `${process.env.APP_URL}${params.media.file_path}`;
             }
 
             return res.status(HTTP_STATUS_OK).json(params);
@@ -39,10 +39,6 @@ export default class ParameterController {
         try {
             const payload = req.body;
             
-            if (payload.logo && payload.logo.includes(process.env.APP_URL)) {
-                payload.logo = payload.logo.replace(process.env.APP_URL, '');
-            }
-
             const updatedParams = await this.parameterService.updateParameters(payload);
 
             return res.status(HTTP_STATUS_OK).json({
