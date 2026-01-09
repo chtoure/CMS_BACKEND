@@ -40,23 +40,24 @@ export default class RoleController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
+            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
 
             // Appel simultané pour les données et le total
             const [roleList, totalCount] = await Promise.all([
-                roleService.getAllRoles(skip, limit),
-                roleService.countRoles()
+                roleService.getAllRoles(filter,skip, limit),
+                roleService.countRoles(filter)
             ]);
 
             const totalPages = Math.ceil(totalCount / limit);
             const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
 
             // Construction des liens de navigation
+           // Construction des liens de navigation
             const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
-                
             const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
 
             // Réponse structurée
@@ -121,13 +122,24 @@ export default class RoleController {
 
 
 
-    // Methode : Supprimer un role
+    // Methode : Archiver un role
     async deleteRole(req:Request,res:Response){
         try {
             const deletedRole = await roleService.deleteRole(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(deletedRole);
         } catch (error) {
             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de role", details: error });
+        }
+    }
+
+
+    // Methode : Restorer un role
+    async restoreRole(req:Request,res:Response){
+        try {
+            const deletedRole = await roleService.restoreRole(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(deletedRole);
+        } catch (error) {
+            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration de role", details: error });
         }
     }
 
@@ -144,7 +156,7 @@ export default class RoleController {
 
             const roleExistant = await roleService.getRoleById(Number(req.params.id));
             if (!roleExistant) {
-                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Role non existant' });
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Role non existant ou archiver' });
             }
 
             const roleUpdated = await roleService.addPermissionsToRole(roleExistant.id,req.body.permissionIds);
@@ -164,7 +176,7 @@ export default class RoleController {
 
             const roleExistant = await roleService.getRoleById(Number(req.params.id));
             if (!roleExistant) {
-                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Role non existant' });
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Role non existant ou archiver' });
             }
 
             const roleUpdated = await roleService.removePermissionFromRole(roleExistant.id,permissionId);
@@ -172,6 +184,26 @@ export default class RoleController {
         } catch (error) {
             console.error('Erreur lors du retrait de la permission du role', error);
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors du retrait de la permission du role.' });
+        }
+    }
+
+
+    //  Methode: Restorer une permission d'un role
+     async restorePermissionFromRole(req:Request,res:Response){
+
+        const {permissionId} = req.body;
+        try {
+
+            const roleExistant = await roleService.getRoleById(Number(req.params.id));
+            if (!roleExistant) {
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Role non existant ou archiver' });
+            }
+
+            const roleUpdated = await roleService.restorePermissionFromRole(roleExistant.id,permissionId);
+            res.status(HTTP_STATUS_OK).json(roleUpdated);
+        } catch (error) {
+            console.error('Erreur lors du restore de la permission du role', error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors du restoration de la permission du role.' });
         }
     }
 

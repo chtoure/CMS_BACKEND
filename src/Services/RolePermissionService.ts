@@ -59,8 +59,24 @@ export default class RolePermissionService {
 
     // Supprimer une relation (RolePermission) spécifique
     static async deleteRolePermission(whereData:{roleId:number,permissionId:number}):Promise<Prisma.BatchPayload> {
-        return prisma.rolePermission.deleteMany({
-            where:whereData
+        return prisma.rolePermission.updateMany({
+            where:{roleId:whereData.roleId,permissionId:whereData.permissionId,archive:false},
+            data:{
+                archive: true,
+                archivedAt: new Date()
+            }
+        })
+    }
+
+
+    // Restore une relation (RolePermission) spécifique
+    static async restoreRolePermission(whereData:{roleId:number,permissionId:number}):Promise<Prisma.BatchPayload> {
+        return prisma.rolePermission.updateMany({
+            where:{roleId:whereData.roleId , permissionId:whereData.permissionId , archive:true },
+            data:{
+                archive: false,
+                archivedAt: null
+            }
         })
     }
 }

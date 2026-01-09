@@ -30,23 +30,23 @@ export default class PermissionController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
+            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
 
             // Appel simultané pour les données et le total
             const [permsListes, totalCount] = await Promise.all([
-                permissionService.getAllPermissions(skip, limit),
-                permissionService.countPermissions()
+                permissionService.getAllPermissions(filter,skip, limit),
+                permissionService.countPermissions(filter)
             ]);
 
             const totalPages = Math.ceil(totalCount / limit);
             const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
 
             // Construction des liens de navigation
-            const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+             const next = page < totalPages 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
-                
             const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
 
             // Réponse structurée
@@ -99,13 +99,24 @@ export default class PermissionController {
 
 
     
-    // Methode : Supprimer une permission
+    // Methode : Archiver une permission
     async deletePerms(req:Request,res:Response){
         try {
             const perm = await permissionService.deletePermission(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(perm);
         } catch (error) {
             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de la permission", details: error });
+        }
+    }
+
+    
+    // Methode : restorer une permission
+    async restorePerms(req:Request,res:Response){
+        try {
+            const perm = await permissionService.RestorePermission(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(perm);
+        } catch (error) {
+            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration de la permission", details: error });
         }
     }
 

@@ -58,11 +58,13 @@ export default class RoleService {
 
     // Recuperer tous les roles avec pagination
     public async getAllRoles(
+        archive: true | false | null,
         skip?: number, 
         take?: number
     ): Promise<Role[]> {
 
         const options: any = {
+            where: archive ? { archive } : {},
             include: {
                 users: true,
                 permissions: {
@@ -86,8 +88,10 @@ export default class RoleService {
 
     }
 
-     public async countRoles(): Promise<number> {
-        return prisma.role.count();
+     public async countRoles(archive: true | false | null): Promise<number> {
+        return prisma.role.count({
+            where: archive ? { archive } : {}
+        });
     }
 
 
@@ -95,6 +99,7 @@ export default class RoleService {
     // Recuperer tous les roles sans pagination
     public async getAllRolesNoPaginate(): Promise<Role[]> {
         const roles = await prisma.role.findMany({
+            where:{archive:false},
             include: {
                 users: true,
                 permissions: {
@@ -114,7 +119,7 @@ export default class RoleService {
     // Récupère un role par ID
     public async getRoleById(id: number): Promise<Role | null> {
         const role = await prisma.role.findUnique({
-            where:{id},
+            where:{id,archive:false},
             include:{
                  permissions:{
                     include:{permission:true}
@@ -166,10 +171,26 @@ export default class RoleService {
     }
 
 
-    // Delete Role
+    // Archiver un  Role
     public async deleteRole(id: number): Promise<Role> {
-        return prisma.role.delete({
-            where:{id}
+        return prisma.role.update({
+            where:{id, archive:false},
+            data:{
+                archive:true,
+                archivedAt: new Date()
+            }            
+        })
+    }
+
+
+    // Restorer un role archivé
+    public async restoreRole(id: number): Promise<Role> {
+        return prisma.role.update({
+            where:{id, archive:true},
+            data:{
+                archive:false,
+                archivedAt:null
+            }            
         })
     }
 
@@ -177,6 +198,14 @@ export default class RoleService {
     // Retirer la permission d'un role (Je souhaite le gerer avec l'archivage)
     public async removePermissionFromRole(roleId: number, permissionId: number) {
         await RolePermissionService.deleteRolePermission({roleId,permissionId});
+        return this.getRoleById(roleId);
+
+    }
+
+
+    // Restore la permission  d'un role retirer
+     public async restorePermissionFromRole(roleId: number, permissionId: number) {
+        await RolePermissionService.restoreRolePermission({roleId,permissionId});
         return this.getRoleById(roleId);
 
     }
@@ -203,7 +232,7 @@ export default class RoleService {
     // recuperer les permission d'un role by id
     public async getPermissions(roleId: number): Promise<Permission[]> {
         const roleWithPermissions = await prisma.role.findUnique({
-            where: { id: roleId },
+            where: { id: roleId,archive:false },
             include: {
                 permissions: {
                     include: {

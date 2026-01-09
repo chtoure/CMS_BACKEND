@@ -26,11 +26,13 @@ export default class UserService {
 
     // Recuperer tous les utilisateurs
     public async getAllUser(
+        archive: true | false | null,
         skip?: number, 
         take?: number
     ): Promise<User[]> {
 
         const options: any = {
+            where: archive ? { archive } : {},
             include:{role:true},
             orderBy: {
                 createdAt: 'desc'
@@ -43,15 +45,17 @@ export default class UserService {
        return prisma.user.findMany(options);
     }
 
-    public async countUsers(): Promise<number> {
-        return prisma.user.count();
+    public async countUsers(archive: true | false | null): Promise<number> {
+        return prisma.user.count({
+            where: archive ? {archive} : {}
+        });
     }
 
 
     // Récupère un utilisateur par ID
     public async getUserById(id: number): Promise<User | null> {
         return prisma.user.findUnique({
-            where:{id},
+            where:{id , archive:false},
             include:{role:true}
         });
     }
@@ -65,12 +69,21 @@ export default class UserService {
         });
     }
 
+
+    // Récupère un utilisateur non archivé par email
+    public async getUserByEmailNonArchive(email: string): Promise<User | null> {
+        return prisma.user.findUnique({
+            where:{email,archive:false},
+            include:{role:true} 
+        });
+    }
+
     
     
     // Recuperer un user par RefreshToken 
     public async getUserByToken(refreshToken: string):  Promise<User | null> {
        return prisma.user.findUnique({
-            where:{refreshToken},
+            where:{refreshToken , archive:false},
             include:{role:true}
        })
     }
@@ -86,10 +99,27 @@ export default class UserService {
     }
 
 
-    // Supprimer un utilisateur 
+    // Archiver les utilisateurs
     public async deleteUser(id:number):  Promise<User | null>{
-        return prisma.user.delete({
-            where:{id},
+        return prisma.user.update({
+            where:{id, archive:false},
+            data:{
+                archive:true,
+                archivedAt: new Date()
+            },
+            include:{role:true}
+        })
+    }
+
+
+    // Restorer un utilisateur archiver
+    public async restoreUser(id: number): Promise<User> {
+         return prisma.user.update({
+            where:{id, archive:false},
+            data:{
+                archive:false,
+                archivedAt:null
+            },
             include:{role:true}
         })
     }

@@ -126,10 +126,10 @@ export default class AuthController {
             try {
                 
                 // Verifier de l'existance de l'utisateur
-                const user = await userService.getUserByEmail(email);
+                const user = await userService.getUserByEmailNonArchive(email);
                 if (!user) {
                     console.log("Email Invalide");
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides.' });
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides ou utilisateur archivé.' });
                 }
                 console.log("Utilisateur trouvé:", user);
                 const isPasswordValid = await userService.comparePassword(password,user.password_hash);
