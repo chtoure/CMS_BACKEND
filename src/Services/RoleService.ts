@@ -58,13 +58,20 @@ export default class RoleService {
 
     // Recuperer tous les roles avec pagination
     public async getAllRoles(
-        archive: true | false | null,
+        archive: boolean | null,
         skip?: number, 
         take?: number
     ): Promise<Role[]> {
 
+        const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
+
         const options: any = {
-            where: archive ? { archive } : {},
+            where: where,
             include: {
                 users: true,
                 permissions: {
@@ -88,9 +95,16 @@ export default class RoleService {
 
     }
 
-     public async countRoles(archive: true | false | null): Promise<number> {
+     public async countRoles(archive: boolean | null): Promise<number> {
+
+         const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
         return prisma.role.count({
-            where: archive ? { archive } : {}
+            where: where
         });
     }
 

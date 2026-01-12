@@ -23,6 +23,7 @@ export default class UserController {
             const skip = (page - 1) * limit;
 
             const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
+            
 
             // Appel simultané pour les données et le total
             const [userList, totalCount] = await Promise.all([

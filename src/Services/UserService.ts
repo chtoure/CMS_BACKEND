@@ -26,13 +26,19 @@ export default class UserService {
 
     // Recuperer tous les utilisateurs
     public async getAllUser(
-        archive: true | false | null,
+        archive: boolean | null,
         skip?: number, 
         take?: number
     ): Promise<User[]> {
 
+        const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
         const options: any = {
-            where: archive ? { archive } : {},
+            where: where,
             include:{role:true},
             orderBy: {
                 createdAt: 'desc'
@@ -45,9 +51,16 @@ export default class UserService {
        return prisma.user.findMany(options);
     }
 
-    public async countUsers(archive: true | false | null): Promise<number> {
+    public async countUsers(archive: boolean | null): Promise<number> {
+
+         const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
         return prisma.user.count({
-            where: archive ? {archive} : {}
+            where: where
         });
     }
 
@@ -83,7 +96,7 @@ export default class UserService {
     // Recuperer un user par RefreshToken 
     public async getUserByToken(refreshToken: string):  Promise<User | null> {
        return prisma.user.findUnique({
-            where:{refreshToken , archive:false},
+            where:{refreshToken},
             include:{role:true}
        })
     }
@@ -115,7 +128,7 @@ export default class UserService {
     // Restorer un utilisateur archiver
     public async restoreUser(id: number): Promise<User> {
          return prisma.user.update({
-            where:{id, archive:false},
+            where:{id, archive:true},
             data:{
                 archive:false,
                 archivedAt:null
