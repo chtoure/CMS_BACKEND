@@ -11,6 +11,7 @@ import { permissionRoutes } from "./PermissionRoute.ts";
 import { parameterRoutes } from "./ParameterRoute.ts";
 import { mockRoutes } from "./MockRoute.ts";
 import { contentTypeRoutes } from "./ContentTypeRoute.ts";
+import { contentEntryRoutes } from "./ContentEntryRoute.ts";
 
 
 
@@ -32,6 +33,9 @@ export default (app:Express): void  => {
     mockRoutes(app);
 
     //Moodule ContentType
-    contentTypeRoutes(app,validateBody)
+    contentTypeRoutes(app,validateBody);
+
+    // Module ContentEntry
+    contentEntryRoutes(app);
 
 }
