@@ -1,0 +1,55 @@
+import Joi from "joi";
+
+// Schéma pour les options des Select
+const selectOptionSchema = Joi.object({
+  label: Joi.string().required(),
+  value: Joi.alternatives().try(Joi.string(), Joi.number()).required()
+});
+
+// Schéma individuel pour chaque définition de champ
+const fieldDefinitionSchema = Joi.object({
+  // Propriétés communes (IBaseField)
+  name: Joi.string().required(),
+  label: Joi.string().required(),
+  required: Joi.boolean().required(),
+  placeholder: Joi.string().allow('').optional(),
+  description: Joi.string().allow('').optional(),
+  
+  // Discriminant
+  type: Joi.string().valid(
+    'text', 'richtext', 'number', 'media', 
+    'taxonomy', 'boolean', 'select', 'relation'
+  ).required(),
+
+  // Validation spécifique selon le type (Configs)
+  minLength: Joi.number().optional(),
+  maxLength: Joi.number().optional(),
+  pattern: Joi.string().optional(),
+  min: Joi.number().optional(),
+  max: Joi.number().optional(),
+  step: Joi.number().optional(),
+  allowedTypes: Joi.array().items(Joi.string().valid('image', 'video').allow(null)).optional(),
+  multiple: Joi.boolean().optional(),
+  taxonomy_slug: Joi.string().when('type', { is: 'taxonomy', then: Joi.required() }),
+  renderType: Joi.string().valid('combobox', 'badges', 'checkbox').optional(),
+  options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }),
+  defaultValue: Joi.any().optional(),
+  toolbar: Joi.string().valid('minimal', 'full').optional(),
+  targetContentTypeSlug: Joi.string().when('type', { is: 'relation', then: Joi.required() }),
+});
+
+// Validation principale
+export const contentTypeSchema = Joi.object({
+  name: Joi.string().min(3).required(),
+  slug: Joi.string().min(3).required(),
+  description: Joi.string().min(3).allow(null, '').optional(),
+  // On valide que c'est un tableau de définitions
+  fields_schema: Joi.array().items(fieldDefinitionSchema).required()
+});
+
+export const contentTypeUpdateSchema = Joi.object({
+  name: Joi.string().min(3).optional(),
+  slug: Joi.string().min(3).optional(),
+  description: Joi.string().min(3).allow(null, '').optional(),
+  fields_schema: Joi.array().items(fieldDefinitionSchema).optional()
+});
