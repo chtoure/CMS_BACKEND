@@ -141,6 +141,8 @@ model ContentType {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  archive   Boolean     @default(false)
+  archivedAt DateTime? 
 }
 
 model ContentEntry {
@@ -159,6 +161,8 @@ model ContentEntry {
 
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  archive   Boolean     @default(false)
+  archivedAt DateTime? 
 }
 
 model Taxonomy {
