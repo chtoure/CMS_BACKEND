@@ -30,9 +30,9 @@ interface INumberConfig {
 
 interface IMediaConfig {
   type: FieldType.MEDIA;
-  allowedTypes: ('image' | 'video')[];
+  required: boolean;
+  allowedTypes: ('image' | 'video' | null)[];
   multiple: boolean;
-  maxSize?: number; 
 }
 
 
