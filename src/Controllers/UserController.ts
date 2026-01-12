@@ -6,7 +6,7 @@ import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 
 
-const userService = new UserService();
+export const userService = new UserService();
 const roleService = new RoleService();
 
 
