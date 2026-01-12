@@ -150,7 +150,8 @@ model ContentEntry {
   contentTypeId   Int
   contentType     ContentType  @relation(fields: [contentTypeId], references: [id])
   userId          Int
-  data_json       Json         
+  data_json       Json   
+  name            String       
   status          Status       @default(DRAFT)
   taxonomies      Taxonomy[]   @relation("EntryTaxonomies")
 
