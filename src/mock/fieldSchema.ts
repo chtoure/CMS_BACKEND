@@ -3,6 +3,7 @@ import { FieldType, type IFieldDefinition } from "../Types/InputField.ts";
 
 export const getContentTypeMock = (req: Request, res: Response) => {
     const blogSchema: IFieldDefinition[] = [
+
         {
             name: "title",
             label: "Titre de l'article",
@@ -50,12 +51,19 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             required: true,
             defaultValue: true
         }
-        ];
+    ];
 
-    return res.status(200).json({
+    const contentEntryMock = {
         id: 1,
         name: "Article de Blog",
         slug: "blog",
-        fields_schema: blogSchema
-    });
+        description: "Description de l'article de blog",
+        fields_schema: blogSchema,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        archive: false,
+        archivedAt: null
+    }
+
+    return res.status(200).json(contentEntryMock);
 };
