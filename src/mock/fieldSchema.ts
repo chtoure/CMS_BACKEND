@@ -50,6 +50,14 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             type: FieldType.BOOLEAN,
             required: true,
             defaultValue: true
+        },
+        {
+            name: "author",
+            label: "Auteur",
+            type: FieldType.RELATION,
+            required: true,
+            targetContentTypeSlug: "users",
+            multiple: true,
         }
     ];
 
