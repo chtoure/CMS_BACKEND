@@ -14,6 +14,6 @@ export  function permissionRoutes(app:Express,validateBody:Function) : void {
     app.get("/permissions/:id", permissionController.getPermsById.bind(permissionController));
     app.post("/permissions", validateBody(permissionSchema), permissionController.createPermission.bind(permissionController));
     app.put("/permissions/:id", validateBody(permissionSchema), permissionController.upadatePerms.bind(permissionController));
-    app.delete("/permissions/:id", permissionController.deletePerms.bind(permissionController));
-    
+    app.put("/archivePermissions/:id", permissionController.deletePerms.bind(permissionController));
+    app.put("/restorePermissions/:id", permissionController.restorePerms.bind(permissionController));
 }

@@ -1,6 +1,5 @@
 
 import type { Permission } from "./Permission.ts";
-import type { RolePermission } from "./RolePermission.ts";
 import type { User } from "./User.ts";
 
 
@@ -16,4 +15,5 @@ export interface Role {
     updatedAt: Date;
     users?: User[];
     permissions?: Permission[];
+    archive : boolean;
 }

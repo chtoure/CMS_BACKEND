@@ -13,4 +13,5 @@ export interface Permission {
     createdAt: Date;
     updatedAt: Date;
     roles?: Role[];
+    archive : boolean;
 }

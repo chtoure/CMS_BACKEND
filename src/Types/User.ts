@@ -17,5 +17,6 @@ export interface User {
     role?:Role | null;
     isLoggedIn: boolean;
     resetCode?: string | null;
-    codeExpiration?: Date | null;    
+    codeExpiration?: Date | null;
+    archive : boolean;   
 }

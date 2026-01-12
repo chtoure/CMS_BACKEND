@@ -22,10 +22,13 @@ export default class UserController {
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
 
+            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
+            
+
             // Appel simultané pour les données et le total
             const [userList, totalCount] = await Promise.all([
-                userService.getAllUser(skip, limit),
-                userService.countUsers()
+                userService.getAllUser(filter,skip, limit),
+                userService.countUsers(filter)
             ]);
 
             const totalPages = Math.ceil(totalCount / limit);
@@ -33,11 +36,10 @@ export default class UserController {
 
             // Construction des liens de navigation
             const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
-                
             const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
 
             // Réponse structurée
@@ -65,7 +67,7 @@ export default class UserController {
         try {
             
             const user = await userService.getUserById(Number(req.params.id));
-            if (!user) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Utilisateur non trouvé' });
+            if (!user) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Utilisateur non trouvé ou archivé' });
             res.status(HTTP_STATUS_OK).json(user);
 
         } catch (error) {
@@ -135,6 +137,7 @@ export default class UserController {
     }
 
 
+    // User archiver
     async deleteUser(req:Request,res:Response){
 
         try {
@@ -146,6 +149,21 @@ export default class UserController {
              res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de l'utilisateur", details: error });
         }
     }
+
+
+    // restorer un utilisateur archivés
+    async restoreUser(req:Request,res:Response){
+
+        try {
+            
+            const user = await userService.restoreUser(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(user);
+
+        } catch (error) {
+             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration de l'utilisateur", details: error });
+        }
+    }
+
 
 
     async changePassword(req:Request,res:Response){

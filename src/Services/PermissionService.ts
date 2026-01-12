@@ -48,11 +48,20 @@ export default class PermissionService {
 
      // Recuperer tous les permissions avec pagination
     public async getAllPermissions(
+        archive: boolean | null,
         skip?: number, 
         take?: number
     ): Promise<Permission[]> {
 
+        const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
+
         const options: any = {
+            where: where,
             include: {
                 roles: {
                     include: {
@@ -72,14 +81,25 @@ export default class PermissionService {
        return PermissionService.mapPermissions(dataPerms);
     }
 
-     public async countPermissions(): Promise<number> {
-        return prisma.permission.count();
+     public async countPermissions(archive: boolean | null): Promise<number> {
+
+        const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
+
+        return prisma.permission.count({
+             where: where
+        });
     }
 
 
      // Recuperer tous les permissions sans Pagination
     public async getAllPermissionsNoPaginate(): Promise<Permission[]> {
        const dataPerms = await prisma.permission.findMany({
+        where:{archive:false},
         include: {
             roles: {
                 include: {
@@ -95,7 +115,7 @@ export default class PermissionService {
     // Récupère une permission par ID
     public async getPermissionById(id: number): Promise<Permission | null> {
         const permission = await prisma.permission.findUnique({
-            where:{id},
+            where:{id,archive:false},
             include: {
             roles: {
                 include: {
@@ -111,7 +131,7 @@ export default class PermissionService {
     // Récupère une permission par name
     public async getPermissionByName(name: string): Promise<Permission | null> {
         const perms = await prisma.permission.findUnique({
-            where:{name},
+            where:{name,archive:false},
             include: {
             roles: {
                 include: {
@@ -141,20 +161,45 @@ export default class PermissionService {
     }
 
 
-    // Supprimer un utilisateur 
+    // Archiver une permission 
     public async deletePermission(id:number):  Promise<Permission | null>{
-        const perm = await prisma.permission.delete({
-            where:{id},
+        const perm = await prisma.permission.update({
+            where:{id,archive:false},
             include: {
-            roles: {
-                include: {
-                    role: true
-                }
+                roles: {
+                    include: {
+                        role: true
+                    }
+                },
+            },
+            data:{
+                archive:true,
+                archivedAt: new Date()
             }
-        }
         })
         return PermissionService.mapSinglePermission(perm);
     }
+
+
+
+    // Restore une permission
+    public async RestorePermission(id:number):  Promise<Permission | null>{
+        const perm = await prisma.permission.update({
+            where:{id,archive:true},
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                },
+            },
+            data:{
+                archive:false,
+                archivedAt:null
+            }
+        })
+        return PermissionService.mapSinglePermission(perm);
+    } 
 
 
     // Function : Prend Un tableau(Name Permissions) et retourne un tableau(Id Permission)
@@ -163,7 +208,8 @@ export default class PermissionService {
             where: {
                 name: {
                     in: names
-                }
+                },
+                archive:false
             },
             select: {
                 id: true, // Récupère [{id: 1}, {id: 2}, ...]
