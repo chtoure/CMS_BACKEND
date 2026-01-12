@@ -111,13 +111,25 @@ export default class ContentTypeController {
     // restorer un contentType archivés
     public async restoreContentType(req:Request,res:Response){
 
-        try {
-            
+        try {            
             const content = await contentTypeService.restoredContentType(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(content);
-
         } catch (error) {
              res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration d'un contentType", details: error });
+        }
+    }
+
+
+    // delete contentType archiver
+    public async deleteContentTypeArchived(req:Request,res:Response){
+        try {
+
+            const contentDelete = await contentTypeService.deleteContentType(Number(req.params.id));
+            if(!contentDelete) res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'ContententType non trouvé ou non archivé' });
+            res.status(HTTP_STATUS_OK).json(contentDelete);
+
+        } catch (error) {
+            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression d'un contentType", details: error });
         }
     }
 

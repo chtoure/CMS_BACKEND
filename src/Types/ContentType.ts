@@ -1,4 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.ts";
+import type { IFieldDefinition } from "./InputField.ts";
 
 
 
@@ -7,7 +8,7 @@ export interface ContentType {
     name: string,
     slug: string,
     description: string | null,
-    fields_schema: Prisma.JsonValue,
+    fields_schema: IFieldDefinition[],
     createdAt: Date;
     updatedAt: Date;
     archive: Boolean;
@@ -20,12 +21,12 @@ export interface RegisterContentType {
     name: string,
     slug: string,
     description?: string,
-    fields_schema: Prisma.InputJsonValue,
+    fields_schema: IFieldDefinition[] | Prisma.InputJsonValue,
 }
 
 
 export interface UpdateContentType {
     name?: string;
     slug?: string;
-    fields_schema?: Prisma.InputJsonValue;
+    fields_schema?: IFieldDefinition[] | Prisma.InputJsonValue;
 }
