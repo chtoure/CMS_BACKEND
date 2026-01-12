@@ -116,3 +116,55 @@ model Parameter {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+
+model ContentType {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  slug          String         @unique
+  description   String?
+  fields_schema Json           
+  parentId      Int?           
+  parent        ContentType?   @relation("ContentTypeHierarchy", fields: [parentId], references: [id])
+  children      ContentType[]  @relation("ContentTypeHierarchy")
+
+  entries       ContentEntry[]
+  taxonomies    Taxonomy[]     @relation("ContentTypeTaxonomies")
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ContentEntry {
+  id              Int          @id @default(autoincrement())
+  contentTypeId   Int
+  contentType     ContentType  @relation(fields: [contentTypeId], references: [id])
+  userId          Int
+  data_json       Json         
+  status          Status       @default(DRAFT)
+  taxonomies      Taxonomy[]   @relation("EntryTaxonomies")
+
+  parentId        Int?         
+  parent          ContentEntry? @relation("ContentEntryHierarchy", fields: [parentId], references: [id])
+  children        ContentEntry[] @relation("ContentEntryHierarchy")
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Taxonomy {
+  id              Int            @id @default(autoincrement())
+  name            String
+  slug            String         @unique
+  description     String?
+  contentTypes    ContentType[]  @relation("ContentTypeTaxonomies")
+  entries         ContentEntry[] @relation("EntryTaxonomies")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
