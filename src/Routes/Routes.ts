@@ -9,6 +9,7 @@ import { userRoutes } from "./UserRoute.ts";
 import { roleRoutes } from "./RoleRoute.ts";
 import { permissionRoutes } from "./PermissionRoute.ts";
 import { parameterRoutes } from "./ParameterRoute.ts";
+import { mockRoutes } from "./MockRoute.ts";
 
 
 
@@ -25,5 +26,8 @@ export default (app:Express): void  => {
     mediaRoutes(app);
     variableRoutes(app);
     parameterRoutes(app);
+
+    // Module Mock
+    mockRoutes(app);
 
 }
