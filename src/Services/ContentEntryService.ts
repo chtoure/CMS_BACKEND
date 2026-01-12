@@ -81,9 +81,9 @@ export default class ContentEntryService {
 
    
    // Archivage
-   public async archivedContentEntry(id:number): Promise<ContentEntry>{
+   public async archivedContentEntry(id:number,idcontentType: number): Promise<ContentEntry>{
         return prisma.contentEntry.update({
-            where: { id , archive:false },
+            where: { id ,contentTypeId:idcontentType , archive:false },
             data:{
                 archive:true,
                 archivedAt: new Date()
@@ -94,9 +94,9 @@ export default class ContentEntryService {
 
 
    // Restorer
-   public async restoredContentType(id:number): Promise<ContentEntry>{
+   public async restoredContentEntry(id:number,idcontentType: number): Promise<ContentEntry>{
         return prisma.contentEntry.update({
-            where: { id , archive:true },
+            where: { id , contentTypeId:idcontentType, archive:true },
             data:{
                 archive:false,
                 archivedAt:null
@@ -106,9 +106,9 @@ export default class ContentEntryService {
 
    
     // delete
-    public async deleteContentType(id: number): Promise<ContentEntry> {
+    public async deleteContentEntry(id:number,idcontentType: number): Promise<ContentEntry> {
         return prisma.contentEntry.delete({
-            where: { id }
+            where: { id, contentTypeId:idcontentType, archive:true }
         });
     }
 
