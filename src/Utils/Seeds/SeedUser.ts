@@ -17,7 +17,7 @@ async function  seedAddUser() {
         update: {}, // Si l'utilisateur existe déjà, on ne fait rien
         create: {
             email: 'chabaneu7@gmail.com',
-            full_name: 'TAKPAA Wella Gilbert',
+            full_name: 'TAKPAA Wella Gilbo',
             password_hash: password_hash,
             isLoggedIn: false,
         },
