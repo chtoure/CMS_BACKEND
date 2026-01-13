@@ -58,6 +58,18 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             required: true,
             targetContentTypeSlug: "users",
             multiple: true,
+        },
+        {
+            name: "comments",
+            label: "Commentaires",
+            type: FieldType.SELECT,
+            required: false,
+            multiple: true,
+            options: [
+                { label: "Commentaire 1", value: "commentaire_1" },
+                { label: "Commentaire 2", value: "commentaire_2" },
+                { label: "Commentaire 3", value: "commentaire_3" },
+            ]
         }
     ];
 
