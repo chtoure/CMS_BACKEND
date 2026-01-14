@@ -81,7 +81,7 @@ interface IRichTextConfig {
 
 interface IRelationConfig {
   type: FieldType.RELATION;
-  targetContentTypeSlug: string; 
+  contentTypeId: number; 
   multiple: boolean;             
   required: boolean;
 }

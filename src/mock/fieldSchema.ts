@@ -56,7 +56,7 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             label: "Auteur",
             type: FieldType.RELATION,
             required: true,
-            targetContentTypeSlug: "users",
+            contentTypeId: 1,
             multiple: true,
         },
         {
