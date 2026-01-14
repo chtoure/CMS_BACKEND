@@ -32,10 +32,12 @@ export default class ContentTypeController {
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
 
+            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
+
             // Appel simultané pour les données et le total
             const [contentTypeList, totalCount] = await Promise.all([
-                contentTypeService.getAllContentTypes(skip, limit),
-                contentTypeService.countContentTypes()
+                contentTypeService.getAllContentTypes(filter,skip, limit),
+                contentTypeService.countContentTypes(filter)
             ]);
 
 
@@ -44,10 +46,10 @@ export default class ContentTypeController {
 
             // Construction des liens de navigation
             const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
             const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
             
             // Réponse structurée
