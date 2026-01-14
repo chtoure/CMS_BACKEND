@@ -1,32 +1,44 @@
+type JsonValue = 
+  | string 
+  | number 
+  | boolean 
+  | null 
+  | { [key: string]: JsonValue } 
+  | JsonValue[];
 
-
-import type { Prisma } from "../generated/prisma/client.ts";
-
-
-
-export interface ContentEntry {
-    id: number,
-    contentTypeId: number,
-    userId: number,
-    data_json: Prisma.JsonValue,
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-    archive: Boolean;
-    archivedAt: Date | null;
+interface IContentData {
+  [key: string]: JsonValue;
 }
 
-
-
-export interface RegisterContentEntry {
-    contentTypeId: number,
-    userId: number,
-    data_json: Prisma.InputJsonValue,
+interface ContentEntry {
+  id: number;
+  contentTypeId: number;
+  userId: number;
+  data_json: IContentData;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  createdAt: Date;
+  updatedAt: Date;
+  archive: boolean;
+  archivedAt: Date | null;
 }
 
+interface RegisterContentEntry {
+  contentTypeId: number;
+  userId: number;
+  data_json: IContentData;
+  parentId?: number | null;
+}
 
-export interface UpdateContentEntry {
-    contentTypeId?: number,
-    userId?: number,
-    data_json?: Prisma.InputJsonValue;
+interface UpdateContentEntry {
+  contentTypeId?: number;
+  userId?: number;
+  data_json?: IContentData;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+}
+
+export type {
+    ContentEntry,
+    RegisterContentEntry,
+    UpdateContentEntry,
+    IContentData
 }

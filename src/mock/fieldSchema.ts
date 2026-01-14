@@ -3,6 +3,7 @@ import { FieldType, type IFieldDefinition } from "../Types/InputField.ts";
 
 export const getContentTypeMock = (req: Request, res: Response) => {
     const blogSchema: IFieldDefinition[] = [
+
         {
             name: "title",
             label: "Titre de l'article",
@@ -31,8 +32,8 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             label: "Image de couverture",
             type: FieldType.MEDIA,
             required: true,
-            allowedTypes: ["image"],
-            multiple: false
+            allowedTypes: ["image", "video"],
+            multiple: true
         },
         {
             name: "category",
@@ -49,13 +50,40 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             type: FieldType.BOOLEAN,
             required: true,
             defaultValue: true
+        },
+        {
+            name: "author",
+            label: "Auteur",
+            type: FieldType.RELATION,
+            required: true,
+            targetContentTypeSlug: "users",
+            multiple: true,
+        },
+        {
+            name: "comments",
+            label: "Commentaires",
+            type: FieldType.SELECT,
+            required: false,
+            multiple: false,
+            options: [
+                "commentaire_1",
+                "commentaire_2",
+                "commentaire_3"
+            ]
         }
-        ];
+    ];
 
-    return res.status(200).json({
+    const contentEntryMock = {
         id: 1,
         name: "Article de Blog",
         slug: "blog",
-        fields_schema: blogSchema
-    });
+        description: "Description de l'article de blog",
+        fields_schema: blogSchema,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        archive: false,
+        archivedAt: null
+    }
+
+    return res.status(200).json(contentEntryMock);
 };
