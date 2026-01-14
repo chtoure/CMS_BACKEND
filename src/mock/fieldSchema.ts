@@ -32,8 +32,8 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             label: "Image de couverture",
             type: FieldType.MEDIA,
             required: true,
-            allowedTypes: ["image"],
-            multiple: false
+            allowedTypes: ["image", "video"],
+            multiple: true
         },
         {
             name: "category",
@@ -64,11 +64,11 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             label: "Commentaires",
             type: FieldType.SELECT,
             required: false,
-            multiple: true,
+            multiple: false,
             options: [
-                { label: "Commentaire 1", value: "commentaire_1" },
-                { label: "Commentaire 2", value: "commentaire_2" },
-                { label: "Commentaire 3", value: "commentaire_3" },
+                "commentaire_1",
+                "commentaire_2",
+                "commentaire_3"
             ]
         }
     ];
