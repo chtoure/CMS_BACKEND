@@ -1,16 +1,18 @@
 import Joi from "joi";
 
 // Schéma pour les options des Select
-const selectOptionSchema = Joi.object({
-  label: Joi.string().required(),
-  value: Joi.alternatives().try(Joi.string(), Joi.number()).required()
+const selectOptionSchema = Joi.array().items(
+    Joi.string(),
+    Joi.number()
+).messages({
+    'array.base': 'Les options doivent être un tableau',
 });
 
 // Schéma individuel pour chaque définition de champ
 const fieldDefinitionSchema = Joi.object({
   // Propriétés communes (IBaseField)
   name: Joi.string().required(),
-  label: Joi.string().required(),
+ label: Joi.string().required().allow(''),
   required: Joi.boolean().required(),
   placeholder: Joi.string().allow('').optional(),
   description: Joi.string().allow('').optional(),
@@ -43,6 +45,7 @@ export const contentTypeSchema = Joi.object({
   name: Joi.string().min(3).required(),
   slug: Joi.string().min(3).required(),
   description: Joi.string().min(3).allow(null, '').optional(),
+  archive: Joi.boolean().default(false).optional(),
   // On valide que c'est un tableau de définitions
   fields_schema: Joi.array().items(fieldDefinitionSchema).required()
 });
@@ -51,5 +54,6 @@ export const contentTypeUpdateSchema = Joi.object({
   name: Joi.string().min(3).optional(),
   slug: Joi.string().min(3).optional(),
   description: Joi.string().min(3).allow(null, '').optional(),
+  archive: Joi.boolean().default(false).optional(),
   fields_schema: Joi.array().items(fieldDefinitionSchema).optional()
 });
