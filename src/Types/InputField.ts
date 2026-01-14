@@ -44,15 +44,15 @@ interface ITaxonomyConfig {
 }
 
 
-interface ISelectOption {
-  label: string;
-  value: string | number;
-}
+// interface ISelectOption {
+//   label: string;
+//   value: string | number;
+// }
 
 
 interface ISelectConfig {
   type: FieldType.SELECT;
-  options: ISelectOption[];
+  options: string[] | number[] | (string | number)[];
   multiple: boolean;
 }
 
@@ -105,7 +105,6 @@ export {
   type INumberConfig,
   type IMediaConfig,
   type ITaxonomyConfig,
-  type ISelectOption,
   type ISelectConfig,
   type IBooleanConfig,
   type IRichTextConfig,

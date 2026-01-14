@@ -32,8 +32,8 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             label: "Image de couverture",
             type: FieldType.MEDIA,
             required: true,
-            allowedTypes: ["image"],
-            multiple: false
+            allowedTypes: ["image", "video"],
+            multiple: true
         },
         {
             name: "category",
@@ -50,6 +50,26 @@ export const getContentTypeMock = (req: Request, res: Response) => {
             type: FieldType.BOOLEAN,
             required: true,
             defaultValue: true
+        },
+        {
+            name: "author",
+            label: "Auteur",
+            type: FieldType.RELATION,
+            required: true,
+            targetContentTypeSlug: "users",
+            multiple: true,
+        },
+        {
+            name: "comments",
+            label: "Commentaires",
+            type: FieldType.SELECT,
+            required: false,
+            multiple: false,
+            options: [
+                "commentaire_1",
+                "commentaire_2",
+                "commentaire_3"
+            ]
         }
     ];
 
