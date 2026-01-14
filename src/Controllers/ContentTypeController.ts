@@ -17,6 +17,7 @@ export default class ContentTypeController {
             const result = await contentTypeService.createContentType(data);
             return res.status(HTTP_STATUS_CREATED).json(result);
         } catch (error: any) {
+            console.log(error);
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     }
@@ -60,7 +61,7 @@ export default class ContentTypeController {
             });
 
         } catch (error) {
-            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors de la récupération des des contentTypes", 
                 details: error 
             });
@@ -69,18 +70,50 @@ export default class ContentTypeController {
     }
 
 
-    public async getContentType(req:Request,res:Response){
+    public async getContentTypesNoPaginate(req:Request,res:Response){
+        try {
+            const contents = await contentTypeService.getAllContentsNoPaginate();
+            return res.status(HTTP_STATUS_OK).json(contents)
+        } catch (error) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors de la récupération des des contentTypes", 
+                details: error 
+            });
+        }
+    }
+
+
+    public async getContentTypeById(req:Request,res:Response){
 
         try {
             
             const contentType = await contentTypeService.getContentTypeById(Number(req.params.id));
             if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'ContententType non trouvé ou archivé' });
-            res.status(HTTP_STATUS_OK).json(contentType);
+            return res.status(HTTP_STATUS_OK).json(contentType);
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération de ContententType", details: error });
+            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération de ContententType", details: error });
         }
 
+    }
+
+
+    public async getContentTypeBySlug(req:Request,res:Response){
+         const {slug}= req.params
+        try {
+
+            if (!slug) {
+                res.status(HTTP_STATUS_BAD_REQUEST).json({ message: "Le paramètre slug est manquant." });
+                return null;
+            }
+    
+            const contentTypeSlug = await contentTypeService.getContentTypeBySlug(slug);
+            if (!contentTypeSlug) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'ContententType non trouvé ou archivé' });
+             res.status(HTTP_STATUS_OK).json(contentTypeSlug);
+
+        } catch (error) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la récupération de ContententType", details: error });
+        }
     }
 
 
@@ -98,12 +131,11 @@ export default class ContentTypeController {
     // archiver contentType
     public async archivedContentType(req:Request,res:Response){
         try {
-            
             const contentType = await contentTypeService.archivedContentType(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(contentType);
 
         } catch (error) {
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de l'archivage d'un contenType", details: error });
+            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de l'archivage d'un contenType", details: error });
         }
     }
 
@@ -115,7 +147,7 @@ export default class ContentTypeController {
             const content = await contentTypeService.restoredContentType(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(content);
         } catch (error) {
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration d'un contentType", details: error });
+            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration d'un contentType", details: error });
         }
     }
 
@@ -129,7 +161,7 @@ export default class ContentTypeController {
             res.status(HTTP_STATUS_OK).json(contentDelete);
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression d'un contentType", details: error });
+           return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression d'un contentType", details: error });
         }
     }
 

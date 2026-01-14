@@ -72,7 +72,7 @@ export default class ContentTypeService {
 
 
     // Recuperer tous les contentType sans pagination
-    public async getAllRolesNoPaginate(): Promise<ContentType[]> {
+    public async getAllContentsNoPaginate(): Promise<ContentType[]> {
         
         const dataContentTypes = await prisma.contentType.findMany({
           orderBy:{createdAt:"desc"}
