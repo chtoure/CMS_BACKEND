@@ -52,7 +52,7 @@ interface ITaxonomyConfig {
 
 interface ISelectConfig {
   type: FieldType.SELECT;
-  options: string[] | number[] | (string | number)[];
+  options: (string | number)[];
   multiple: boolean;
 }
 

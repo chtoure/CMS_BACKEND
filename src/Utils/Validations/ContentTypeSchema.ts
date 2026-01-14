@@ -1,12 +1,7 @@
 import Joi from "joi";
 
 // Schéma pour les options des Select
-const selectOptionSchema = Joi.array().items(
-    Joi.string(),
-    Joi.number()
-).messages({
-    'array.base': 'Les options doivent être un tableau',
-});
+const selectOptionSchema = Joi.alternatives().try(Joi.string(), Joi.number());
 
 // Schéma individuel pour chaque définition de champ
 const fieldDefinitionSchema = Joi.object({
@@ -34,10 +29,10 @@ const fieldDefinitionSchema = Joi.object({
   multiple: Joi.boolean().optional(),
   taxonomy_slug: Joi.string().when('type', { is: 'taxonomy', then: Joi.required() }),
   renderType: Joi.string().valid('combobox', 'badges', 'checkbox').optional(),
-  options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }),
+  options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }).messages({'array.base': 'Les options doivent être un tableau'}),
   defaultValue: Joi.any().optional(),
   toolbar: Joi.string().valid('minimal', 'full').optional(),
-  targetContentTypeSlug: Joi.string().when('type', { is: 'relation', then: Joi.required() }),
+  contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }),
 });
 
 // Validation principale
