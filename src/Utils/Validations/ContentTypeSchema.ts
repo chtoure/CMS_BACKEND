@@ -7,7 +7,7 @@ const selectOptionSchema = Joi.alternatives().try(Joi.string(), Joi.number());
 const fieldDefinitionSchema = Joi.object({
   // Propriétés communes (IBaseField)
   name: Joi.string().required(),
- label: Joi.string().required().allow(''),
+  label: Joi.string().required().allow(''),
   required: Joi.boolean().required(),
   placeholder: Joi.string().allow('').optional(),
   description: Joi.string().allow('').optional(),

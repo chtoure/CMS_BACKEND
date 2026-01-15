@@ -1,6 +1,4 @@
 
-
-
 import prisma from "../Utils/PrismaClient.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { ContentEntry , RegisterContentEntry , UpdateContentEntry } from "../Types/ContentEntry.ts";
@@ -10,19 +8,20 @@ export default class ContentEntryService {
 
     // Create
     public async createContentEntry (data: RegisterContentEntry): Promise<ContentEntry> {
-         return prisma.contentEntry.create({
+        return prisma.contentEntry.create({
             data
         });
     }
 
 
-
-    // get all avec pagination
-    public async getAllContentTypes(skip?: number, take?: number): Promise<ContentEntry[]> {
+    public async getAllContentEntry(skip?: number, take?: number): Promise<ContentEntry[]> {
 
         const options: any = {
             orderBy: {
                 createdAt: 'desc'
+            }, 
+            include:{
+                user:true
             }
         };
 
@@ -33,48 +32,67 @@ export default class ContentEntryService {
         return prisma.contentEntry.findMany(options);
     }
 
+    public async getAllContentEntryNoPaginate(): Promise<ContentEntry[]> {
+        return prisma.contentEntry.findMany({
+          orderBy:{createdAt:"desc"}
+        });
+    }
 
-    // count (utile pour ta pagination côté frontend)
+
     public async countContentEntrys(): Promise<number> {
         return prisma.contentEntry.count();
     }
 
 
 
-    // Recuperer tous les ContentEntry sans pagination
-    public async getAllRolesNoPaginate(): Promise<ContentEntry[]> {
-        return prisma.contentEntry.findMany({
-          orderBy:{createdAt:"desc"}
-        });
-
-    }
-
     // get contentEntry by id
-    public async getContentEntryById(idEntry: number, idType:number): Promise<ContentEntry | null> {
+    public async getContentEntryById(idEntry: number): Promise<ContentEntry | null> {
         return prisma.contentEntry.findUnique({
             where: {
                  id:idEntry,
-                 contentTypeId:idType,
                  archive:false
+            },
+            include:{
+                contentType:true
             }
         });
     }
 
 
-    //get ContentEntries by contentTypeID
-    public async getContentEntriesByContentTypeID(id: number): Promise<ContentEntry[]> {
-        return prisma.contentEntry.findMany({
-            where: { contentTypeId:id }
-        });
+    public async getContentEntriesByContentTypeID(
+        id: number, 
+        skip?: number,
+        take?: number,
+        status?: "PUBLISHED" | "DRAFT" | "ARCHIVED",
+        search?: string
+    ): Promise<ContentEntry[]> {
+
+        const options: any = {
+            where: { contentTypeId:id },
+            orderBy:{
+                createdAt:"desc"
+            },
+            skip,
+            take,
+            include:{
+                user:true,
+                contentType:true
+            }
+        };
+
+        if (status) options.where.status = status;
+        if (search) options.where.search = search;
+
+        return prisma.contentEntry.findMany(options);
     }
 
 
 
 
     // update
-    public async updateContentEntry(id: number,idcontentType: number, data: UpdateContentEntry): Promise<ContentEntry> {
+    public async updateContentEntry(id: number, data: UpdateContentEntry): Promise<ContentEntry> {
         return prisma.contentEntry.update({
-            where: { id , contentTypeId:idcontentType },
+            where: { id },
             data: data as Prisma.ContentEntryUpdateInput
         });
     }
