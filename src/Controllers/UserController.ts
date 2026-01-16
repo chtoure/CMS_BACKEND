@@ -4,6 +4,7 @@ import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_N
 import UserService from "../Services/UserService.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 
 
 export const userService = new UserService();
@@ -53,10 +54,9 @@ export default class UserController {
             });
 
         } catch (error) {
-            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
-                error: "Erreur lors de la récupération des utilisateurs", 
-                details: error 
-            });
+            console.log('Erreur lors de la récupération des utilisateurs:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -70,8 +70,10 @@ export default class UserController {
             if (!user) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Utilisateur non trouvé ou archivé' });
             res.status(HTTP_STATUS_OK).json(user);
 
-        } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération de l'utilisateur", details: error });
+        } catch (error) {   
+            console.log('Erreur lors de la récupération de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
 
     }
@@ -132,7 +134,9 @@ export default class UserController {
             });
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour de l'utilisateur", details: error });
+            console.log('Erreur lors de la mise à jour de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -146,7 +150,9 @@ export default class UserController {
             res.status(HTTP_STATUS_OK).json(user);
 
         } catch (error) {
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de l'utilisateur", details: error });
+            console.log('Erreur lors de la suppression de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -160,7 +166,9 @@ export default class UserController {
             res.status(HTTP_STATUS_OK).json(user);
 
         } catch (error) {
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration de l'utilisateur", details: error });
+            console.log('Erreur lors de la restauration de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -183,8 +191,9 @@ export default class UserController {
                 }
             });
         } catch (error) {
-            console.log("Erreur lors de la mise à jour du mot de passe", error);
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour du mot de passe", details: error });
+            console.log('Erreur lors de la mise à jour du mot de passe:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 

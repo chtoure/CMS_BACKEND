@@ -2,7 +2,7 @@
 import type { Request,Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import ContentTypeService from "../Services/ContentTypeService.ts";
-
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 
 // Initialisation
 const contentTypeService = new ContentTypeService()
@@ -18,7 +18,8 @@ export default class ContentTypeController {
             return res.status(HTTP_STATUS_CREATED).json(result);
         } catch (error: any) {
             console.log(error);
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -32,10 +33,12 @@ export default class ContentTypeController {
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
 
+            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
+
             // Appel simultané pour les données et le total
             const [contentTypeList, totalCount] = await Promise.all([
-                contentTypeService.getAllContentTypes(skip, limit),
-                contentTypeService.countContentTypes()
+                contentTypeService.getAllContentTypes(filter,skip, limit),
+                contentTypeService.countContentTypes(filter)
             ]);
 
 
@@ -44,10 +47,10 @@ export default class ContentTypeController {
 
             // Construction des liens de navigation
             const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
             const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}` 
+                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
                 : null;
             
             // Réponse structurée
@@ -61,10 +64,9 @@ export default class ContentTypeController {
             });
 
         } catch (error) {
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
-                error: "Erreur lors de la récupération des des contentTypes", 
-                details: error 
-            });
+            console.log('Erreur lors de la récupération des contentTypes:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
 
     }
@@ -75,10 +77,9 @@ export default class ContentTypeController {
             const contents = await contentTypeService.getAllContentsNoPaginate();
             return res.status(HTTP_STATUS_OK).json(contents)
         } catch (error) {
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
-                error: "Erreur lors de la récupération des des contentTypes", 
-                details: error 
-            });
+            console.log('Erreur lors de la récupération des contentTypes:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -92,7 +93,9 @@ export default class ContentTypeController {
             return res.status(HTTP_STATUS_OK).json(contentType);
 
         } catch (error) {
-            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération de ContententType", details: error });
+            console.log('Erreur lors de la récupération de ContententType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
 
     }
@@ -112,7 +115,9 @@ export default class ContentTypeController {
              res.status(HTTP_STATUS_OK).json(contentTypeSlug);
 
         } catch (error) {
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la récupération de ContententType", details: error });
+            console.log('Erreur lors de la récupération de ContententType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -123,7 +128,9 @@ export default class ContentTypeController {
             const result = await contentTypeService.updateContentType(Number(req.params.id), req.body);
             return res.status(HTTP_STATUS_OK).json(result);
         } catch (error: any) {           
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la mise à jour de l'utilisateur", details: error });
+            console.log('Erreur lors de la mise à jour de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -135,7 +142,9 @@ export default class ContentTypeController {
             res.status(HTTP_STATUS_OK).json(contentType);
 
         } catch (error) {
-            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de l'archivage d'un contenType", details: error });
+            console.log('Erreur lors de l\'archivage d\'un contenType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -147,7 +156,9 @@ export default class ContentTypeController {
             const content = await contentTypeService.restoredContentType(Number(req.params.id));
             res.status(HTTP_STATUS_OK).json(content);
         } catch (error) {
-            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration d'un contentType", details: error });
+            console.log('Erreur lors de la restauration d\'un contentType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -161,7 +172,9 @@ export default class ContentTypeController {
             res.status(HTTP_STATUS_OK).json(contentDelete);
 
         } catch (error) {
-           return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression d'un contentType", details: error });
+            console.log('Erreur lors de la suppression d\'un contentType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 

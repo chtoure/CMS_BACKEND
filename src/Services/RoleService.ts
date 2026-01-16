@@ -97,7 +97,7 @@ export default class RoleService {
 
      public async countRoles(archive: boolean | null): Promise<number> {
 
-         const where: any = {};
+        const where: any = {};
 
         if (archive !== null) {
             where.archive = archive;

@@ -12,6 +12,8 @@ import { parameterRoutes } from "./ParameterRoute.ts";
 import { mockRoutes } from "./MockRoute.ts";
 import { contentTypeRoutes } from "./ContentTypeRoute.ts";
 import { contentEntryRoutes } from "./ContentEntryRoute.ts";
+import { taxonomyRoutes } from "./TaxonomyRoute.ts";
+import { taxonomyTermRoutes } from "./TaxonomyTermRoute.ts";
 
 
 
@@ -37,5 +39,9 @@ export default (app:Express): void  => {
 
     // Module ContentEntry
     contentEntryRoutes(app);
+
+    // Module Taxonomy
+    taxonomyRoutes(app, validateBody);
+    taxonomyTermRoutes(app, validateBody);
 
 }
