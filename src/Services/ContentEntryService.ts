@@ -68,20 +68,34 @@ export default class ContentEntryService {
     ): Promise<ContentEntry[]> {
 
         const options: any = {
-            where: { contentTypeId:id },
-            orderBy:{
-                createdAt:"desc"
+            where: { 
+                contentTypeId: id,
+                archive: false 
+            },
+            orderBy: {
+                createdAt: "desc"
             },
             skip,
-            take,
-            include:{
-                user:true,
-                contentType:true
+            take: take,
+            include: {
+                user: true,
+                contentType: true
             }
         };
 
-        if (status) options.where.status = status;
-        if (search) options.where.search = search;
+        if (status) {
+            options.where.status = status;
+        }
+
+        if (search && search.trim() !== "") {
+            const query = search.trim();
+
+             options.where.OR = [
+                { data_json: { path: '$.title', string_contains: query } },
+                { data_json: { path: '$.name', string_contains: query } },
+                { data_json: { path: '$.content', string_contains: query } }
+             ];
+        }
 
         return prisma.contentEntry.findMany(options);
     }

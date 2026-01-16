@@ -70,19 +70,24 @@ export default class ContentEntryController {
     public async getContentEntriesByContentTypeID(req: Request, res: Response) {
         try {
 
-            const filterStatus = req.query.status as "PUBLISHED" | "DRAFT" | "ARCHIVED";
-            const filterSearch = req.query.search as string;
-            const filterPage = req.query.page as string;
-            const filterLimit = req.query.limit as string;
+            const filterStatus = req.query.status as "PUBLISHED" | "DRAFT" | "ARCHIVED" | undefined;
+            const filterSearch = req.query.search as string | undefined;
+            const filterPage = Number(req.query.page) || 1;
+            const filterLimit = Number(req.query.limit) || 10;
 
-            const skip = (Number(filterPage) - 1) * Number(filterLimit);
-            const limit = Number(filterLimit);
+            console.log("Filtres reçus:", { filterStatus, filterSearch, filterPage, filterLimit });
 
+            const skip = (filterPage - 1) * filterLimit;
+            const limit = filterLimit;
 
-            const entries = await entryService.getContentEntriesByContentTypeID(Number(req.params.id));
+            const entries = await entryService.getContentEntriesByContentTypeID(
+                Number(req.params.id),
+                skip,
+                limit,
+                filterStatus,
+                filterSearch
+            );
 
-            console.log(entries);
-            
             return res.status(HTTP_STATUS_OK).json(entries);
         } catch (error: any) {
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
