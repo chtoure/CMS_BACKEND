@@ -45,9 +45,17 @@ export default class ContentTypeService {
 
 
     // get all avec pagination
-    public async getAllContentTypes(skip?: number, take?: number): Promise<ContentType[]> {
+    public async getAllContentTypes(archive: boolean | null, skip?: number, take?: number): Promise<ContentType[]> {
 
+         const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
+        
         const options: any = {
+            where:where,
             orderBy: {
                 createdAt: 'desc'
             }
@@ -65,8 +73,17 @@ export default class ContentTypeService {
 
 
     // count (utile pour ta pagination côté frontend)
-    public async countContentTypes(): Promise<number> {
-        return prisma.contentType.count();
+    public async countContentTypes(archive: boolean | null): Promise<number> {
+        
+        const where: any = {};
+
+        if (archive !== null) {
+            where.archive = archive;
+        }
+
+        return prisma.contentType.count({
+            where:where
+        });
     }
 
 

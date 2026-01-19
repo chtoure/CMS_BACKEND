@@ -9,6 +9,7 @@ import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 import { EmailService } from "../Services/EmailService.ts";
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 
 // Instanciation des services
 const userService = new UserService();
@@ -113,7 +114,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de l\'enregistrement:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la création de l\'utilisateur.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
 
         }
@@ -145,7 +147,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la connexion:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de l\'authentification.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
 
         }
@@ -183,7 +186,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la renouvellation du token access', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de la renouvellation du token access' }); 
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage }); 
             }
         }
 
@@ -235,7 +239,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la réinitialisation du mot de passe.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
         }
 

@@ -49,11 +49,11 @@ export default class ContentEntryService {
     public async getContentEntryById(idEntry: number): Promise<ContentEntry | null> {
         return prisma.contentEntry.findUnique({
             where: {
-                 id:idEntry,
-                 archive:false
+                 id:idEntry
             },
             include:{
-                contentType:true
+                contentType:true,
+                user:true
             }
         });
     }
@@ -111,13 +111,23 @@ export default class ContentEntryService {
         });
     }
 
+    public updateStatus(id:number, status: "PUBLISHED" | "DRAFT" | "ARCHIVED"):Promise<ContentEntry>{
+        return prisma.contentEntry.update({
+            where: { id },
+            data: {
+                status:status,
+            }
+        });  
+    }
+
    
    // Archivage
-   public async archivedContentEntry(id:number,idcontentType: number): Promise<ContentEntry>{
+   public async archivedContentEntry(id:number): Promise<ContentEntry>{
         return prisma.contentEntry.update({
-            where: { id ,contentTypeId:idcontentType , archive:false },
+            where: { id , archive:false },
             data:{
                 archive:true,
+                status: "ARCHIVED",
                 archivedAt: new Date()
             }
         });
@@ -126,27 +136,54 @@ export default class ContentEntryService {
 
 
    // Restorer
-   public async restoredContentEntry(id:number,idcontentType: number): Promise<ContentEntry>{
+   public async restoredContentEntry(id:number): Promise<ContentEntry>{
         return prisma.contentEntry.update({
-            where: { id , contentTypeId:idcontentType, archive:true },
+            where: { id , archive:true },
             data:{
                 archive:false,
+                status:"DRAFT",
                 archivedAt:null
             }
         });
    }
 
-   
-    // delete
-    public async deleteContentEntry(id:number,idcontentType: number): Promise<ContentEntry> {
+    public async deleteContentEntry(id:number): Promise<ContentEntry> {
         return prisma.contentEntry.delete({
-            where: { id, contentTypeId:idcontentType, archive:true }
+            where: { id, archive:true }
         });
     }
 
-    
-    
+    public async getArchivedContentEntry(
+        skip?: number,
+        take?: number,
+        search?: string
+    ): Promise<ContentEntry[]> {
 
+        const options: any = {
+            where: { 
+                archive:true
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip,
+            take: take,
+            include: {
+                user: true,
+                contentType: true
+            }
+        };
 
+        if (search && search.trim() !== "") {
+            const query = search.trim();
 
+             options.where.OR = [
+                { data_json: { path: '$.title', string_contains: query } },
+                { data_json: { path: '$.name', string_contains: query } },
+                { data_json: { path: '$.content', string_contains: query } }
+             ];
+        }
+
+        return prisma.contentEntry.findMany(options);
+    }
 }

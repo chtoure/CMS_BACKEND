@@ -6,7 +6,7 @@ const selectOptionSchema = Joi.alternatives().try(Joi.string(), Joi.number());
 // Schéma individuel pour chaque définition de champ
 const fieldDefinitionSchema = Joi.object({
   // Propriétés communes (IBaseField)
-  name: Joi.string().required(),
+  name: Joi.string().required().lowercase().trim(),
   label: Joi.string().required().allow(''),
   required: Joi.boolean().required(),
   placeholder: Joi.string().allow('').optional(),
@@ -42,7 +42,13 @@ export const contentTypeSchema = Joi.object({
   description: Joi.string().min(3).allow(null, '').optional(),
   archive: Joi.boolean().default(false).optional(),
   // On valide que c'est un tableau de définitions
-  fields_schema: Joi.array().items(fieldDefinitionSchema).required()
+  fields_schema: Joi.array()
+    .items(fieldDefinitionSchema)
+    .unique('name')
+    .required()
+    .messages({
+      'array.unique': 'Le nom technique du champ (name) doit être unique.'
+    })
 });
 
 export const contentTypeUpdateSchema = Joi.object({
@@ -50,5 +56,11 @@ export const contentTypeUpdateSchema = Joi.object({
   slug: Joi.string().min(3).optional(),
   description: Joi.string().min(3).allow(null, '').optional(),
   archive: Joi.boolean().default(false).optional(),
-  fields_schema: Joi.array().items(fieldDefinitionSchema).optional()
+  fields_schema: Joi.array()
+    .items(fieldDefinitionSchema)
+    .unique('name')
+    .optional()
+    .messages({
+      'array.unique': 'Le nom technique du champ (name) doit être unique.'
+    })
 });
