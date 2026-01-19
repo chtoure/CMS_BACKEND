@@ -2,7 +2,9 @@
 import prisma from "../Utils/PrismaClient.ts";
 import type { ContentType, RegisterContentType, UpdateContentType } from "../Types/ContentType.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
-import type { IFieldDefinition } from "../Types/InputField.ts";
+import { FieldType, type IBaseField, type IFieldDefinition, type IRelationConfig } from "../Types/InputField.ts";
+import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_NOT_FOUND } from "../Utils/Constantes/ConstantesHttp.ts";
+import { AppError } from "../Utils/ErrorPrisma.ts";
 
 
 
@@ -92,7 +94,8 @@ export default class ContentTypeService {
     public async getAllContentsNoPaginate(): Promise<ContentType[]> {
         
         const dataContentTypes = await prisma.contentType.findMany({
-          orderBy:{createdAt:"desc"}
+            where:{archive:false},
+            orderBy:{createdAt:"desc"}
         });
 
         // on fait le casting
@@ -170,17 +173,58 @@ export default class ContentTypeService {
    
     // delete
     public async deleteContentType(id: number): Promise<ContentType> {
-        const contentDelete = await prisma.contentType.delete({
-            where: { id,archive:true }
+
+        const typeASupprimer = await prisma.contentType.findUnique({    
+            where: { id , archive:true},
+            include: {
+                _count: {
+                select: { 
+                    childrenContentTypes: true, 
+                    entries: true               
+                    }
+                }
+            }
         });
 
-        // On fait le casting
+        console.log(typeASupprimer);
+
+        if (!typeASupprimer) throw new AppError("Type non trouvé ou non archivé.");
+
+        if (typeASupprimer._count.childrenContentTypes > 0) throw new AppError("Suppression impossible : ce type est le 'Parent' relationnel d'autres types.");
+
+        if (typeASupprimer._count.entries > 0) throw new AppError("Suppression impossible : ce type a des entrées.");
+                
+        const contentDelete = await prisma.contentType.delete({ where: { id } });
         return ContentTypeService.castingContentType(contentDelete);
     }
 
     
     
+    // synchronisation des relations entre les content types
+    async syncRelationsContentType(proprietaireId: number, fieldsSchema: IFieldDefinition[]) {
+        
+        // On filtre uniquement les champs de type RELATION
+        const cibleIds = [...new Set(
+            fieldsSchema
+                .filter((f): f is (IBaseField & IRelationConfig) => f.type === FieldType.RELATION)
+                .map(f => Number(f.contentTypeId))
+        )];
 
+        // Nettoyage des anciens liens pour ce propriétaire
+        await prisma.contentTypeRelation.deleteMany({
+            where: { proprietaireId: proprietaireId }
+        });
+
+        // Création des nouveaux index relationnels
+        if (cibleIds.length > 0) {
+            await prisma.contentTypeRelation.createMany({
+                data: cibleIds.map(id => ({
+                    proprietaireId: proprietaireId,
+                    cibleId: id
+                }))
+            });
+        }
+    }
 
 
 }
