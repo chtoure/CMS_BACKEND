@@ -29,6 +29,7 @@ model User {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt         
   role            Role?        @relation(fields: [role_id], references: [id])
+  entries         ContentEntry[]
   archive   Boolean     @default(false)
   archivedAt DateTime?
 }
@@ -170,24 +171,44 @@ model ContentTypeRelation {
 
 
 
+
 model ContentEntry {
-  id              Int          @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   contentTypeId   Int
-  contentType     ContentType  @relation(fields: [contentTypeId], references: [id])
+  contentType     ContentType   @relation(fields: [contentTypeId], references: [id])
   userId          Int
-  data_json       Json   
-  name            String       
-  status          Status       @default(DRAFT)
-  taxonomies      Taxonomy[]   @relation("EntryTaxonomies")
+  user            User          @relation(fields: [userId], references: [id])
+  data_json       Json         
+  status          Status        @default(DRAFT)
+  taxonomies      Taxonomy[]    @relation("EntryTaxonomies")
 
   parentId        Int?         
   parent          ContentEntry? @relation("ContentEntryHierarchy", fields: [parentId], references: [id])
   children        ContentEntry[] @relation("ContentEntryHierarchy")
+  
+  outgoingRelations ContentEntryRelation[] @relation("SourceEntry")
+  
+  incomingRelations ContentEntryRelation[] @relation("TargetEntry")
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  archive   Boolean     @default(false)
-  archivedAt DateTime? 
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  archivedAt      DateTime? 
+}
+
+
+model ContentEntryRelation {
+  id           Int          @id @default(autoincrement())
+  
+  sourceId     Int
+  source       ContentEntry @relation("SourceEntry", fields: [sourceId], references: [id], onDelete: Cascade)
+
+  targetId     Int
+  target       ContentEntry @relation("TargetEntry", fields: [targetId], references: [id], onDelete: Cascade)
+
+  fieldName    String       
+
+  @@unique([sourceId, targetId, fieldName])
+  @@index([targetId]) 
 }
 
 model Taxonomy {
