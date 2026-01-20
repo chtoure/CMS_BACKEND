@@ -17,6 +17,8 @@ export const userLoginSchema = Joi.object({
 
 
 
+
+
 // Validation Du User : Update
 export const userUpdateSchema = Joi.object({
     full_name: Joi.string().min(3),

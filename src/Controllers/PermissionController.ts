@@ -121,6 +121,9 @@ export default class PermissionController {
         }
     }
 
+
+
+    
     
     // Methode : restorer une permission
     async restorePerms(req:Request,res:Response){

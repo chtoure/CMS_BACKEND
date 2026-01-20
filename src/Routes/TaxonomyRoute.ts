@@ -7,6 +7,7 @@ import { taxonomySchema, taxonomyUpdateSchema } from "../Utils/Validations/Taxon
 export function taxonomyRoutes(app: Express, validateBody: Function): void {
     const taxonomyController = new TaxonomyController();
 
+    
     // Routes TaxonomyController
     app.post("/taxonomies", AuthMiddleware, validateBody(taxonomySchema), taxonomyController.create.bind(taxonomyController));
     app.get("/taxonomies", AuthMiddleware, taxonomyController.getTaxonomies.bind(taxonomyController));

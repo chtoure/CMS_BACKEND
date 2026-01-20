@@ -8,6 +8,7 @@ export  function permissionRoutes(app:Express,validateBody:Function) : void {
     
     const permissionController = new PermissionController();
 
+    
     // Routes PermissionControllers
     app.get("/permissions", permissionController.getAllPerms.bind(permissionController));
     app.get("/permissionsNoPaginate", permissionController.getAllPermsNoPaginate.bind(permissionController));

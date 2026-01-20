@@ -132,10 +132,13 @@ model ContentType {
   name          String         @unique
   slug          String         @unique
   description   String?
-  fields_schema Json           
-  parentId      Int?           
-  parent        ContentType?   @relation("ContentTypeHierarchy", fields: [parentId], references: [id])
-  children      ContentType[]  @relation("ContentTypeHierarchy")
+  fields_schema Json  
+
+  // Les ContentTypes dont je references(mes parents logiques)
+  parentContentTypes  ContentTypeRelation[] @relation("TypeProprietaire")
+  
+  // Les ContentTypes qui me references(mes enfants logiques)
+  childrenContentTypes ContentTypeRelation[] @relation("TypeCible")
 
   entries       ContentEntry[]
   taxonomies    Taxonomy[]     @relation("ContentTypeTaxonomies")
@@ -145,6 +148,29 @@ model ContentType {
   archive   Boolean     @default(false)
   archivedAt DateTime? 
 }
+
+
+
+
+
+
+model ContentTypeRelation {
+  id        Int         @id @default(autoincrement())
+  
+  // Celui qui possède le champ relation
+  proprietaireId      Int         
+  proprietaire        ContentType @relation("TypeProprietaire", fields: [proprietaireId], references: [id], onDelete: Cascade)
+
+  // Celui qui est pointé/référencé
+  cibleId             Int         
+  cible               ContentType @relation("TypeCible", fields: [cibleId], references: [id], onDelete: Cascade)
+
+  @@unique([proprietaireId, cibleId])
+}
+
+
+
+
 
 model ContentEntry {
   id              Int           @id @default(autoincrement())

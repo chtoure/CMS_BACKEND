@@ -12,6 +12,7 @@ export  function userRoutes(app:Express,validateBody:Function) : void {
 
     const userController = new UserController();
 
+    
     // Routes UserControllers
     app.get("/users", AuthMiddleware, userController.getUsers.bind(userController));
     app.get("/users/:id", userController.getUser.bind(userController));

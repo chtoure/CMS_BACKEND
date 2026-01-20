@@ -22,6 +22,7 @@ export default class PermissionService {
         };
     }
 
+    
     // Creation d'une permission
     public async createPermission(data: Prisma.PermissionUncheckedCreateInput): Promise<Permission> {
         const perms = await prisma.permission.create({

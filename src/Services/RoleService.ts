@@ -29,6 +29,8 @@ export default class RoleService {
     };
   }
 
+  
+
 
     // Creation d'un role
     public async createRole(data: Prisma.RoleUncheckedCreateInput,permissionIds: number[] = []): Promise<Role> {
