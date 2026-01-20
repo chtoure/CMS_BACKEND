@@ -1,6 +1,7 @@
 
 import prisma from "../Utils/PrismaClient.ts";
 import type { Taxonomy, RegisterTaxonomy, UpdateTaxonomy } from "../Types/Taxonomy.ts";
+import { AppError } from "../Utils/ErrorPrisma.ts";
 
 export default class TaxonomyService {
 
@@ -67,6 +68,7 @@ export default class TaxonomyService {
     // Get all without pagination
     public async getAllTaxonomiesNoPaginate(): Promise<Taxonomy[]> {
         const items = await prisma.taxonomy.findMany({
+            where:{archive:false},
             orderBy: { createdAt: "desc" },
             include: {
                 terms: true
@@ -139,6 +141,24 @@ export default class TaxonomyService {
 
     // Delete
     public async deleteTaxonomy(id: number): Promise<Taxonomy> {
+
+        const itemASupprimer = await prisma.taxonomy.findUnique({
+            where: { id, archive: true },
+            include: {
+                _count: {
+                    select: {
+                        terms: true,
+                        contentTypes: true
+                    }
+                } 
+            }
+        });
+
+        if (!itemASupprimer) throw new AppError("Taxonomy non trouvé ou non archivé.");
+
+        if (itemASupprimer._count.terms > 0) throw new AppError("Suppression impossible : ce categorie a des termes.");
+        if (itemASupprimer._count.contentTypes > 0) throw new AppError("Suppression impossible : ce categorie est utilisé par des types de contenu.");
+
         const item = await prisma.taxonomy.delete({
             where: { id, archive: true }
         });

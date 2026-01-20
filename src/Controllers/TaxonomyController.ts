@@ -16,12 +16,14 @@ export default class TaxonomyController {
         try {
             const data = { name,slug,description };
             const result = await taxonomyService.createTaxonomy(data);
-            const termsData = terms.map((term:string) => ({
-                name: term,
-                slug: term.toLowerCase().replace(/\s+/g, '-'),
-                taxonomyId: result.id
-            }));
-            await taxonomyTermService.createTerms(termsData);
+            if (terms.length > 0) {
+                const termsData = terms.map((term:string) => ({
+                    name: term,
+                    slug: term.toLowerCase().replace(/\s+/g, '-'),
+                    taxonomyId: result.id
+                }));
+                await taxonomyTermService.createTerms(termsData);
+            }
             return res.status(HTTP_STATUS_CREATED).json(result);
         } catch (error: any) {
             console.log(error);
@@ -122,8 +124,12 @@ export default class TaxonomyController {
                 }));
                 console.log(termsData);
                 await taxonomyTermService.updateTerms(result.id,termsData);
+                return res.status(HTTP_STATUS_OK).json(result);
             }
+            // Si pas de termes, on met à jour la taxonomie sans les termes
+            await taxonomyTermService.deleteTerms(result.id);
             return res.status(HTTP_STATUS_OK).json(result);
+           
         } catch (error: any) {  
             console.error('Erreur lors de la mise à jour de la taxonomie', error);         
             const errorMessage = handlePrismaError(error);
