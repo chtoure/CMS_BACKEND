@@ -98,4 +98,12 @@ export default class TaxonomyTermService {
 
         return TaxonomyTermService.castingTerm(item);
     }
+
+
+    public async deleteTerms(taxonomyId: number): Promise<BatchPayload> {
+        return prisma.taxonomyTerm.deleteMany({
+            where: { taxonomyId }
+        });
+
+    }
 }
