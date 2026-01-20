@@ -5,8 +5,7 @@ import ContentTypeService from '../Services/ContentTypeService.ts';
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from '../Utils/Constantes/ConstantesHttp.ts';
 import type { ContentType } from '../Types/ContentType.ts';
 
-
-const entryService = new ContentEntryService();
+const contentEntryService = new ContentEntryService();
 const contentTypeService = new ContentTypeService();
 
 export default class ContentEntryController {
@@ -32,13 +31,12 @@ export default class ContentEntryController {
 
             const { slug } = req.params;
 
-            // Validation slug
             const contentTypeValidate = await ContentEntryController.validateSlug(slug,res);
 
             if (!contentTypeValidate) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le type de contenu '${slug}' est inconnu ou archivé.` });
            
             // On récupère les entrées liées à ce ContentType ID
-            const entries = await entryService.getContentEntriesByContentTypeID(contentTypeValidate.id);
+            const entries = await contentEntryService.getContentEntriesByContentTypeID(contentTypeValidate.id);
             
             return res.status(HTTP_STATUS_OK).json({
                 contentType: contentTypeValidate.name,
@@ -50,28 +48,62 @@ export default class ContentEntryController {
         }
     }
 
+    public async getAllContentEntry(req: Request, res: Response) {
+        try {
+            const entries = await contentEntryService.getAllContentEntry();
+            return res.status(HTTP_STATUS_OK).json(entries);
+        } catch (error: any) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
+
+    public async getAllContentEntryNoPaginate(req: Request, res: Response) {
+        try {
+            const entries = await contentEntryService.getAllContentEntryNoPaginate();
+            return res.status(HTTP_STATUS_OK).json(entries);
+        } catch (error: any) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
+
+    public async getContentEntriesByContentTypeID(req: Request, res: Response) {
+        try {
+
+            const filterStatus = req.query.status as "PUBLISHED" | "DRAFT" | "ARCHIVED" | undefined;
+            const filterSearch = req.query.search as string | undefined;
+            const filterPage = Number(req.query.page) || 1;
+            const filterLimit = Number(req.query.limit) || 10;
+
+            const skip = (filterPage - 1) * filterLimit;
+            const limit = filterLimit;
+
+            const entries = await contentEntryService.getContentEntriesByContentTypeID(
+                Number(req.params.id),
+                skip,
+                limit,
+                filterStatus,
+                filterSearch
+            );
+
+            return res.status(HTTP_STATUS_OK).json(entries);
+        } catch (error: any) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
+
 
    
     // get entry by id /content/:slug/:id
     public async getEntry(req: Request, res: Response) {
         try {
 
-            const { slug ,id } = req.params;
+            const { id } = req.params;
 
-            // Validation slug
-            const contentTypeValidate = await ContentEntryController.validateSlug(slug,res);
+            const entry = await contentEntryService.getContentEntryById(Number(id));
 
-            if (!contentTypeValidate) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le type de contenu '${slug}' est inconnu ou archivé.` });
+            if (!entry) return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: `Entry '${id}' est inconnu. ou archiver` });
             
-            const entry = await entryService.getContentEntryById(Number(id),contentTypeValidate.id);
-
-            if (!entry) return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: `Entry '${slug}' est inconnu. ou archiver` });
-            
-            return res.status(HTTP_STATUS_OK).json({
-                contentType: contentTypeValidate.name,
-                schema: contentTypeValidate.fields_schema, // Utile pour que le front sache quoi afficher
-                data: entry
-            });
+            return res.status(HTTP_STATUS_OK).json(entry);
         } catch (error: any) {
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
@@ -84,14 +116,16 @@ export default class ContentEntryController {
         try {
             const { slug } = req.params;
 
-            // Validation slug
+            const userId = req.user?.sub;
+
             const contentType = await ContentEntryController.validateSlug(slug,res);
 
             if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le type de contenu '${slug}' est inconnu ou archivé.` });
 
             // On ajoute l'ID du type de contenu à la donnée
-            const newEntry = await entryService.createContentEntry({
+            const newEntry = await contentEntryService.createContentEntry({
                 ...req.body,
+                userId,
                 contentTypeId: contentType.id
             });
 
@@ -106,18 +140,36 @@ export default class ContentEntryController {
     public async updateContentEntry(req: Request, res: Response) {
         try {
 
-            const { slug, id } = req.params;
+            const { id } = req.params;
 
-            // Validation slug
-            const contentType = await ContentEntryController.validateSlug(slug,res);
-
-            if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le type de contenu '${slug}' est inconnu ou archivé.` });
-
-        
-            const result = await entryService.updateContentEntry(Number(id), contentType.id, req.body);
+            const result = await contentEntryService.updateContentEntry(Number(id), req.body);
             return res.status(HTTP_STATUS_OK).json(result);
         } catch (error: any) {           
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la mise à jour d'un entry", details: error });
+        }
+    }
+
+
+    public async updateStatus(req: Request, res:Response){
+        try {
+
+            const {id} = req.params;
+
+            if (id == undefined) {
+                return res.status(HTTP_STATUS_NOT_FOUND).json({error: "Contenu non trouver"})
+            }
+            const {status} = req.body as {status: "PUBLISHED" | "DRAFT" | "ARCHIVED"};
+
+            console.log(status);
+            
+            const result = contentEntryService.updateStatus(parseInt(id), status)
+
+            console.log((await result).status);
+            
+            return res.status(HTTP_STATUS_OK).json(result);
+            
+        } catch (error: any) {
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({error:"Erreur lors de la modification du status"})
         }
     }
 
@@ -127,14 +179,9 @@ export default class ContentEntryController {
     public async archivedContentEntry(req:Request,res:Response){
         try {
 
-            const { slug,id } = req.params;
+            const { id } = req.params;
 
-            // Validation slug
-            const contentType = await ContentEntryController.validateSlug(slug,res);
-
-            if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le contenu de type '${slug}' est inconnu ou archivé.` });
-
-            const contentEntryArchive = await entryService.archivedContentEntry(Number(id),contentType.id);
+            const contentEntryArchive = await contentEntryService.archivedContentEntry(Number(id));
             
             res.status(HTTP_STATUS_OK).json(contentEntryArchive);
 
@@ -144,43 +191,47 @@ export default class ContentEntryController {
     }
 
 
-    // restorer un contentType archivés PUT /restoreContentEntry/:slug/:id
     public async restoreContentType(req:Request,res:Response){
 
         try {       
             
-            const { slug,id } = req.params;
+            const {id } = req.params;
 
-            // Validation slug
-            const contentType = await ContentEntryController.validateSlug(slug,res);
-
-            if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le contenu de type '${slug}' est inconnu ou archivé.` });
-            
-            const content = await entryService.restoredContentEntry(Number(id),contentType.id);
+            const content = await contentEntryService.restoredContentEntry(Number(id));
             res.status(HTTP_STATUS_OK).json(content);
         } catch (error) {
              res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la restoration d'un contentEntry", details: error });
         }
     }
 
-
-    // delete contentEntry archiver
-    public async deletecontentEntryArchived(req:Request,res:Response){
+    public async deletecontentEntry(req:Request,res:Response){
         try {
 
-            const { slug,id } = req.params;
+            const { id } = req.params;
 
-            // Validation slug
-            const contentType = await ContentEntryController.validateSlug(slug,res);
-
-            if (!contentType) return res.status(HTTP_STATUS_NOT_FOUND).json({ message: `Le contenu de type '${slug}' est inconnu ou archivé.` });
-
-            const entryDelete = await entryService.deleteContentEntry(Number(id),contentType.id);
+            const entryDelete = await contentEntryService.deleteContentEntry(Number(id));
             if(!entryDelete) res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'ContententType non trouvé ou non archivé' });
             res.status(HTTP_STATUS_OK).json(entryDelete);
 
         } catch (error) {
             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression d'un contentEntry", details: error });
+        }
+    }
+
+    public async getAllArchivedContentEntry(req:Request,res:Response){
+        try {
+            const filterSearch = req.query.search as string | undefined;
+            const filterPage = Number(req.query.page) || 1;
+            const filterLimit = Number(req.query.limit) || 10;
+
+            const skip = (filterPage - 1) * filterLimit;
+            const limit = filterLimit;
+
+
+            const content = await contentEntryService.getArchivedContentEntry(skip,limit,filterSearch);
+            res.status(HTTP_STATUS_OK).json(content);
+        } catch (error) {
+            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération d'un contentEntry", details: error });
         }
     }
 

@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { FieldType, type IFieldDefinition } from '../../Types/InputField.ts';
 
-export const buildJoiSchema = (fields: IFieldDefinition[]) => {
+const buildJoiSchema = (fields: IFieldDefinition[]) => {
   const schemaDefinition: Record<string, Joi.Schema> = {};
 
   fields.forEach((field) => {
@@ -67,4 +67,13 @@ export const buildJoiSchema = (fields: IFieldDefinition[]) => {
   });
 
   return Joi.object(schemaDefinition);
+};
+
+const switchStatusSchema = Joi.object({
+    status: Joi.string().valid("PUBLISHED", "DRAFT", "ARCHIVED").required()
+})
+
+export {
+  switchStatusSchema,
+  buildJoiSchema
 };
