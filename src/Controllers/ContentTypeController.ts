@@ -15,6 +15,8 @@ export default class ContentTypeController {
         try {
             const data = req.body;
             const result = await contentTypeService.createContentType(data);
+            //sync relations
+            await contentTypeService.syncRelationsContentType(result.id,result.fields_schema);
             return res.status(HTTP_STATUS_CREATED).json(result);
         } catch (error: any) {
             console.log(error);
@@ -126,6 +128,8 @@ export default class ContentTypeController {
         try {
            
             const result = await contentTypeService.updateContentType(Number(req.params.id), req.body);
+            //sync relations
+            await contentTypeService.syncRelationsContentType(result.id,result.fields_schema);
             return res.status(HTTP_STATUS_OK).json(result);
         } catch (error: any) {           
             console.log('Erreur lors de la mise à jour de l\'utilisateur:', error);
