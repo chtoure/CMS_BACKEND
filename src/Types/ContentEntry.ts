@@ -22,7 +22,6 @@ interface ContentEntry {
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   createdAt: Date;
   updatedAt: Date;
-  archive: boolean;
   archivedAt: Date | null;
 }
 

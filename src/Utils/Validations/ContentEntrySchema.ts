@@ -73,7 +73,12 @@ const switchStatusSchema = Joi.object({
     status: Joi.string().valid("PUBLISHED", "DRAFT", "ARCHIVED").required()
 })
 
+const toggleArchiveSchema = Joi.object({
+    archive: Joi.boolean().required()
+})
+
 export {
   switchStatusSchema,
-  buildJoiSchema
+  buildJoiSchema,
+  toggleArchiveSchema
 };
