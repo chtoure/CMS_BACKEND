@@ -12,6 +12,8 @@ export const roleSchema = Joi.object({
 
 
 
+
+
 // Validation de la mise à jour de Role
 export const roleUpdateSchema = Joi.object({
     name: Joi.string().min(3).optional(),

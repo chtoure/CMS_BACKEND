@@ -14,6 +14,9 @@ export const taxonomyUpdateSchema = Joi.object({
   terms: Joi.array().items(Joi.string()).optional(),
 });
 
+
+
+
 export const taxonomyTermSchema = Joi.object({
   name: Joi.string().min(1).required(),
   slug: Joi.string().min(1).required(),

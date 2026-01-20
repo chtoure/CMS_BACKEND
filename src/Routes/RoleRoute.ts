@@ -8,6 +8,7 @@ export  function roleRoutes(app:Express,validateBody:Function) : void {
 
     const roleController = new RoleController();
 
+    
     // Routes RoleControllers
     app.get("/roles", roleController.getAllRoles.bind(roleController));
     app.get("/rolesNoPaginate", roleController.getAllRolesNoPaginate.bind(roleController));

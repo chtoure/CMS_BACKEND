@@ -7,6 +7,7 @@ import { taxonomyTermSchema, taxonomyTermUpdateSchema } from "../Utils/Validatio
 export function taxonomyTermRoutes(app: Express, validateBody: Function): void {
     const taxonomyTermController = new TaxonomyTermController();
 
+    
     // Routes TaxonomyTermController
     app.post("/terms", AuthMiddleware, validateBody(taxonomyTermSchema), taxonomyTermController.create.bind(taxonomyTermController));
     app.get("/terms/taxonomy/:taxonomyId", AuthMiddleware, taxonomyTermController.getTermsByTaxonomy.bind(taxonomyTermController));

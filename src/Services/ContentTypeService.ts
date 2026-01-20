@@ -183,8 +183,8 @@ export default class ContentTypeService {
                     entries: true               
                     }
                 }
-
                 
+
             }
         });
 

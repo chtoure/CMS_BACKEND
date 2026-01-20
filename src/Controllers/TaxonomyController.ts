@@ -170,4 +170,7 @@ export default class TaxonomyController {
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+
+    
 }

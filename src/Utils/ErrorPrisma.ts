@@ -34,6 +34,9 @@ export const handlePrismaError = (error: unknown): string => {
 
 
 
+
+
+
 // Dans PrismaErrorHandler.ts
 export const getErrorStatus = (error: unknown): number => {
   // 1. Si c'est une erreur manuelle (Validation métier)

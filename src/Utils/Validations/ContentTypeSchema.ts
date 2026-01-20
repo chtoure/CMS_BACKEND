@@ -35,6 +35,8 @@ const fieldDefinitionSchema = Joi.object({
   contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }).invalid(0).messages({'number.invalid': 'Le contentTypeId ne peut pas être 0'}),
 });
 
+
+
 // Validation principale
 export const contentTypeSchema = Joi.object({
   name: Joi.string().min(3).required(),

@@ -17,6 +17,8 @@ export interface ContentType {
 
 
 
+
+
 export interface RegisterContentType {
     name: string,
     slug: string,

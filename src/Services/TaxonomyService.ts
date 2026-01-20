@@ -92,6 +92,8 @@ export default class TaxonomyService {
         return TaxonomyService.castingTaxonomy(item);
     }
 
+    
+
     // Get by slug
     public async getTaxonomyBySlug(slug: string): Promise<Taxonomy | null> {
         const item = await prisma.taxonomy.findUnique({

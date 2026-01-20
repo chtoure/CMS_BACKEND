@@ -14,6 +14,7 @@ export  function authRoutes(app:Express,validateBody:Function) : void {
     const authController = new AuthController();
     const emailController = new EmailController();
 
+    
     //  Routes AuthControllers && EmailControllers
     app.post("/register",AuthMiddleware,validateBody(userRegisterSchema),authController.register.bind(authController));
     app.post("/login",validateBody(userLoginSchema),authController.login.bind(authController));

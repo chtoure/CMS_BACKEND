@@ -26,6 +26,9 @@ export default class ContentTypeController {
     }
 
 
+
+    
+
     public async getContentTypes(req:Request, res:Response){
 
        try {

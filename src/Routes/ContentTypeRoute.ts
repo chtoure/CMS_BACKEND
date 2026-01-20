@@ -12,6 +12,7 @@ export  function contentTypeRoutes(app:Express,validateBody:Function) : void {
 
     const contentTypeController = new ContentTypeController();
 
+    
     // Routes contentTypeController
     app.post("/contents", AuthMiddleware,validateBody(contentTypeSchema) ,contentTypeController.create.bind(contentTypeController));
     app.get("/contents", AuthMiddleware, contentTypeController.getContentTypes.bind(contentTypeController));
