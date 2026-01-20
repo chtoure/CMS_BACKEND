@@ -149,7 +149,7 @@ export default class ContentEntryService {
 
     public async deleteContentEntry(id:number): Promise<ContentEntry> {
         return prisma.contentEntry.delete({
-            where: { id, archive:true }
+            where: { id }
         });
     }
 

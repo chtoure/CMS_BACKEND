@@ -18,7 +18,7 @@ export function contentEntryRoutes(app: Express): void {
     app.put("/content-entry/:id",AuthMiddleware, entryController.updateContentEntry.bind(entryController));
     app.put("/archive-content-entry/:id", AuthMiddleware, entryController.archivedContentEntry.bind(entryController));
     app.put("/restore-content-entry/:id", AuthMiddleware, entryController.restoreContentType.bind(entryController));
-    app.delete("/content-entry/:slug/:id", AuthMiddleware, entryController.deletecontentEntryArchived.bind(entryController));
+    app.delete("/content-entry/delete/:id", AuthMiddleware, entryController.deletecontentEntry.bind(entryController));
     app.put("/content-entry/switch-status/:id", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController))
-    app.get("/content-entry/archived", AuthMiddleware, entryController.getAllArchivedContentEntry.bind(entryController));
+    app.get("/content-entry-archived", AuthMiddleware, entryController.getAllArchivedContentEntry.bind(entryController));
 }

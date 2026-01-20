@@ -204,7 +204,7 @@ export default class ContentEntryController {
         }
     }
 
-    public async deletecontentEntryArchived(req:Request,res:Response){
+    public async deletecontentEntry(req:Request,res:Response){
         try {
 
             const { id } = req.params;
