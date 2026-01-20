@@ -201,7 +201,29 @@ export default class ContentTypeService {
     
     
     // synchronisation des relations entre les content types
-    async syncRelationsContentType(proprietaireId: number, fieldsSchema: IFieldDefinition[]) {
+    async syncRelationsContentTypeCreate(proprietaireId: number, fieldsSchema: IFieldDefinition[]) {
+        
+        // On filtre uniquement les champs de type RELATION
+        const cibleIds = [...new Set(
+            fieldsSchema
+                .filter((f): f is (IBaseField & IRelationConfig) => f.type === FieldType.RELATION)
+                .map(f => Number(f.contentTypeId))
+        )];
+
+        // Création des nouveaux index relationnels
+        if (cibleIds.length > 0) {
+            await prisma.contentTypeRelation.createMany({
+                data: cibleIds.map(id => ({
+                    proprietaireId: proprietaireId,
+                    cibleId: id
+                }))
+            });
+        }
+    }
+
+
+
+    async syncRelationsContentTypeUpdate(proprietaireId: number, fieldsSchema: IFieldDefinition[]) {
         
         // On filtre uniquement les champs de type RELATION
         const cibleIds = [...new Set(
@@ -225,6 +247,5 @@ export default class ContentTypeService {
             });
         }
     }
-
 
 }

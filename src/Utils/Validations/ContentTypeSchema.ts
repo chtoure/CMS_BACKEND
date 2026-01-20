@@ -32,7 +32,7 @@ const fieldDefinitionSchema = Joi.object({
   options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }).messages({'array.base': 'Les options doivent être un tableau'}),
   defaultValue: Joi.any().optional(),
   toolbar: Joi.string().valid('minimal', 'full').optional(),
-  contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }),
+  contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }).invalid(0).messages({'number.invalid': 'Le contentTypeId ne peut pas être 0'}),
 });
 
 // Validation principale
