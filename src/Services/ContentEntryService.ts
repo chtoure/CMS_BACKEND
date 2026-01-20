@@ -47,6 +47,7 @@ export default class ContentEntryService {
 
 
     private async syncRelations(tx: Prisma.TransactionClient, entryId: number, contentTypeId: number, dataJson: IContentData) {
+
         const ct = await tx.contentType.findUnique({
             where: { id: contentTypeId },
             select: { fields_schema: true }
@@ -54,7 +55,8 @@ export default class ContentEntryService {
 
         if (!ct?.fields_schema) return;
 
-        const fields: IFieldDefinition[] = JSON.parse(ct.fields_schema as string);
+        const fields: IFieldDefinition[] = (ct.fields_schema as unknown) as IFieldDefinition[];
+
         const relationFields = fields.filter(f => f.type === 'relation' || f.type === 'media');
 
         const relationsToCreate: Prisma.ContentEntryRelationCreateManyInput[] = [];
@@ -78,6 +80,7 @@ export default class ContentEntryService {
     }
 
     public async createContentEntry(data: RegisterContentEntry): Promise<ContentEntry> {
+        
         return prisma.$transaction(async (tx) => {
             const entry = await tx.contentEntry.create({
                 data: data as unknown as Prisma.ContentEntryCreateInput

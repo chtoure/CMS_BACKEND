@@ -59,6 +59,7 @@ export default class ContentEntryController {
 
     public async createEntry(req: Request, res: Response) {
         try {
+
             const ct = await ContentEntryController.getValidatedContentType(req.params.slug, res);
             if (!ct) return;
 
