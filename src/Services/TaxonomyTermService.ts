@@ -89,6 +89,8 @@ export default class TaxonomyTermService {
         });
     }
 
+    
+
 
     // Delete
     public async deleteTerm(id: number): Promise<TaxonomyTerm> {
