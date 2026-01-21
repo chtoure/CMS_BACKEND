@@ -25,6 +25,7 @@ const fieldDefinitionSchema = Joi.object({
   min: Joi.number().optional(),
   max: Joi.number().optional(),
   step: Joi.number().optional(),
+  maxSize: Joi.number().optional(),
   allowedTypes: Joi.array().items(Joi.string().valid('image', 'video').allow(null)).optional(),
   multiple: Joi.boolean().optional(),
   taxonomy_slug: Joi.string().when('type', { is: 'taxonomy', then: Joi.required() }),

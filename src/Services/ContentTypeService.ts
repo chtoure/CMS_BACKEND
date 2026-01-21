@@ -127,6 +127,18 @@ export default class ContentTypeService {
     }
 
 
+
+    // get contentTypes excepted the one with id
+    public async getContentTypesExcepted(id: number): Promise<ContentType[]> {
+        const contentTypes = await prisma.contentType.findMany({
+            where: { archive:false, NOT: { id } }
+        });
+
+        // on fait le casting
+        return ContentTypeService.castingContentTypes(contentTypes);
+    }
+
+
     // update
     public async updateContentType(id: number, data: UpdateContentType): Promise<ContentType> {
         const contentUpdated = await prisma.contentType.update({

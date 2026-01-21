@@ -127,6 +127,18 @@ export default class ContentTypeController {
     }
 
 
+    public async getContentTypesExcepted(req:Request,res:Response){
+        try {
+            const contentTypes = await contentTypeService.getContentTypesExcepted(Number(req.params.id));
+            return res.status(HTTP_STATUS_OK).json(contentTypes);
+        } catch (error) {
+            console.log('Erreur lors de la récupération de ContententType:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
+
     public async updateContentType(req: Request, res: Response) {
         try {
            
