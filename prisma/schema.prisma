@@ -84,6 +84,7 @@ model Media {
   type         String
   alt          String?
   parameter   Parameter[]
+  usedInEntries ContentEntryRelation[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -181,34 +182,34 @@ model ContentEntry {
   data_json       Json         
   status          Status        @default(DRAFT)
   taxonomies      Taxonomy[]    @relation("EntryTaxonomies")
-
-  parentId        Int?         
-  parent          ContentEntry? @relation("ContentEntryHierarchy", fields: [parentId], references: [id])
-  children        ContentEntry[] @relation("ContentEntryHierarchy")
   
-  outgoingRelations ContentEntryRelation[] @relation("SourceEntry")
-  
-  incomingRelations ContentEntryRelation[] @relation("TargetEntry")
+  outgoingRelations ContentEntryRelation[] @relation("OutgoingRelations")
+  incomingRelations ContentEntryRelation[] @relation("IncomingRelations")
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   archivedAt      DateTime? 
 }
 
-
 model ContentEntryRelation {
-  id           Int          @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
+  fieldName String
+
+  sourceId  Int
+  source    ContentEntry @relation("OutgoingRelations", fields: [sourceId], references: [id], onDelete: Cascade)
+
+  targetEntryId Int?
+  targetEntry   ContentEntry? @relation("IncomingRelations", fields: [targetEntryId], references: [id], onDelete: Cascade)
+
+  targetMediaId Int?
+  targetMedia   Media?        @relation(fields: [targetMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetEntryId, fieldName])
+  @@unique([sourceId, targetMediaId, fieldName])
   
-  sourceId     Int
-  source       ContentEntry @relation("SourceEntry", fields: [sourceId], references: [id], onDelete: Cascade)
-
-  targetId     Int
-  target       ContentEntry @relation("TargetEntry", fields: [targetId], references: [id], onDelete: Cascade)
-
-  fieldName    String       
-
-  @@unique([sourceId, targetId, fieldName])
-  @@index([targetId]) 
+  @@index([sourceId])
+  @@index([targetEntryId])
+  @@index([targetMediaId])
 }
 
 model Taxonomy {

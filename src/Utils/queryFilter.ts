@@ -7,6 +7,7 @@ interface QueryFilters {
   search?: string | undefined;
   status?: string | undefined;
   archive?: boolean;
+  type?: string | undefined;
 }
 
 class RequestHelper {
@@ -19,6 +20,7 @@ class RequestHelper {
     if (req.query.limit) filters.limit = Number(req.query.limit);
     if (req.query.search) filters.search = req.query.search as string;
     if (req.query.status) filters.status = req.query.status as string;
+    if (req.query.type) filters.type = req.query.type as string;
 
     return filters;
   }
