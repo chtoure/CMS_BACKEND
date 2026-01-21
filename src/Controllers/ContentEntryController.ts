@@ -71,6 +71,8 @@ export default class ContentEntryController {
 
             return res.status(HTTP_STATUS_CREATED).json(newEntry);
         } catch (error: any) {
+            console.log(error);
+            
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     }

@@ -3,9 +3,8 @@ import MediaService from "../Services/MediaService.ts";
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import { deleteFile } from "../Utils/file.ts";
 import path from "path";
-import fs from "fs";
 import sharp from "sharp";
-
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 export default class MediaController {
 
@@ -40,40 +39,20 @@ export default class MediaController {
 
     async getMedias(req: Request, res: Response) {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-            const filter = req.query.type as 'video' | 'image' | null || null;
+            const filters = RequestHelper.getFilters(req);
 
-            const [mediaList, totalCount] = await Promise.all([
-                this.mediaService.getAllMedia(filter, skip, limit),
-                this.mediaService.countMedia(filter)
-            ]);
+            const mediaList = await this.mediaService.getAllMedia(filters);
 
             const baseUrl = `${process.env.APP_URL}`;
-            const totalPages = Math.ceil(totalCount / limit);
 
-            const results = mediaList.map((media) => ({
+            const results = mediaList.results.map((media) => ({
                 ...media,
                 file_path: `${baseUrl}${media.file_path}`
             }));
 
-            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
-            const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
-                : null;
-            const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
-                : null;
+            const paginateData={...mediaList,results};
 
-            return res.status(HTTP_STATUS_OK).json({
-                count: totalCount,
-                next: next,
-                previous: previous,
-                total_pages: totalPages,
-                current_page: page,
-                results: results
-            });
+            return res.status(HTTP_STATUS_OK).json(paginateData);
 
         } catch (error) {
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
@@ -119,97 +98,126 @@ export default class MediaController {
         }
     }
 
-    async createMedia(req:Request,res:Response){
-
-        try {
-
-            if (!req.file) return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Aucun fichier téléchargé" });
-
-            const mediaPayload = req.body;
-
-            if (req.file.mimetype.startsWith('image/')) {
-                mediaPayload.file_path = 'media/uploads/images/' + req.file?.filename;
-                mediaPayload.type = 'image';
-            }else{
-                mediaPayload.file_path = 'media/uploads/videos/' + req.file?.filename;
-                mediaPayload.type = 'video';
-            }
-
-            
-            
-            const newMedia =  await this.mediaService.createMedia(mediaPayload);
-            
-            return res.status(HTTP_STATUS_OK).json(newMedia);
-
-        } catch (error) {
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors de la création du média", details: error });
-        }
-    }
-
-    // MediaController.ts
-
-    async editImage(req: Request, res: Response) {
+async createMedia(req: Request, res: Response) {
     try {
-        const { id } = req.params;
-        const { geometry, adjustments } = req.body;
+        if (!req.file) {
+            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Aucun fichier téléchargé" });
+        }
 
-        const media = await this.mediaService.getMediaById(Number(id));
-        if (!media) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Média non trouvé" });
+        const mediaPayload = req.body;
+        const mimetype = req.file.mimetype;
+        const filename = req.file.filename;
 
-        const originalAbsolutePath = path.join(process.cwd(), media.file_path);
+        /**
+         * Détermination dynamique du chemin et du type
+         * basée sur la logique du middleware Multer
+         */
+        if (mimetype.startsWith('image/')) {
+            mediaPayload.file_path = `media/uploads/images/${filename}`;
+            mediaPayload.type = 'image';
+        } 
+        else if (mimetype.startsWith('video/')) {
+            mediaPayload.file_path = `media/uploads/videos/${filename}`;
+            mediaPayload.type = 'video';
+        } 
+        else if (
+            mimetype.includes('pdf') || 
+            mimetype.includes('msword') || 
+            mimetype.includes('officedocument') ||
+            mimetype.startsWith('text/')
+        ) {
+            mediaPayload.file_path = `media/uploads/documents/${filename}`;
+            mediaPayload.type = 'document';
+        } 
+        else if (
+            mimetype.includes('zip') || 
+            mimetype.includes('x-rar') || 
+            mimetype.includes('tar') || 
+            mimetype.includes('compressed')
+        ) {
+            mediaPayload.file_path = `media/uploads/archives/${filename}`;
+            mediaPayload.type = 'archive';
+        } 
+        else {
+            // Sécurité pour les fichiers non classés (dossier 'others' dans Multer)
+            mediaPayload.file_path = `media/uploads/others/${filename}`;
+            mediaPayload.type = 'other';
+        }
+
+        // Sauvegarde en base de données
+        const newMedia = await this.mediaService.createMedia(mediaPayload);
         
-        const fileExt = path.extname(media.file_path);
-        const fileName = path.basename(media.file_path, fileExt);
-        const newFileName = `${fileName}_edited_${Date.now()}${fileExt}`;
-        const newRelativePath = path.join('media/uploads/images/', newFileName).replace(/\\/g, '/');
-        const newAbsolutePath = path.join(process.cwd(), newRelativePath);
-
-        let pipeline = sharp(originalAbsolutePath).rotate(); // 1. Auto-rotation EXIF
-// 2. Crop (sur l'image redressée par Sharp)
-if (geometry && geometry.crop) {
-    pipeline = pipeline.extract({
-        left: Math.max(0, Math.round(geometry.crop.x)),
-        top: Math.max(0, Math.round(geometry.crop.y)),
-        width: Math.round(geometry.crop.width),
-        height: Math.round(geometry.crop.height)
-    });
-}
-// 3. Transformations manuelles (APRÈS le crop)
-if (geometry.rotation) pipeline = pipeline.rotate(geometry.rotation);
-if (geometry.flipH) pipeline = pipeline.flop();
-if (geometry.flipV) pipeline = pipeline.flip();
-// 4. Ajustements
-if (adjustments) {
-    pipeline = pipeline.modulate({
-        brightness: adjustments.brightness, // Multiplicateur (ex: 1.0)
-        saturation: adjustments.saturation
-    });
-    if (adjustments.grayscale) pipeline = pipeline.grayscale();
-    if (adjustments.blur) pipeline = pipeline.blur(adjustments.blur);
-    
-    // Contraste (simulé via linear)
-    if (adjustments.contrast && adjustments.contrast !== 1) {
-        pipeline = pipeline.linear(adjustments.contrast, -(0.5 * adjustments.contrast) + 0.5);
-    }
-}
-await pipeline.toFile(newAbsolutePath);
-
-        const newMedia = await this.mediaService.createMedia({
-            alt: `Edited ${media.alt || 'image'}`,
-            file_path: newRelativePath,
-            type: 'image'
-        });
-
-        return res.status(HTTP_STATUS_OK).json({ 
-            message: "Nouvelle image créée avec succès", 
-            media: newMedia 
-        });
+        return res.status(HTTP_STATUS_OK).json(newMedia);
 
     } catch (error) {
-        console.error(error);
-        return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur lors du traitement de l'image" });
+        console.error("CreateMedia Error:", error);
+        return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+            error: "Erreur lors de la création du média", 
+            details: error instanceof Error ? error.message : error 
+        });
     }
 }
+
+    async editImage(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { geometry, adjustments } = req.body;
+
+            const media = await this.mediaService.getMediaById(Number(id));
+            if (!media) {
+                return res.status(HTTP_STATUS_NOT_FOUND).json({ error: "Média non trouvé" });
+            }
+
+            const originalAbsolutePath = path.join(process.cwd(), media.file_path);
+            const fileExt = path.extname(media.file_path);
+            const fileName = path.basename(media.file_path, fileExt);
+            const newFileName = `${fileName}_edited_${Date.now()}${fileExt}`;
+            const newRelativePath = path.join('media/uploads/images/', newFileName).replace(/\\/g, '/');
+            const newAbsolutePath = path.join(process.cwd(), newRelativePath);
+
+            let pipeline = sharp(originalAbsolutePath).rotate(); 
+
+            if (geometry && geometry.crop) {
+                pipeline = pipeline.extract({
+                    left: Math.max(0, Math.round(geometry.crop.x)),
+                    top: Math.max(0, Math.round(geometry.crop.y)),
+                    width: Math.round(geometry.crop.width),
+                    height: Math.round(geometry.crop.height)
+                });
+            }
+
+            if (geometry.rotation) {
+                pipeline = pipeline.rotate(geometry.rotation);
+            }
+
+            if (geometry.flipH) pipeline = pipeline.flop(); 
+            if (geometry.flipV) pipeline = pipeline.flip(); 
+
+            if (adjustments) {
+                if (adjustments.grayscale) pipeline = pipeline.grayscale();
+                if (adjustments.blur) pipeline = pipeline.blur(adjustments.blur);
+            }
+
+            await pipeline.toFile(newAbsolutePath);
+
+            const newMedia = await this.mediaService.createMedia({
+                alt: `Edited ${media.alt || 'image'}`,
+                file_path: newRelativePath,
+                type: 'image'
+            });
+
+            return res.status(HTTP_STATUS_OK).json({ 
+                message: "Nouvelle image créée avec succès", 
+                media: newMedia 
+            });
+
+        } catch (error) {
+            console.error("Erreur EditImage:", error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors du traitement de l'image" 
+            });
+        }
+    }
 }
 
 

@@ -1,10 +1,10 @@
 import prisma from "../Utils/PrismaClient.ts";
 import { Prisma } from "../generated/prisma/client.ts";
 import type { 
-  ContentEntry, 
-  IContentData, 
-  RegisterContentEntry, 
-  UpdateContentEntry 
+    ContentEntry, 
+    IContentData, 
+    RegisterContentEntry, 
+    UpdateContentEntry 
 } from "../Types/ContentEntry.ts";
 import type { IFieldDefinition } from "../Types/InputField.ts";
 import { Paginator } from "../Utils/Paginator.ts";
@@ -45,9 +45,7 @@ export default class ContentEntryService {
         });
     }
 
-
     private async syncRelations(tx: Prisma.TransactionClient, entryId: number, contentTypeId: number, dataJson: IContentData) {
-
         const ct = await tx.contentType.findUnique({
             where: { id: contentTypeId },
             select: { fields_schema: true }
@@ -55,32 +53,41 @@ export default class ContentEntryService {
 
         if (!ct?.fields_schema) return;
 
-        const fields: IFieldDefinition[] = (ct.fields_schema as unknown) as IFieldDefinition[];
+        const fields = (typeof ct.fields_schema === 'string' 
+            ? JSON.parse(ct.fields_schema) 
+            : ct.fields_schema) as IFieldDefinition[];
 
         const relationFields = fields.filter(f => f.type === 'relation' || f.type === 'media');
-
         const relationsToCreate: Prisma.ContentEntryRelationCreateManyInput[] = [];
 
         relationFields.forEach(field => {
             const val = dataJson[field.name];
-            if (!val) return;
+            if (val === undefined || val === null) return;
 
             const ids = Array.isArray(val) ? val : [val];
+            
             ids.forEach(id => {
-                if (typeof id === 'number') {
-                    relationsToCreate.push({ sourceId: entryId, targetId: id, fieldName: field.name });
+                const numericId = Number(id);
+                if (!isNaN(numericId)) {
+                    relationsToCreate.push({
+                        sourceId: entryId,
+                        fieldName: field.name,
+                        // Correction ici : On utilise les nouvelles colonnes
+                        targetEntryId: field.type === 'relation' ? numericId : null,
+                        targetMediaId: field.type === 'media' ? numericId : null,
+                    });
                 }
             });
         });
 
         await tx.contentEntryRelation.deleteMany({ where: { sourceId: entryId } });
+        
         if (relationsToCreate.length > 0) {
             await tx.contentEntryRelation.createMany({ data: relationsToCreate });
         }
     }
 
     public async createContentEntry(data: RegisterContentEntry): Promise<ContentEntry> {
-        
         return prisma.$transaction(async (tx) => {
             const entry = await tx.contentEntry.create({
                 data: data as unknown as Prisma.ContentEntryCreateInput
@@ -103,23 +110,10 @@ export default class ContentEntryService {
         });
     }
 
-    public async updateStatus(id: number, status: string): Promise<ContentEntry> {
-        return prisma.contentEntry.update({
-            where: { id },
-            data: { 
-                status: status as any,
-                ...(status === "ARCHIVED" ? { archivedAt: new Date() } : { archivedAt: null })
-            }
-        });
-    }
-
-    public async toggleArchive(id: number, shouldArchive: boolean): Promise<ContentEntry> {
-        return this.updateStatus(id, shouldArchive ? "ARCHIVED" : "DRAFT");
-    }
-
     public async deleteContentEntry(id: number): Promise<ContentEntry> {
+        // Correction ici : On vérifie si l'entrée est ciblée dans targetEntryId
         const usages = await prisma.contentEntryRelation.findMany({
-            where: { targetId: id },
+            where: { targetEntryId: id },
             include: { source: { select: { id: true, data_json: true } } }
         });
 
@@ -137,9 +131,29 @@ export default class ContentEntryService {
             include: { 
                 contentType: true, 
                 user: true,
-                outgoingRelations: { include: { target: true } }
+                // Correction ici : On inclut les deux types de cibles possibles
+                outgoingRelations: { 
+                    include: { 
+                        targetEntry: true, 
+                        targetMedia: true 
+                    } 
+                } 
             }
         });
         return entry as unknown as ContentEntry | null;
+    }
+
+    public async updateStatus(id: number, status: string): Promise<ContentEntry> {
+        return prisma.contentEntry.update({
+            where: { id },
+            data: { 
+                status: status as any,
+                ...(status === "ARCHIVED" ? { archivedAt: new Date() } : { archivedAt: null })
+            }
+        });
+    }
+
+    public async toggleArchive(id: number, shouldArchive: boolean): Promise<ContentEntry> {
+        return this.updateStatus(id, shouldArchive ? "ARCHIVED" : "DRAFT");
     }
 }
