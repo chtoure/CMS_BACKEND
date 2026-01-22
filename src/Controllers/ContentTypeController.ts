@@ -3,6 +3,7 @@ import type { Request,Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import ContentTypeService from "../Services/ContentTypeService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 // Initialisation
 const contentTypeService = new ContentTypeService()
@@ -26,67 +27,18 @@ export default class ContentTypeController {
     }
 
 
-
-    
-
-    public async getContentTypes(req:Request, res:Response){
-
-       try {
-
-            // Calculs de base pour la pagination
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-
-            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
-
-            // Appel simultané pour les données et le total
-            const [contentTypeList, totalCount] = await Promise.all([
-                contentTypeService.getAllContentTypes(filter,skip, limit),
-                contentTypeService.countContentTypes(filter)
-            ]);
-
-
-            const totalPages = Math.ceil(totalCount / limit);
-            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
-
-            // Construction des liens de navigation
-            const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
-                : null;
-            const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
-                : null;
-            
-            // Réponse structurée
-            return res.status(HTTP_STATUS_OK).json({
-                count: totalCount,
-                next: next,
-                previous: previous,
-                total_pages: totalPages,
-                current_page: page,
-                results: contentTypeList
-            });
-
-        } catch (error) {
-            console.log('Erreur lors de la récupération des contentTypes:', error);
-            const errorMessage = handlePrismaError(error);
-            return res.status(getErrorStatus(error)).json({ message: errorMessage });
-        }
-
-    }
-
-
-    public async getContentTypesNoPaginate(req:Request,res:Response){
+    public async getAllContentTypes(req:Request,res:Response){
         try {
-            const contents = await contentTypeService.getAllContentsNoPaginate();
-            return res.status(HTTP_STATUS_OK).json(contents)
+            const filter = RequestHelper.getFilters(req)
+            const contentTypes = await contentTypeService.getContentTypes(filter);
+            return res.status(HTTP_STATUS_OK).json(contentTypes);
         } catch (error) {
             console.log('Erreur lors de la récupération des contentTypes:', error);
             const errorMessage = handlePrismaError(error);
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+    
 
 
     public async getContentTypeById(req:Request,res:Response){

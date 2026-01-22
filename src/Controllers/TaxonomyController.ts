@@ -4,6 +4,7 @@ import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_INTERNAL_SERV
 import TaxonomyService from "../Services/TaxonomyService.ts";
 import TaxonomyTermService from "../Services/TaxonomyTermService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 // Initialisation
 const taxonomyService = new TaxonomyService();
@@ -32,55 +33,14 @@ export default class TaxonomyController {
         }
     }
 
-    public async getTaxonomies(req: Request, res: Response) {
+
+    public async getAllTaxonomies(req:Request,res:Response){
         try {
-            // Calculs de base pour la pagination
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-
-            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
-
-            // Appel simultané pour les données et le total
-            const [taxonomyList, totalCount] = await Promise.all([
-                taxonomyService.getAllTaxonomies(filter, skip, limit),
-                taxonomyService.countTaxonomies(filter)
-            ]);
-
-            const totalPages = Math.ceil(totalCount / limit);
-            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
-
-            // Construction des liens de navigation
-            const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter !== null ? `&archive=${filter}` : ''}` 
-                : null;
-            const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter !== null ? `&archive=${filter}` : ''}` 
-                : null;
-            
-            // Réponse structurée
-            return res.status(HTTP_STATUS_OK).json({
-                count: totalCount,
-                next: next,
-                previous: previous,
-                total_pages: totalPages,
-                current_page: page,
-                results: taxonomyList
-            });
-
+            const filter = RequestHelper.getFilters(req)
+            const taxonomies = await taxonomyService.getTaxonomies(filter);
+            return res.status(HTTP_STATUS_OK).json(taxonomies);
         } catch (error) {
-            console.error('Erreur lors de la recuperation des taxonomies', error);
-            const errorMessage = handlePrismaError(error);
-            return res.status(getErrorStatus(error)).json({ message: errorMessage });
-        }
-    }
-
-    public async getTaxonomiesNoPaginate(req: Request, res: Response) {
-        try {
-            const items = await taxonomyService.getAllTaxonomiesNoPaginate();
-            return res.status(HTTP_STATUS_OK).json(items);
-        } catch (error) {
-            console.error('Erreur lors de la recuperation des taxonomies', error);
+            console.log('Erreur lors de la récupération des taxonomies:', error);
             const errorMessage = handlePrismaError(error);
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }

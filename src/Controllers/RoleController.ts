@@ -3,6 +3,7 @@ import type { Request,Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import RoleService from "../Services/RoleService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 
 const roleService = new RoleService();
@@ -33,65 +34,20 @@ export default class RoleController {
 
     }
 
-
-
     // Methode : Recuperer tous les roles
-    async getAllRoles(req:Request,res:Response){
+    async getRoles(req:Request,res:Response){
         try {
-            // Calculs de base pour la pagination
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-            const filter = req.query.archive === 'true' ? true : req.query.archive === 'false' ? false : null;
-
-            // Appel simultané pour les données et le total
-            const [roleList, totalCount] = await Promise.all([
-                roleService.getAllRoles(filter,skip, limit),
-                roleService.countRoles(filter)
-            ]);
-
-            const totalPages = Math.ceil(totalCount / limit);
-            const fullUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
-
-            // Construction des liens de navigation
-           // Construction des liens de navigation
-            const next = page < totalPages 
-                ? `${fullUrl}?page=${page + 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
-                : null;
-            const previous = page > 1 
-                ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&archive=${filter}` : ''}` 
-                : null;
-
-            // Réponse structurée
-            return res.status(HTTP_STATUS_OK).json({
-                count: totalCount,
-                next: next,
-                previous: previous,
-                total_pages: totalPages,
-                current_page: page,
-                results: roleList
-            });
-
-        } 
-        catch (error) {
-            console.log('Erreur lors de la récupération des roles:', error);
-            const errorMessage = handlePrismaError(error);
-            return res.status(getErrorStatus(error)).json({ message: errorMessage });
-        }
-    }
-
-
-    // Methode : Recuperer tous les roles sans Pagination
-    async getAllRolesNoPaginate(re:Request,res:Response){
-        try {
-            const roles = await roleService.getAllRolesNoPaginate();
+            const filter = RequestHelper.getFilters(req);
+            const roles = await roleService.getRoles(filter);
             return res.status(HTTP_STATUS_OK).json(roles);
         } catch (error) {
-            console.log('Erreur lors de la récupération des roles:', error);
+            console.error('Erreur lors de la recuperation des roles', error);
             const errorMessage = handlePrismaError(error);
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+
 
 
     // Methode : Recuperer un role par son id

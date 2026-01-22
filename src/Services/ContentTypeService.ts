@@ -5,6 +5,8 @@ import type { Prisma } from "../generated/prisma/client.ts";
 import { FieldType, type IBaseField, type IFieldDefinition, type IRelationConfig } from "../Types/InputField.ts";
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_NOT_FOUND } from "../Utils/Constantes/ConstantesHttp.ts";
 import { AppError } from "../Utils/ErrorPrisma.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 
 
 
@@ -31,6 +33,25 @@ export default class ContentTypeService {
 
 
 
+    private buildWhereClause(filter?:QueryFilters): Prisma.ContentTypeWhereInput {
+        const where: Prisma.ContentTypeWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { slug: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
+
+
     // Create
     public async createContentType (data: RegisterContentType): Promise<ContentType> {
         const itemContentType = await prisma.contentType.create({
@@ -45,61 +66,19 @@ export default class ContentTypeService {
     }
 
 
+    // get permissions
+    public async getContentTypes(filter?:QueryFilters){
+        const data = await Paginator.paginate<ContentType>(prisma.contentType, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
+            orderBy: { createdAt: 'desc' }
+        });
 
-    // get all avec pagination
-    public async getAllContentTypes(archive: boolean | null, skip?: number, take?: number): Promise<ContentType[]> {
-
-         const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        
-        const options: any = {
-            where:where,
-            orderBy: {
-                createdAt: 'desc'
-            }
+        return {
+            ...data,
+            results: ContentTypeService.castingContentTypes(data.results)
         };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-
-        const intemsContent = await prisma.contentType.findMany(options);
-
-       // On fait le casting
-       return ContentTypeService.castingContentTypes(intemsContent);
-    }
-
-
-    // count (utile pour ta pagination côté frontend)
-    public async countContentTypes(archive: boolean | null): Promise<number> {
-        
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        return prisma.contentType.count({
-            where:where
-        });
-    }
-
-
-
-    // Recuperer tous les contentType sans pagination
-    public async getAllContentsNoPaginate(): Promise<ContentType[]> {
-        
-        const dataContentTypes = await prisma.contentType.findMany({
-            where:{archive:false},
-            orderBy:{createdAt:"desc"}
-        });
-
-        // on fait le casting
-        return ContentTypeService.castingContentTypes(dataContentTypes);
     }
 
 
