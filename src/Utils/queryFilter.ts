@@ -7,7 +7,7 @@ interface QueryFilters {
   search?: string | undefined;
   status?: string | undefined;
   archive?: boolean;
-  type?: string | undefined;
+  type?: string[];
 }
 
 class RequestHelper {
@@ -16,11 +16,14 @@ class RequestHelper {
       archive: req.query.archive === 'true'
     };
 
+    if (req.query.type && typeof req.query.type === 'string') {
+        filters.type = req.query.type.split(',');
+    }
+
     if (req.query.page) filters.page = Number(req.query.page);
     if (req.query.limit) filters.limit = Number(req.query.limit);
     if (req.query.search) filters.search = req.query.search as string;
     if (req.query.status) filters.status = req.query.status as string;
-    if (req.query.type) filters.type = req.query.type as string;
 
     return filters;
   }

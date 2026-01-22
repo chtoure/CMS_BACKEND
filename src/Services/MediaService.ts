@@ -7,8 +7,11 @@ import type { QueryFilters } from "../Utils/queryFilter.ts";
 export default class MediaService {
 
     private buildWhereClause(filters?: QueryFilters): Prisma.MediaWhereInput {
+
+        console.log(filters?.type);
+        
         const where: Prisma.MediaWhereInput = {};
-        if(filters?.type) where.type = filters.type;
+        if(filters?.type && filters.type.length > 0) where.type = { in: filters.type };
 
         if (filters?.search?.trim()) {
             const query = filters.search.trim();

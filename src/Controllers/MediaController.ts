@@ -55,6 +55,9 @@ export default class MediaController {
             return res.status(HTTP_STATUS_OK).json(paginateData);
 
         } catch (error) {
+
+            console.log(error);
+            
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors de la récupération des médias", 
                 details: error 
