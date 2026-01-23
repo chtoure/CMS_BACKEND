@@ -45,7 +45,7 @@ export default class ContentEntryService {
         });
     }
 
-    private async syncRelations(tx: Prisma.TransactionClient, entryId: number, contentTypeId: number, dataJson: IContentData) {
+    private async syncRelations(tx: Prisma.TransactionClient, entryId: number,contentTypeId : number, dataJson: IContentData) {
         const ct = await tx.contentType.findUnique({
             where: { id: contentTypeId },
             select: { fields_schema: true }
@@ -57,7 +57,7 @@ export default class ContentEntryService {
             ? JSON.parse(ct.fields_schema) 
             : ct.fields_schema) as IFieldDefinition[];
 
-        const relationFields = fields.filter(f => f.type === 'relation' || f.type === 'media');
+        const relationFields = fields.filter(f => f.type === 'relation' || f.type === 'media' || f.type === 'taxonomy');
         const relationsToCreate: Prisma.ContentEntryRelationCreateManyInput[] = [];
 
         relationFields.forEach(field => {
@@ -72,9 +72,9 @@ export default class ContentEntryService {
                     relationsToCreate.push({
                         sourceId: entryId,
                         fieldName: field.name,
-                        // Correction ici : On utilise les nouvelles colonnes
                         targetEntryId: field.type === 'relation' ? numericId : null,
                         targetMediaId: field.type === 'media' ? numericId : null,
+                        targetTaxonomyId: field.type === 'taxonomy' ? numericId : null,
                     });
                 }
             });
@@ -87,12 +87,59 @@ export default class ContentEntryService {
         }
     }
 
+    private async syncTaxonomyTerm(tx: Prisma.TransactionClient, entryId: number, contentTypeId: number, dataJson: IContentData): Promise<void> {
+        const ct = await tx.contentType.findUnique({
+            where: { id: contentTypeId },
+            select: { fields_schema: true }
+        });
+
+        if (!ct?.fields_schema) return;
+
+        const fields = (typeof ct.fields_schema === 'string'
+            ? JSON.parse(ct.fields_schema)
+            : ct.fields_schema) as IFieldDefinition[];
+
+        const taxonomyFields = fields.filter(f => f.type === 'taxonomy');
+        const termIdsToConnect: number[] = [];
+
+        for (const field of taxonomyFields) {
+            const val = dataJson[field.name];
+            if (val === undefined || val === null) continue;
+
+            const ids = Array.isArray(val) ? val.map(Number) : [Number(val)];
+            const validIds = ids.filter(id => !isNaN(id));
+
+            if (validIds.length === 0) continue;
+
+            const validTerms = await tx.taxonomyTerm.findMany({
+                where: {
+                    id: { in: validIds },
+                    taxonomy: { slug: (field as any).taxonomy_slug }
+                },
+                select: { id: true }
+            });
+
+            termIdsToConnect.push(...validTerms.map(t => t.id));
+        }
+
+        await tx.contentEntry.update({
+            where: { id: entryId },
+            data: {
+                taxonomyTerms: {
+                    set: termIdsToConnect.map(id => ({ id }))
+                }
+            }
+        });
+    }
+    
+
     public async createContentEntry(data: RegisterContentEntry): Promise<ContentEntry> {
         return prisma.$transaction(async (tx) => {
             const entry = await tx.contentEntry.create({
                 data: data as unknown as Prisma.ContentEntryCreateInput
             });
             await this.syncRelations(tx, entry.id, data.contentTypeId, data.data_json as IContentData);
+            await this.syncTaxonomyTerm(tx, entry.id, data.contentTypeId, data.data_json as IContentData);
             return entry as unknown as ContentEntry;
         });
     }
@@ -105,13 +152,13 @@ export default class ContentEntryService {
             });
             if (data.data_json && entry.contentTypeId) {
                 await this.syncRelations(tx, id, entry.contentTypeId, data.data_json as IContentData);
+                await this.syncTaxonomyTerm(tx, id, entry.contentTypeId, data.data_json as IContentData);
             }
             return entry as unknown as ContentEntry;
         });
     }
 
     public async deleteContentEntry(id: number): Promise<ContentEntry> {
-        // Correction ici : On vérifie si l'entrée est ciblée dans targetEntryId
         const usages = await prisma.contentEntryRelation.findMany({
             where: { targetEntryId: id },
             include: { source: { select: { id: true, data_json: true } } }
@@ -131,7 +178,6 @@ export default class ContentEntryService {
             include: { 
                 contentType: true, 
                 user: true,
-                // Correction ici : On inclut les deux types de cibles possibles
                 outgoingRelations: { 
                     include: { 
                         targetEntry: true, 
