@@ -97,7 +97,10 @@ export default class TaxonomyService {
     // Get by slug
     public async getTaxonomyBySlug(slug: string): Promise<Taxonomy | null> {
         const item = await prisma.taxonomy.findUnique({
-            where: { slug, archive: false }
+            where: { slug, archive: false },
+            include: {
+                terms: true
+            }
         });
 
         if (!item) return null;
