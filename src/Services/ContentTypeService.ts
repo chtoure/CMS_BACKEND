@@ -7,7 +7,17 @@ import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_NOT_FOUND } from "../Utils/Constan
 import { AppError } from "../Utils/ErrorPrisma.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import ContentEntryService from "./ContentEntryService.ts";
+import type { ContentEntry } from "../Types/ContentEntry.ts";
 
+
+
+const contentEntryService = new ContentEntryService();
+
+interface Changement {
+    name: string;
+    action: string;
+};
 
 
 export default class ContentTypeService {
@@ -17,7 +27,8 @@ export default class ContentTypeService {
          return {
             ...data,   
             fields_schema: data.fields_schema as unknown as IFieldDefinition[],
-            archive: Boolean(data.archive) 
+            archive: Boolean(data.archive),
+            entries: data.entries as unknown as ContentEntry[]
         } as ContentType;
     }
 
@@ -85,7 +96,8 @@ export default class ContentTypeService {
     //get by ID
     public async getContentTypeById(id: number): Promise<ContentType | null> {
         const item = await prisma.contentType.findUnique({
-            where: { id , archive:false }
+            where: { id , archive:false },
+            include:{entries:true}
         });
 
         if (!item) return null;
@@ -240,5 +252,84 @@ export default class ContentTypeService {
             });
         }
     }
+
+
+    static async logiqueModContentType(
+        nouveauFieldsSchema:IFieldDefinition[],
+        ancienFieldsSchema:IFieldDefinition[],
+        contentTypeId:number
+    ) {
+        
+        // 1. On pré-calcule les changements
+        const changements = ancienFieldsSchema.map((ancienField, index) => {
+            const nouveauField = nouveauFieldsSchema[index];
+
+            // CAS 1 : Suppression (Le nom a changé à cet index ou le nouveau n'existe pas)
+            if (!nouveauField || ancienField.name !== nouveauField.name) {
+                return { name: ancienField.name, action: 'DELETE' };
+            }
+
+            // CAS 2 : Changement de type vers spécifique (RELATION, MEDIA, TAXONOMY)
+            const typesSpecifiques = [FieldType.RELATION, FieldType.MEDIA, FieldType.TAXONOMY];
+            if (typesSpecifiques.includes(nouveauField.type) && ancienField.type !== nouveauField.type) {
+                return { name: ancienField.name, action: 'NULL' };
+            }
+
+            // CAS 3 : Changement de type vers SELECT ou modification des OPTIONS
+            if (nouveauField.type === FieldType.SELECT) {
+                if (ancienField.type !== FieldType.SELECT) {
+                    return { name: ancienField.name, action: 'NULL' };
+                }
+                // Si on a retiré au moins une option
+                const optionsRestantes = ancienField.options.every(opt => nouveauField.options.includes(opt));
+                if (!optionsRestantes) {
+                    return { name: ancienField.name, action: 'NULL' };
+                }
+            }
+
+            return { name: ancienField.name, action: 'NONE' };
+        });
+
+        await ContentTypeService.bouclerEntry(contentTypeId,changements)
+
+    }
+
+
+
+
+
+    static async bouclerEntry(
+        id:number,
+        changements:Changement[]
+    ){
+
+        // Appel de getEntries d'un contentType
+        const { results: entries } = await contentEntryService.getEntries(id);
+        if (entries.length === 0) return;
+
+        for (const entry of entries) {
+        const data_json = entry.data_json as Record<string, any>;
+            let hasChanged = false;
+
+            changements.forEach(changement => {
+                if (changement.action === 'DELETE' && changement.name in data_json) {
+                    delete data_json[changement.name];
+                    hasChanged = true;
+                } else if (changement.action === 'NULL' && changement.name in data_json) {
+                    data_json[changement.name] = null;
+                    hasChanged = true;
+                }
+            });
+
+            // 3. Sauvegarde en base
+            if (hasChanged) {
+            await contentEntryService.updateContentEntry(id,data_json)
+            }
+        }
+
+    }
+
+       
+        
 
 }

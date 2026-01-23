@@ -4,6 +4,7 @@ import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_CREATED,HTTP_STATUS_INTERNAL_SERVER
 import ContentTypeService from "../Services/ContentTypeService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 import { RequestHelper } from "../Utils/queryFilter.ts";
+import type { IFieldDefinition } from "../Types/InputField.ts";
 
 // Initialisation
 const contentTypeService = new ContentTypeService()
@@ -148,5 +149,6 @@ export default class ContentTypeController {
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
 
 }
