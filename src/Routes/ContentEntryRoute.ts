@@ -27,7 +27,7 @@ export function contentEntryRoutes(app: Express): void {
     app.patch("/content-entries/:id/status", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController));
     
     // Archiver ou Restaurer (on passe { "archive": true/false } dans le body)
-    app.put("/content-entries/:id/archive", AuthMiddleware, validateBody(toggleArchiveSchema), entryController.toggleArchive.bind(entryController));
+    app.put("/content-entries/:id/archive", AuthMiddleware, entryController.toggleArchive.bind(entryController));
 
     // Suppression définitive
     app.delete("/content-entries/:id", AuthMiddleware, entryController.deleteEntry.bind(entryController));

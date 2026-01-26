@@ -8,8 +8,6 @@ export default class MediaService {
 
     private buildWhereClause(filters?: QueryFilters): Prisma.MediaWhereInput {
 
-        console.log(filters?.type);
-        
         const where: Prisma.MediaWhereInput = {};
         if(filters?.type && filters.type.length > 0) where.type = { in: filters.type };
 
