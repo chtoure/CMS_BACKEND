@@ -199,7 +199,55 @@ export default class ContentEntryService {
         });
     }
 
-    public async toggleArchive(id: number, shouldArchive: boolean): Promise<ContentEntry> {
-        return this.updateStatus(id, shouldArchive ? "ARCHIVED" : "DRAFT");
+    public async toggleArchive(id: number): Promise<ContentEntry> {
+        const currentEntry = await prisma.contentEntry.findUnique({
+            where: { id },
+            select: { id: true, status: true }
+        });
+
+        if (!currentEntry) throw new Error("Contenu introuvable.");
+
+        const isCurrentlyArchived = currentEntry.status === 'ARCHIVED';
+
+        if (!isCurrentlyArchived) {
+            
+            const activeUsages = await prisma.contentEntryRelation.findMany({
+                where: {
+                    targetEntryId: id,
+                    source: {
+                        status: { in: ['PUBLISHED', 'DRAFT'] }
+                    }
+                },
+                include: {
+                    source: { select: { id: true, data_json: true, status: true } }
+                }
+            });
+
+            if (activeUsages.length > 0) {
+                const names = activeUsages.map(u => (u.source.data_json as any)?.title || `ID: ${u.source.id}`);
+                throw new Error(`Archivage bloqué : Ce contenu est utilisé par des éléments actifs : "${names.join(', ')}".`);
+            }
+
+            return this.updateStatus(id, "ARCHIVED");
+
+        } else {
+
+            const archivedDependencies = await prisma.contentEntryRelation.findMany({
+                where: {
+                    sourceId: id,
+                    targetEntry: { status: 'ARCHIVED' }
+                },
+                include: {
+                    targetEntry: { select: { id: true, data_json: true } }
+                }
+            });
+
+            if (archivedDependencies.length > 0) {
+                const names = archivedDependencies.map(d => (d.targetEntry?.data_json as any)?.title || `ID: ${d.targetEntryId}`);
+                throw new Error(`Désarchivage impossible : Ce contenu dépend de l'élément archivé "${names.join(', ')}".`);
+            }
+
+            return this.updateStatus(id, "DRAFT");
+        }
     }
 }

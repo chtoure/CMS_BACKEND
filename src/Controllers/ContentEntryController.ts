@@ -99,15 +99,11 @@ export default class ContentEntryController {
     public async toggleArchive(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { archive } = req.body; 
-            const result = await contentEntryService.toggleArchive(Number(id), archive);
+            const result = await contentEntryService.toggleArchive(Number(id));
 
             return res.status(HTTP_STATUS_OK).json(result);
         } catch (error: any) {
-            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
-                error: "Erreur lors du changement d'état d'archivage", 
-                details: error.message 
-            });
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     }
 
