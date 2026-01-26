@@ -4,6 +4,8 @@ import type { User } from "../Types/User.ts";
 import type { UpdateUserPayload } from "../Types/UpdateUserPayload.ts";
 import * as bcrypt from 'bcrypt';
 import type { Prisma } from "../generated/prisma/client.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 
 const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
@@ -11,6 +13,28 @@ const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
 
 export default class UserService {
+
+
+
+    private buildWhereClause(filter?:QueryFilters): Prisma.UserWhereInput {
+        const where: Prisma.UserWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { email: { contains: query } },
+                { full_name: { contains: query } },
+                { role: { name: { contains: query } } }
+            ];
+        }
+
+        return where;
+    }
+
 
 
     // Creation d'un utilisateur
@@ -24,43 +48,13 @@ export default class UserService {
 
 
 
-    // Recuperer tous les utilisateurs
-    public async getAllUser(
-        archive: boolean | null,
-        skip?: number, 
-        take?: number
-    ): Promise<User[]> {
-
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        const options: any = {
-            where: where,
-            include:{role:true},
-            orderBy: {
-                createdAt: 'desc'
-            }
-        };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-       return prisma.user.findMany(options);
-    }
-
-    public async countUsers(archive: boolean | null): Promise<number> {
-
-         const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        return prisma.user.count({
-            where: where
+    public async getAllUsers(filter?:QueryFilters){
+        return Paginator.paginate<User>(prisma.user, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
+            include: { role: true },
+            orderBy: { createdAt: 'desc' }
         });
     }
 

@@ -1,7 +1,9 @@
 
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { Permission } from "../Types/Permission.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
 
 
 export default class PermissionService {
@@ -22,6 +24,27 @@ export default class PermissionService {
         };
     }
 
+
+   private buildWhereClause(filter?:QueryFilters): Prisma.PermissionWhereInput {
+        const where: Prisma.PermissionWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { description: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
+
+
+    
     // Creation d'une permission
     public async createPermission(data: Prisma.PermissionUncheckedCreateInput): Promise<Permission> {
         const perms = await prisma.permission.create({
@@ -46,22 +69,12 @@ export default class PermissionService {
     }
 
 
-     // Recuperer tous les permissions avec pagination
-    public async getAllPermissions(
-        archive: boolean | null,
-        skip?: number, 
-        take?: number
-    ): Promise<Permission[]> {
 
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-
-        const options: any = {
-            where: where,
+    public async getPermissions(filter?:QueryFilters){
+        const data = await Paginator.paginate<Permission>(prisma.permission, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
             include: {
                 roles: {
                     include: {
@@ -69,48 +82,15 @@ export default class PermissionService {
                     }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-       const dataPerms = await prisma.permission.findMany(options);
-       return PermissionService.mapPermissions(dataPerms);
-    }
-
-     public async countPermissions(archive: boolean | null): Promise<number> {
-
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-
-        return prisma.permission.count({
-             where: where
+            orderBy: { createdAt: 'desc' }
         });
+
+        return {
+            ...data,
+            results: PermissionService.mapPermissions(data.results)
+        };
     }
-
-
-     // Recuperer tous les permissions sans Pagination
-    public async getAllPermissionsNoPaginate(): Promise<Permission[]> {
-       const dataPerms = await prisma.permission.findMany({
-        where:{archive:false},
-        include: {
-            roles: {
-                include: {
-                    role: true
-                }
-            }
-        }
-       });
-       return PermissionService.mapPermissions(dataPerms);
-    }
-
+    
 
     // Récupère une permission par ID
     public async getPermissionById(id: number): Promise<Permission | null> {

@@ -25,6 +25,7 @@ const fieldDefinitionSchema = Joi.object({
   min: Joi.number().optional(),
   max: Joi.number().optional(),
   step: Joi.number().optional(),
+  maxSize: Joi.number().optional(),
   allowedTypes: Joi.array().items(Joi.string().valid('image', 'video').allow(null)).optional(),
   multiple: Joi.boolean().optional(),
   taxonomy_slug: Joi.string().when('type', { is: 'taxonomy', then: Joi.required() }),
@@ -32,8 +33,10 @@ const fieldDefinitionSchema = Joi.object({
   options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }).messages({'array.base': 'Les options doivent être un tableau'}),
   defaultValue: Joi.any().optional(),
   toolbar: Joi.string().valid('minimal', 'full').optional(),
-  contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }),
+  contentTypeId: Joi.number().when('type', { is: 'relation', then: Joi.required() }).invalid(0).messages({'number.invalid': 'Le contentTypeId ne peut pas être 0'}),
 });
+
+
 
 // Validation principale
 export const contentTypeSchema = Joi.object({

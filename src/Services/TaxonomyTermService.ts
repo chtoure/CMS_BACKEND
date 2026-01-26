@@ -90,6 +90,8 @@ export default class TaxonomyTermService {
     }
 
 
+
+
     // Delete
     public async deleteTerm(id: number): Promise<TaxonomyTerm> {
         const item = await prisma.taxonomyTerm.delete({
@@ -97,5 +99,15 @@ export default class TaxonomyTermService {
         });
 
         return TaxonomyTermService.castingTerm(item);
+    }
+
+
+
+    
+    public async deleteTerms(taxonomyId: number): Promise<BatchPayload> {
+        return prisma.taxonomyTerm.deleteMany({
+            where: { taxonomyId }
+        });
+
     }
 }

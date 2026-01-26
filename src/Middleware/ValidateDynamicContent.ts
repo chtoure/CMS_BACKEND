@@ -2,67 +2,64 @@ import type { Request, Response, NextFunction } from 'express';
 import { buildJoiSchema } from '../Utils/Validations/ContentEntrySchema.ts';
 import prisma from '../Utils/PrismaClient.ts';
 import Joi from 'joi';
+import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND } from '../Utils/Constantes/ConstantesHttp.ts';
+import type { IFieldDefinition } from '../Types/InputField.ts';
 
 const validateDynamicContent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { slug } = req.params;
-    const { data_json, parentId, status } = req.body;
+    const { data_json, status } = req.body;
 
     if (!slug) {
-      return res.status(400).json({ message: "Le paramètre slug est manquant." });
+      return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: "Le paramètre slug est manquant." });
     }
 
+    // 1. Trouver le ContentType
     const contentType = await prisma.contentType.findUnique({
       where: { slug }
     });
 
     if (!contentType) {
-      return res.status(404).json({ message: "Type de contenu inconnu." });
+      return res.status(HTTP_STATUS_NOT_FOUND).json({ message: "Type de contenu inconnu." });
     }
 
-    const dynamicSchema = buildJoiSchema(contentType.fields_schema as any);
+    // 2. Valider le contenu dynamique (data_json)
+    const dynamicSchema = buildJoiSchema(contentType.fields_schema as unknown as IFieldDefinition[]);
     const { error: jsonError, value: validatedJson } = dynamicSchema.validate(data_json, {
       abortEarly: false,
-      allowUnknown: true
+      stripUnknown: true // Nettoie les champs non définis dans le schéma
     });
 
     if (jsonError) {
-      return res.status(400).json({ 
-        message: "Erreur de validation des champs", 
-        errors: jsonError.details.map(err => ({ field: err.path[0], message: err.message })) 
+      console.log(jsonError.details);
+      return res.status(HTTP_STATUS_BAD_REQUEST).json({ 
+        message: jsonError.details.map(err => err.message), 
       });
     }
 
+    // 3. Valider les métadonnées (Statut uniquement)
     const entryMetaSchema = Joi.object({
-      parentId: Joi.number().integer().allow(null).optional(),
-      status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED').optional()
+      status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED').default('DRAFT')
     });
 
-    const { error: metaError } = entryMetaSchema.validate({ parentId, status });
+    const { error: metaError, value: validatedMeta } = entryMetaSchema.validate({ status });
     if (metaError) {
-      return res.status(400).json({ message: "Métadonnées invalides", errors: metaError.details });
-    }
-
-    if (parentId) {
-      const parentExists = await prisma.contentEntry.findUnique({
-        where: { id: parentId }
+      return res.status(HTTP_STATUS_BAD_REQUEST).json({ 
+        message: "Statut invalide", 
+        errors: metaError.details 
       });
-      if (!parentExists) {
-        return res.status(400).json({ message: "L'entrée parente spécifiée n'existe pas." });
-      }
     }
 
+    // 4. Préparer les données pour le controller
     req.body.data_json = validatedJson;
+    req.body.status = validatedMeta.status;
     req.body.contentTypeId = contentType.id; 
     
     next();
   } catch (err) {
     console.error("Erreur Middleware Validation:", err);
-    res.status(500).json({ message: "Erreur lors de la validation dynamique." });
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: "Erreur lors de la validation dynamique." });
   }
 };
 
-
-export {
-  validateDynamicContent
-}
+export { validateDynamicContent };

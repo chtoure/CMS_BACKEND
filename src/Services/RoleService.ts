@@ -2,7 +2,9 @@
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { Permission } from "../Types/Permission.ts";
 import type { Role } from "../Types/Role.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
 import RolePermissionService from "./RolePermissionService.ts";
 
 
@@ -29,6 +31,26 @@ export default class RoleService {
     };
   }
 
+  
+
+   private buildWhereClause(filter?:QueryFilters): Prisma.RoleWhereInput {
+        const where: Prisma.RoleWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { description: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
+  
 
     // Creation d'un role
     public async createRole(data: Prisma.RoleUncheckedCreateInput,permissionIds: number[] = []): Promise<Role> {
@@ -56,22 +78,12 @@ export default class RoleService {
     }
 
 
-    // Recuperer tous les roles avec pagination
-    public async getAllRoles(
-        archive: boolean | null,
-        skip?: number, 
-        take?: number
-    ): Promise<Role[]> {
 
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-
-        const options: any = {
-            where: where,
+    public async getRoles (filter?:QueryFilters){
+        const roles = await Paginator.paginate<Role>(prisma.role, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
             include: {
                 users: true,
                 permissions: {
@@ -80,55 +92,15 @@ export default class RoleService {
                     }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const resultRole = RoleService.mapRoles(roles.results);
+        return {
+            ...roles,
+            results: resultRole
         };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-        const roles = await prisma.role.findMany(options);
-
-        // On transforme (map) le résultat pour aplatir la structure
-        return RoleService.mapRoles(roles)
-
     }
-
-     public async countRoles(archive: boolean | null): Promise<number> {
-
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        return prisma.role.count({
-            where: where
-        });
-    }
-
-
-
-    // Recuperer tous les roles sans pagination
-    public async getAllRolesNoPaginate(): Promise<Role[]> {
-        const roles = await prisma.role.findMany({
-            where:{archive:false},
-            include: {
-                users: true,
-                permissions: {
-                    include: {
-                        permission: true // On inclut l'objet Permission réel
-                    }
-                }
-            }
-        });
-
-        // On transforme (map) le résultat pour aplatir la structure
-        return RoleService.mapRoles(roles)
-
-    }
-
 
     // Récupère un role par ID
     public async getRoleById(id: number): Promise<Role | null> {

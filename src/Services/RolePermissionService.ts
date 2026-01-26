@@ -23,6 +23,9 @@ export default class RolePermissionService {
     }
 
 
+    
+
+
     static async createRolePermsByRoleId(roleId:number, permissionIds:number[]): Promise<Prisma.BatchPayload>{
         return prisma.rolePermission.createMany({
             data: permissionIds.map(permissionId => ({

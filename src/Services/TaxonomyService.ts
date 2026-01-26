@@ -1,6 +1,10 @@
 
 import prisma from "../Utils/PrismaClient.ts";
 import type { Taxonomy, RegisterTaxonomy, UpdateTaxonomy } from "../Types/Taxonomy.ts";
+import { AppError } from "../Utils/ErrorPrisma.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
+import type { Prisma } from "../generated/prisma/client.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 
 export default class TaxonomyService {
 
@@ -23,58 +27,43 @@ export default class TaxonomyService {
 
         return TaxonomyService.castingTaxonomy(item);
     }
+
+
+    private buildWhereClause(filter?:QueryFilters): Prisma.TaxonomyWhereInput {
+        const where: Prisma.TaxonomyWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { slug: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
     
 
-    // Get all with pagination
-    public async getAllTaxonomies(archive: boolean | null, skip?: number, take?: number): Promise<Taxonomy[]> {
-        const where: any = {};
+    // get permissions
+    public async getTaxonomies(filter?:QueryFilters){
+        const data = await Paginator.paginate<Taxonomy>(prisma.taxonomy, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
+            include: {terms: true},
+            orderBy: { createdAt: 'desc' }
+        });
 
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        const options: any = {
-            where: where,
-            orderBy: {
-                createdAt: 'desc'
-            },
-            include: {
-                terms: true
-            }
+        return {
+            ...data,
+            results: TaxonomyService.castingTaxonomies(data.results)
         };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-        const items = await prisma.taxonomy.findMany(options);
-
-        return TaxonomyService.castingTaxonomies(items);
     }
 
-    // Count
-    public async countTaxonomies(archive: boolean | null): Promise<number> {
-        const where: any = {};
-
-        if (archive !== null) {
-            where.archive = archive;
-        }
-
-        return prisma.taxonomy.count({
-            where: where
-        });
-    }
-
-    // Get all without pagination
-    public async getAllTaxonomiesNoPaginate(): Promise<Taxonomy[]> {
-        const items = await prisma.taxonomy.findMany({
-            orderBy: { createdAt: "desc" },
-            include: {
-                terms: true
-            }
-        });
-
-        return TaxonomyService.castingTaxonomies(items);
-    }
 
     // Get by ID
     public async getTaxonomyById(id: number): Promise<Taxonomy | null> {
@@ -89,6 +78,8 @@ export default class TaxonomyService {
 
         return TaxonomyService.castingTaxonomy(item);
     }
+
+    
 
     // Get by slug
     public async getTaxonomyBySlug(slug: string): Promise<Taxonomy | null> {
@@ -139,6 +130,24 @@ export default class TaxonomyService {
 
     // Delete
     public async deleteTaxonomy(id: number): Promise<Taxonomy> {
+
+        const itemASupprimer = await prisma.taxonomy.findUnique({
+            where: { id, archive: true },
+            include: {
+                _count: {
+                    select: {
+                        terms: true,
+                        contentTypes: true
+                    }
+                } 
+            }
+        });
+
+        if (!itemASupprimer) throw new AppError("Taxonomy non trouvé ou non archivé.");
+
+        if (itemASupprimer._count.terms > 0) throw new AppError("Suppression impossible : ce categorie a des termes.");
+        if (itemASupprimer._count.contentTypes > 0) throw new AppError("Suppression impossible : ce categorie est utilisé par des types de contenu.");
+
         const item = await prisma.taxonomy.delete({
             where: { id, archive: true }
         });
