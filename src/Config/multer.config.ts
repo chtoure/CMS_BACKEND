@@ -4,21 +4,34 @@ import fs from 'fs';
 import type { Request, Response, NextFunction } from 'express';
 import { mimeTypes } from '../Utils/Constantes/config.constant.ts';
 
-const tempsDir = path.join(process.cwd(), 'media', 'uploads');
-
-if (!fs.existsSync(tempsDir)) {
-  fs.mkdirSync(tempsDir, { recursive: true });
-}
+const baseUploadDir = path.join(process.cwd(), 'media', 'uploads');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let finalDir;
+    let subDir = 'others';
 
+    // 1. Détermination du sous-dossier
     if (file.mimetype.startsWith('image/')) {
-      finalDir = path.join(tempsDir, 'images');
-    } else {
-      finalDir = path.join(tempsDir, 'videos');
+      subDir = 'images';
+    } else if (file.mimetype.startsWith('video/')) {
+      subDir = 'videos';
+    } else if (
+      file.mimetype.includes('pdf') || 
+      file.mimetype.includes('msword') || 
+      file.mimetype.includes('officedocument') ||
+      file.mimetype.startsWith('text/')
+    ) {
+      subDir = 'documents';
+    } else if (
+      file.mimetype.includes('zip') || 
+      file.mimetype.includes('x-rar') || 
+      file.mimetype.includes('tar') || 
+      file.mimetype.includes('compressed')
+    ) {
+      subDir = 'archives';
     }
+
+    const finalDir = path.join(baseUploadDir, subDir);
 
     if (!fs.existsSync(finalDir)) {
       fs.mkdirSync(finalDir, { recursive: true });
@@ -28,7 +41,7 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random());
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1E9);
     const originalExtension = path.extname(file.originalname);
     cb(null, uniqueSuffix + originalExtension);
   }
@@ -41,13 +54,13 @@ const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
     cb(
       new multer.MulterError(
         'LIMIT_UNEXPECTED_FILE',
-        'Type de fichier non autorisé'
+        `Type ${file.mimetype} non autorisé`
       )
     );
   }
 };
 
-function multerErrorHandler(
+export function multerErrorHandler(
   err: any,
   req: Request,
   res: Response,
@@ -57,30 +70,25 @@ function multerErrorHandler(
     switch (err.code) {
       case 'LIMIT_FILE_SIZE':
         return res.status(413).json({
-          message: 'Fichier trop volumineux (max 10 Mo)',
+          message: 'Fichier trop volumineux (max 50 Mo)',
         });
-
       case 'LIMIT_UNEXPECTED_FILE':
         return res.status(415).json({
           message: err.message || 'Type de fichier non autorisé',
         });
-
       default:
         return res.status(400).json({
           message: err.message,
         });
     }
   }
-
   next(err);
 }
 
-const upload = multer({
+export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: 50 * 1024 * 1024,
   },
 });
-
-export { upload, multerErrorHandler };

@@ -9,6 +9,19 @@ enum FieldType {
   RELATION = 'relation'
 }
 
+enum TypesMedia {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  PDF = 'pdf',
+  MSWORD = 'msword',
+  OFFICEDOCUMENT = 'officedocument',
+  TEXT = 'text/',
+  ZIP = 'zip',
+  RAR = 'x-rar',
+  TAR = 'tar',
+  COMRESSED = 'compressed'
+}
+
 
 interface ITextConfig {
   type: FieldType.TEXT;
@@ -31,7 +44,7 @@ interface INumberConfig {
 interface IMediaConfig {
   type: FieldType.MEDIA;
   required: boolean;
-  allowedTypes: ('image' | 'video' | null)[];
+  allowedTypes: TypesMedia[];
   multiple: boolean;
 }
 
@@ -108,5 +121,6 @@ export {
   type ISelectConfig,
   type IBooleanConfig,
   type IRichTextConfig,
-  type IRelationConfig
+  type IRelationConfig,
+  TypesMedia
 }

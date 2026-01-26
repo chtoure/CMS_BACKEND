@@ -1,7 +1,27 @@
+import type { Prisma } from "../generated/prisma/client.ts";
 import type { Media, MediaPayload } from "../Types/Media.ts"
+import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts"
+import type { QueryFilters } from "../Utils/queryFilter.ts";
 
 export default class MediaService {
+
+    private buildWhereClause(filters?: QueryFilters): Prisma.MediaWhereInput {
+
+        console.log(filters?.type);
+        
+        const where: Prisma.MediaWhereInput = {};
+        if(filters?.type && filters.type.length > 0) where.type = { in: filters.type };
+
+        if (filters?.search?.trim()) {
+            const query = filters.search.trim();
+            where.OR = [
+                { file_path: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
 
     public async createMedia(media: MediaPayload): Promise<Media | null> {
         return prisma.media.create({
@@ -45,25 +65,18 @@ export default class MediaService {
         });
     }
 
-    public async getAllMedia(
-        type: 'video' | 'image' | null, 
-        skip?: number, 
-        take?: number
-    ): Promise<Media[]> {
-        const options: any = {
-            where: type ? { type } : {},
+    public async getAllMedia(filters?: QueryFilters) {
+        return Paginator.paginate<Media>(prisma.media, {
+            page: filters?.page,
+            limit: filters?.limit,
+            where:this.buildWhereClause(filters),
             orderBy: {
                 createdAt: 'desc'
             }
-        };
-
-        if (skip !== undefined) options.skip = skip;
-        if (take !== undefined) options.take = take;
-
-        return prisma.media.findMany(options);
+        });
     }
 
-    public async countMedia(type: 'video' | 'image' | null): Promise<number> {
+    public async countMedia(type: 'video' | 'image' | 'document' | 'archive' | null): Promise<number> {
         return prisma.media.count({
             where: type ? { type } : {}
         });
