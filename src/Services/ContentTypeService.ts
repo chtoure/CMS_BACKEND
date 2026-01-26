@@ -264,13 +264,8 @@ export default class ContentTypeService {
         const changements = ancienFieldsSchema.map((ancienField, index) => {
             const nouveauField = nouveauFieldsSchema[index];
 
-            console.log(ancienField.name);
-            
-
             // CAS 1 : Suppression (Le nom a changé à cet index ou le nouveau n'existe pas)
-            if (!nouveauField || ancienField.name !== nouveauField.name) {
-                console.log("delete",ancienField.name);
-                
+            if (!nouveauField || ancienField.name !== nouveauField.name) {                
                 return { name: ancienField.name, action: 'DELETE' };
             }
 
@@ -317,14 +312,10 @@ export default class ContentTypeService {
             let hasChanged = false;
 
             changements.forEach(changement => {
-                if (changement.action === 'DELETE' && changement.name in data_json) {
-                    console.log("delete",data_json);
-                    
+                if (changement.action === 'DELETE' && changement.name in data_json) {    
                     delete data_json[changement.name];
                     hasChanged = true;
                 } else if (changement.action === 'NULL' && changement.name in data_json) {
-                    console.log(changement.name);
-                    
                     data_json[changement.name] = null;
                     hasChanged = true;
                 }
@@ -332,9 +323,7 @@ export default class ContentTypeService {
 
             // 3. Sauvegarde en base
             if (hasChanged) {
-                console.log("modify",data_json);
-                
-            await contentEntryService.updateContentEntry(entry.id,{data_json})
+                await contentEntryService.updateContentEntry(entry.id,{data_json})
             }
         }
 

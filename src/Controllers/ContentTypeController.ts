@@ -108,9 +108,7 @@ export default class ContentTypeController {
             await contentTypeService.syncRelationsContentTypeUpdate(resultContent.id,resultContent.fields_schema);
             
             const { results: entries }= await contentEntryService.getEntries(resultContent.id)
-            console.log(entries);
-            
-            
+                        
             if (entries.length > 0) {
                 await contentTypeService.logiqueModContentType(fields_schema,ancienContent.fields_schema,resultContent.id)
             }

@@ -66,6 +66,9 @@ export default class MediaController {
                 ? `${fullUrl}?page=${page - 1}&limit=${limit}${filter ? `&type=${filter}` : ''}` 
                 : null;
 
+            console.log(results);
+            
+
             return res.status(HTTP_STATUS_OK).json({
                 count: totalCount,
                 next: next,
