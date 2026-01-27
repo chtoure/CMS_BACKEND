@@ -12,14 +12,8 @@ enum FieldType {
 enum TypesMedia {
   IMAGE = 'image',
   VIDEO = 'video',
-  PDF = 'pdf',
-  MSWORD = 'msword',
-  OFFICEDOCUMENT = 'officedocument',
-  TEXT = 'text/',
-  ZIP = 'zip',
-  RAR = 'x-rar',
-  TAR = 'tar',
-  COMRESSED = 'compressed'
+  DOCUMENT = 'document',
+  ARCHIVE = 'archive'
 }
 
 
