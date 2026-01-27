@@ -41,7 +41,6 @@ export default class ContentTypeController {
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
-    
 
 
     public async getContentTypeById(req:Request,res:Response){

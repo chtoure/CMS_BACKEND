@@ -47,20 +47,24 @@ export default class ContentTypeService {
     private buildWhereClause(filter?:QueryFilters): Prisma.ContentTypeWhereInput {
         const where: Prisma.ContentTypeWhereInput = {};
 
-        if (filter?.archive !== undefined) {
+        if (filter?.archive) {
             where.archive = filter.archive;
+        }else{
+            where.archive = false;
         }
 
         if (filter?.search?.trim()) {
             const query = filter.search.trim();
             where.OR = [
                 { name: { contains: query } },
-                { slug: { contains: query } }
+                { slug: { contains: query } },
+                { description: { contains: query } }
             ];
         }
 
         return where;
     }
+
 
 
     // Create
@@ -77,7 +81,7 @@ export default class ContentTypeService {
     }
 
 
-    // get permissions
+    // get contentTypes
     public async getContentTypes(filter?:QueryFilters){
         const data = await Paginator.paginate<ContentType>(prisma.contentType, {
             page: filter?.page,
@@ -91,6 +95,7 @@ export default class ContentTypeService {
             results: ContentTypeService.castingContentTypes(data.results)
         };
     }
+
 
 
     //get by ID
