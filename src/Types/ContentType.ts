@@ -1,4 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.ts";
+import type { ContentEntry } from "./ContentEntry.ts";
 import type { IFieldDefinition } from "./InputField.ts";
 
 
@@ -13,6 +14,7 @@ export interface ContentType {
     updatedAt: Date;
     archive: Boolean;
     archivedAt: Date | null;
+    entries?: ContentEntry[]
 }
 
 

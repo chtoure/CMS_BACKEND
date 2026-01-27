@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import ContentEntryController from "../Controllers/ContentEntryController.ts";
 import { switchStatusSchema, toggleArchiveSchema } from "../Utils/Validations/ContentEntrySchema.ts";
+import { validateDynamicContent } from "../Middleware/ValidateDynamicContent.ts";
 import validateBody from "../Middleware/ValidateBoody.ts";
 
 export function contentEntryRoutes(app: Express): void {
@@ -18,10 +19,10 @@ export function contentEntryRoutes(app: Express): void {
     app.get("/content-entries-archived", AuthMiddleware, entryController.getArchivedEntries.bind(entryController));
 
     // Créer une nouvelle entrée pour un type donné
-    app.post("/content-entries/:slug", AuthMiddleware, entryController.createEntry.bind(entryController));
+    app.post("/content-entries/:slug", AuthMiddleware, validateDynamicContent, entryController.createEntry.bind(entryController));
     
     // Mise à jour complète d'une entrée
-    app.put("/content-entries/:id", AuthMiddleware, entryController.updateEntry.bind(entryController));
+    app.put("/content-entries/:id", AuthMiddleware, validateDynamicContent, entryController.updateEntry.bind(entryController));
 
     // Changer le statut (PUBLISHED, DRAFT...)
     app.patch("/content-entries/:id/status", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController));

@@ -8,6 +8,7 @@ import {corsOptions} from "./Utils/Constantes/CorsOptions.ts";
 import path from "path";
 
 
+
 dotenv.config();
 
 const port: number = parseInt(process.env.PORT || "3000", 10);
@@ -33,4 +34,3 @@ app.listen(port, "0.0.0.0", () => {
   console.log(`Server started on port ${port}`);
   console.log("Couper le serveur avec Ctrl+C");
 });
- 
