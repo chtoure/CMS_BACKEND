@@ -28,7 +28,14 @@ export default class ContentEntryService {
             where.OR = [
                 { data_json: { path: '$.title', string_contains: query } },
                 { data_json: { path: '$.name', string_contains: query } },
-                { data_json: { path: '$.content', string_contains: query } }
+                { data_json: { path: '$.content', string_contains: query } },
+                { 
+                    user: { 
+                        full_name: { 
+                            contains: query,
+                        } 
+                    } 
+                }
             ];
         }
 
