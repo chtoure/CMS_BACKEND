@@ -34,13 +34,16 @@ export default class TaxonomyService {
 
         if (filter?.archive !== undefined) {
             where.archive = filter.archive;
+        }else{
+            where.archive = false;
         }
 
         if (filter?.search?.trim()) {
             const query = filter.search.trim();
             where.OR = [
                 { name: { contains: query } },
-                { slug: { contains: query } }
+                { slug: { contains: query } },
+                { description: { contains: query } }
             ];
         }
 
