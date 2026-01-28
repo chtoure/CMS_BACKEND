@@ -73,6 +73,23 @@ export default class TaxonomyController {
         }
     }
 
+
+    public async getTaxonomyTermsByTaxonomyIds(req: Request, res: Response) {
+        try {             
+            const { taxonomyIds } = req.params; // Reçoit "1,2,3"
+            if (!taxonomyIds) return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: "Le paramètre taxonomyIds est manquant." });
+            const idsArray = taxonomyIds.split(',').map(Number).filter(n => !isNaN(n));
+            
+            const result = await taxonomyService.getTaxonomyTermsByTaxonomyIds(idsArray);
+            if (!result) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Taxonomie non trouvée ou archivée' });
+            return res.status(HTTP_STATUS_OK).json(result);
+        } catch (error) {
+            console.error('Erreur lors de la recuperation de la taxonomie', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
     public async updateTaxonomy(req: Request, res: Response) {
         const { name,slug,description,terms } = req.body;   
         try {

@@ -13,6 +13,7 @@ export function taxonomyRoutes(app: Express, validateBody: Function): void {
     app.get("/taxonomies", AuthMiddleware, taxonomyController.getAllTaxonomies.bind(taxonomyController));
     app.get("/taxonomies/:id", taxonomyController.getTaxonomyById.bind(taxonomyController));
     app.get("/taxonomiesSlug/:slug", taxonomyController.getTaxonomyBySlug.bind(taxonomyController));
+    app.get("/taxonomiesTerms/:taxonomyIds", taxonomyController.getTaxonomyTermsByTaxonomyIds.bind(taxonomyController));
     app.put("/taxonomies/:id", AuthMiddleware, validateBody(taxonomyUpdateSchema), taxonomyController.updateTaxonomy.bind(taxonomyController));
     app.put("/archiveTaxonomies/:id", AuthMiddleware, taxonomyController.archivedTaxonomy.bind(taxonomyController));
     app.put("/restoreTaxonomies/:id", AuthMiddleware, taxonomyController.restoreTaxonomy.bind(taxonomyController));

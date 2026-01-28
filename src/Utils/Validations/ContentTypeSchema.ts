@@ -29,7 +29,7 @@ const fieldDefinitionSchema = Joi.object({
   maxSize: Joi.number().optional(),
   allowedTypes: Joi.array().items(Joi.string().valid(...Object.values(TypesMedia)).allow(null)).optional(),
   multiple: Joi.boolean().optional(),
-  taxonomy_slug: Joi.string().when('type', { is: 'taxonomy', then: Joi.required() }),
+  taxonomyIds: Joi.array().items(Joi.number()).when('type', { is: 'taxonomy', then: Joi.required() }),
   renderType: Joi.string().valid('combobox', 'badges', 'checkbox').optional(),
   options: Joi.array().items(selectOptionSchema).when('type', { is: 'select', then: Joi.required() }).messages({'array.base': 'Les options doivent être un tableau'}),
   defaultValue: Joi.any().optional(),

@@ -2,7 +2,7 @@
 import prisma from "../Utils/PrismaClient.ts";
 import type { ContentType, RegisterContentType, UpdateContentType } from "../Types/ContentType.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
-import { FieldType, type IBaseField, type IFieldDefinition, type IRelationConfig } from "../Types/InputField.ts";
+import { FieldType, type IBaseField, type IFieldDefinition, type IRelationConfig, type ITaxonomyConfig } from "../Types/InputField.ts";
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_NOT_FOUND } from "../Utils/Constantes/ConstantesHttp.ts";
 import { AppError } from "../Utils/ErrorPrisma.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
@@ -68,11 +68,16 @@ export default class ContentTypeService {
 
 
     // Create
-    public async createContentType (data: RegisterContentType): Promise<ContentType> {
+    public async createContentType (data: RegisterContentType,taxonomyIds?:number[]): Promise<ContentType> {
         const itemContentType = await prisma.contentType.create({
             data:{
                 ...data,
-                fields_schema: data.fields_schema as unknown as Prisma.InputJsonValue
+                fields_schema: data.fields_schema as unknown as Prisma.InputJsonValue,
+                ...(taxonomyIds && taxonomyIds.length > 0 && {
+                    taxonomies: {
+                    connect: taxonomyIds.map(id => ({ id }))
+                    }
+                })
             } as Prisma.ContentTypeCreateInput
         });
 
@@ -136,11 +141,19 @@ export default class ContentTypeService {
 
 
     // update
-    public async updateContentType(id: number, data: UpdateContentType): Promise<ContentType> {
+    public async updateContentType(id: number, data: UpdateContentType , taxonomyIds?:number[]): Promise<ContentType> {
         const contentUpdated = await prisma.contentType.update({
             where: { id },
             // On cast pour éviter les erreurs de compatibilité JSON
-            data: data as Prisma.ContentTypeUpdateInput
+            data: {
+                 ...data,
+                 fields_schema: data.fields_schema as unknown as Prisma.InputJsonValue,
+                ...(taxonomyIds && taxonomyIds.length > 0 &&{
+                    taxonomies: {
+                        set: taxonomyIds.map(id => ({ id }))
+                    }
+                })
+            }
         });
 
         // On fait le casting
@@ -208,6 +221,16 @@ export default class ContentTypeService {
         return ContentTypeService.castingContentType(contentDelete);
     }
 
+    async syncTaxonomyContentType(fieldsSchema: IFieldDefinition[]) {
+        const taxonomyIds = fieldsSchema
+            .filter((f): f is (IBaseField & ITaxonomyConfig) => f.type === FieldType.TAXONOMY)
+            .flatMap(f => f.taxonomyIds || []) // Gère le cas où taxonomyIds est null/undefined
+            .map(id => Number(id))
+            .filter(id => !isNaN(id) && id !== 0); // Élimine les NaN et les IDs invalides (0)
+
+        return [...new Set(taxonomyIds)]; // Retire les doublons à la fin
+    }
+
     
     
     // synchronisation des relations entre les content types
@@ -219,7 +242,7 @@ export default class ContentTypeService {
                 .filter((f): f is (IBaseField & IRelationConfig) => f.type === FieldType.RELATION)
                 .map(f => Number(f.contentTypeId))
         )];
-
+       
         // Création des nouveaux index relationnels
         if (cibleIds.length > 0) {
             await prisma.contentTypeRelation.createMany({
@@ -242,6 +265,7 @@ export default class ContentTypeService {
                 .map(f => Number(f.contentTypeId))
         )];
 
+        
         // Nettoyage des anciens liens pour ce propriétaire
         await prisma.contentTypeRelation.deleteMany({
             where: { proprietaireId: proprietaireId }
@@ -256,6 +280,7 @@ export default class ContentTypeService {
                 }))
             });
         }
+
     }
 
 
