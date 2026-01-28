@@ -9,6 +9,7 @@ const validateBody = (schema: ObjectSchema) => {
     if (error) {
       const messages = error.details.map((err) => err.message);
       res.status(HTTP_STATUS_BAD_REQUEST).json({ erreurs: messages });
+      console.log(messages);    
       return;
     }
 

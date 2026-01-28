@@ -27,4 +27,8 @@ export function variableRoutes(app: Express): void {
     app.delete("/variables/", validateBody(deleteMultipleSchema), variableController.deleteVariables.bind(variableController));
 
     app.delete("/variables/:id", variableController.deleteVariables.bind(variableController));
+
+    app.get("/variables", variableController.getAllVariables.bind(variableController));
+
+    app.get("/variables/:id", variableController.getVariableById.bind(variableController));
 }

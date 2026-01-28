@@ -5,7 +5,7 @@ import UserService from "../../Services/UserService.ts";
 const userService = new UserService()
 
 // Ajouter L'Admin
- async function  seedAddUser() {
+async function  seedAddUser() {
 
     // Hachage du password
     const password_hash = await userService.hashPassword("defaultPassword123");
@@ -23,27 +23,21 @@ const userService = new UserService()
         },
     });
 
-    console.log({ user });
+    const user1 = await prisma.user.upsert({
+        where: { email: 'takpaagilbert@gmail.com' },
+        update: {},
+        create: {
+            email: 'takpaagilbert@gmail.com',
+            full_name: 'TAKPAA Wella Gilbert',
+            password_hash: password_hash,
+            isLoggedIn: false,
+        },
+    });
+
+    console.log({ user, user1 });
     console.log('Utilisateur créé avec succès !');
 
 }
 
 
-async function main() {
-    await seedAddUser();
-}
-
-
-
-// Appele de la focntion principale main
-main()
-  .then(() => {
-    console.log("Fin du script.");
-  })
-  .catch((e) => {
-    console.error("Erreur durant le seed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+export { seedAddUser };

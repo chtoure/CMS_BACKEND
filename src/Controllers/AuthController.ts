@@ -8,7 +8,8 @@ import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
-
+import { EmailService } from "../Services/EmailService.ts";
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 
 // Instanciation des services
 const userService = new UserService();
@@ -98,6 +99,14 @@ export default class AuthController {
                     isLoggedIn: false
                 });
 
+
+                // Envoie du password par defaut a l'utilisateur
+                const isSend = await EmailService.sendVerificationCode(newUser.email,passwordFinal);
+
+                if (!isSend) {
+                    return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la création de l\'utilisateur.' });
+                }
+
                 // Message de Retour 
                 const message="Inscription réussie .";
                 // Function : Creation de Tokens et Retour
@@ -105,7 +114,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de l\'enregistrement:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la création de l\'utilisateur.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
 
         }
@@ -118,10 +128,10 @@ export default class AuthController {
             try {
                 
                 // Verifier de l'existance de l'utisateur
-                const user = await userService.getUserByEmail(email);
+                const user = await userService.getUserByEmailNonArchive(email);
                 if (!user) {
                     console.log("Email Invalide");
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides.' });
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides ou utilisateur archivé.' });
                 }
                 console.log("Utilisateur trouvé:", user);
                 const isPasswordValid = await userService.comparePassword(password,user.password_hash);
@@ -137,11 +147,15 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la connexion:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de l\'authentification.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
 
         }
 
+
+
+        
 
 
         // Refresh Token Access
@@ -175,7 +189,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la renouvellation du token access', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur lors de la renouvellation du token access' }); 
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage }); 
             }
         }
 
@@ -227,7 +242,8 @@ export default class AuthController {
 
             } catch (error) {
                 console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-                return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la réinitialisation du mot de passe.' });
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
         }
 

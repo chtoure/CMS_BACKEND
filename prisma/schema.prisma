@@ -29,6 +29,9 @@ model User {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt         
   role            Role?        @relation(fields: [role_id], references: [id])
+  entries         ContentEntry[]
+  archive   Boolean     @default(false)
+  archivedAt DateTime?
 }
 
 
@@ -36,20 +39,26 @@ model User {
 model Role {
   id              Int         @id @default(autoincrement())
   name            String      @unique
+  description     String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   users           User[]
-  permissions     RolePermission[] 
+  permissions     RolePermission[]
+  archive   Boolean     @default(false)
+  archivedAt DateTime? 
 }
 
 
 
 model Permission {
-  id        Int              @id @default(autoincrement())
-  name      String           @unique
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  roles     RolePermission[]
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  roles           RolePermission[]
+  archive   Boolean     @default(false)
+  archivedAt DateTime?
 }
 
 model RolePermission {
@@ -60,7 +69,9 @@ model RolePermission {
   updatedAt    DateTime   @updatedAt
   permission   Permission @relation(fields: [permissionId], references: [id])
   role         Role       @relation(fields: [roleId], references: [id])
-  @@unique([roleId, permissionId])  
+  @@unique([roleId, permissionId]) 
+  archive   Boolean     @default(false)
+  archivedAt DateTime? 
 }
 
 
@@ -72,6 +83,10 @@ model Media {
   file_path    String
   type         String
   alt          String?
+  parameter   Parameter[]
+  usedInEntries ContentEntryRelation[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 
@@ -97,4 +112,141 @@ model Variable {
   value         String     
   collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   collectionId  Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Parameter {
+  id            Int      @id @default(autoincrement()) 
+  entity_name   String   
+  title         String   
+  media         Media?   @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId       Int?    
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+model ContentType {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  slug          String         @unique
+  description   String?
+  fields_schema Json  
+
+  // Les ContentTypes dont je references(mes parents logiques)
+  parentContentTypes  ContentTypeRelation[] @relation("TypeProprietaire")
+  
+  // Les ContentTypes qui me references(mes enfants logiques)
+  childrenContentTypes ContentTypeRelation[] @relation("TypeCible")
+
+  entries       ContentEntry[]
+  taxonomies    Taxonomy[]     @relation("ContentTypeTaxonomies")
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  archive   Boolean     @default(false)
+  archivedAt DateTime? 
+}
+
+
+
+
+
+
+model ContentTypeRelation {
+  id        Int         @id @default(autoincrement())
+  
+  // Celui qui possède le champ relation
+  proprietaireId      Int         
+  proprietaire        ContentType @relation("TypeProprietaire", fields: [proprietaireId], references: [id], onDelete: Cascade)
+
+  // Celui qui est pointé/référencé
+  cibleId             Int         
+  cible               ContentType @relation("TypeCible", fields: [cibleId], references: [id], onDelete: Cascade)
+
+  @@unique([proprietaireId, cibleId])
+}
+
+
+
+
+
+model ContentEntry {
+  id              Int           @id @default(autoincrement())
+  contentTypeId   Int
+  contentType     ContentType   @relation(fields: [contentTypeId], references: [id])
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
+  data_json       Json         
+  status          Status        @default(DRAFT)
+  taxonomyTerms      TaxonomyTerm[]    @relation("EntryTaxonomyTerms")
+  
+  outgoingRelations ContentEntryRelation[] @relation("OutgoingRelations")
+  incomingRelations ContentEntryRelation[] @relation("IncomingRelations")
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  archivedAt      DateTime? 
+}
+
+model ContentEntryRelation {
+  id        Int      @id @default(autoincrement())
+  fieldName String
+
+  sourceId  Int
+  source    ContentEntry @relation("OutgoingRelations", fields: [sourceId], references: [id], onDelete: Cascade)
+
+  targetEntryId Int?
+  targetEntry   ContentEntry? @relation("IncomingRelations", fields: [targetEntryId], references: [id], onDelete: Cascade)
+
+  targetMediaId Int?
+  targetMedia   Media?        @relation(fields: [targetMediaId], references: [id], onDelete: Cascade)
+
+  targetTaxonomyId Int?
+  targetTaxonomy   TaxonomyTerm? @relation(fields: [targetTaxonomyId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetEntryId, fieldName])
+  @@unique([sourceId, targetMediaId, fieldName])
+  @@unique([sourceId, targetTaxonomyId, fieldName])
+  
+  @@index([sourceId])
+  @@index([targetEntryId])
+  @@index([targetMediaId])
+}
+
+model Taxonomy {
+  id              Int            @id @default(autoincrement())
+  name            String
+  slug            String         @unique
+  description     String?
+  contentTypes    ContentType[]  @relation("ContentTypeTaxonomies")
+  terms       TaxonomyTerm[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  archive   Boolean     @default(false)
+  archivedAt DateTime?
+}
+
+
+model TaxonomyTerm {
+  id          Int          @id @default(autoincrement())
+  name        String       // ex: "Sport"
+  slug        String       @unique // ex: "sport"
+  
+  // La taxonomie parente
+  taxonomyId  Int
+  taxonomy    Taxonomy     @relation(fields: [taxonomyId], references: [id])
+
+  contentEntryRelations ContentEntryRelation[]
+
+  entries     ContentEntry[] @relation("EntryTaxonomyTerms")
+}
+
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }

@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import { EmailService } from "../Services/EmailService.ts";
 import UserService from "../Services/UserService.ts";
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 
 
 const userService = new UserService();
@@ -41,7 +42,7 @@ export default class EmailController {
 
                 res.status(HTTP_STATUS_OK).json({
                     user:{
-                         id: updatedUser.id,
+                        id: updatedUser.id,
                         full_name: updatedUser.full_name,
                         email: updatedUser.email,
                         role: updatedUser.role?.name ?? null,
@@ -53,10 +54,16 @@ export default class EmailController {
                 res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Échec de l'envoi de l'email de vérification." });
             }
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de l'envoi de l'email de vérification.", details: error });
+            console.log('Erreur lors de l\'envoi de l\'email de vérification:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
+
+
+
+    
 
     async verifyCode(req: Request, res: Response) {
 
@@ -75,7 +82,9 @@ export default class EmailController {
             res.status(HTTP_STATUS_OK).json({ message: "Code vérifié avec succès. Vous pouvez réinitialiser votre mot de passe." });
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la vérification du code.", details: error });
+            console.log('Erreur lors de la vérification du code:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 }

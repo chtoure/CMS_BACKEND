@@ -42,4 +42,10 @@ export default class VariableService {
             where : {id}
         })
     }
+
+    public async getAllVariables() {
+        return prisma.variable.findMany({
+            orderBy: { name: 'asc' }
+        });
+    }
 }

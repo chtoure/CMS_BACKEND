@@ -1,12 +1,14 @@
 
 import type { Request,Response } from "express";
-import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import { HTTP_STATUS_BAD_REQUEST,HTTP_STATUS_INTERNAL_SERVER_ERROR,HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import UserService from "../Services/UserService.ts";
 import RoleService from "../Services/RoleService.ts";
 import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
+import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 
-const userService = new UserService();
+export const userService = new UserService();
 const roleService = new RoleService();
 
 
@@ -15,14 +17,15 @@ const roleService = new RoleService();
 export default class UserController {
 
     async getUsers(req:Request,res:Response){
-
         try {
-            
-            const users = await userService.getAllUser();
-            res.status(HTTP_STATUS_OK).json(users);
 
+            const filters = RequestHelper.getFilters(req);
+            const users = await userService.getAllUsers(filters);
+            res.status(HTTP_STATUS_OK).json(users);
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: 'Erreur lors de la récupération des utilisateurs', details: error });
+            console.log('Erreur lors de la récupération des utilisateurs:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
@@ -33,11 +36,13 @@ export default class UserController {
         try {
             
             const user = await userService.getUserById(Number(req.params.id));
-            if (!user) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Utilisateur non trouvé' });
+            if (!user) return res.status(HTTP_STATUS_NOT_FOUND).json({ error: 'Utilisateur non trouvé ou archivé' });
             res.status(HTTP_STATUS_OK).json(user);
 
-        } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la récupération de l'utilisateur", details: error });
+        } catch (error) {   
+            console.log('Erreur lors de la récupération de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
 
     }
@@ -98,11 +103,14 @@ export default class UserController {
             });
 
         } catch (error) {
-            res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour de l'utilisateur", details: error });
+            console.log('Erreur lors de la mise à jour de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
 
 
+    // User archiver
     async deleteUser(req:Request,res:Response){
 
         try {
@@ -111,9 +119,28 @@ export default class UserController {
             res.status(HTTP_STATUS_OK).json(user);
 
         } catch (error) {
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la suppression de l'utilisateur", details: error });
+            console.log('Erreur lors de la suppression de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+
+    // restorer un utilisateur archivés
+    async restoreUser(req:Request,res:Response){
+
+        try {
+            
+            const user = await userService.restoreUser(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(user);
+
+        } catch (error) {
+            console.log('Erreur lors de la restauration de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
 
 
     async changePassword(req:Request,res:Response){
@@ -133,9 +160,13 @@ export default class UserController {
                 }
             });
         } catch (error) {
-            console.log("Erreur lors de la mise à jour du mot de passe", error);
-             res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Erreur lors de la mise à jour du mot de passe", details: error });
+            console.log('Erreur lors de la mise à jour du mot de passe:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+
+    
 
 }

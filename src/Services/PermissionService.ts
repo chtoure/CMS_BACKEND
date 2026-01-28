@@ -1,17 +1,63 @@
 
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { Permission } from "../Types/Permission.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
 
 
 export default class PermissionService {
 
+    static mapPermissions(permissions: any[]): Permission[] {
+        return permissions.map(p => ({
+            ...p,
+            // On extrait l'objet 'role' de chaque entrée de la table pivot
+            roles: p.roles?.map((rp: any) => rp.role) ?? []
+        }));
+    }
+
+
+    static mapSinglePermission(permission: any): Permission {
+        return {
+            ...permission,
+            roles: permission.roles?.map((rp: any) => rp.role) ?? []
+        };
+    }
+
+
+   private buildWhereClause(filter?:QueryFilters): Prisma.PermissionWhereInput {
+        const where: Prisma.PermissionWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { description: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
+
+
+    
     // Creation d'une permission
     public async createPermission(data: Prisma.PermissionUncheckedCreateInput): Promise<Permission> {
-        return prisma.permission.create({
+        const perms = await prisma.permission.create({
             data,
-            include: { roles: true }
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(perms);
     }
 
 
@@ -23,49 +69,117 @@ export default class PermissionService {
     }
 
 
-     // Recuperer tous les permissions
-    public async getAllPermissions(): Promise<Permission[]> {
-       return prisma.permission.findMany({
-        include:{roles:true}
-       });
-    }
 
+    public async getPermissions(filter?:QueryFilters){
+        const data = await Paginator.paginate<Permission>(prisma.permission, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return {
+            ...data,
+            results: PermissionService.mapPermissions(data.results)
+        };
+    }
+    
 
     // Récupère une permission par ID
     public async getPermissionById(id: number): Promise<Permission | null> {
-        return prisma.permission.findUnique({
-            where:{id},
-            include:{roles:true}
+        const permission = await prisma.permission.findUnique({
+            where:{id,archive:false},
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(permission);
     }
 
 
     // Récupère une permission par name
     public async getPermissionByName(name: string): Promise<Permission | null> {
-        return prisma.permission.findUnique({
-            where:{name},
-            include:{roles:true}
+        const perms = await prisma.permission.findUnique({
+            where:{name,archive:false},
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
         });
+        return PermissionService.mapSinglePermission(perms);
     }
 
 
     // Modifier une permission
     public async updatePermission(id:number, userData:Prisma.PermissionUpdateInput): Promise<Permission | null> {
-        return prisma.permission.update({
+        const permission = await prisma.permission.update({
             where:{id},
             data:userData,
-            include:{roles:true}
-        })
+            include: {
+            roles: {
+                include: {
+                    role: true
+                }
+            }
+        }
+        });
+        return PermissionService.mapSinglePermission(permission);
     }
 
 
-    // Supprimer un utilisateur 
+    // Archiver une permission 
     public async deletePermission(id:number):  Promise<Permission | null>{
-        return prisma.permission.delete({
-            where:{id},
-            include:{roles:true}
+        const perm = await prisma.permission.update({
+            where:{id,archive:false},
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                },
+            },
+            data:{
+                archive:true,
+                archivedAt: new Date()
+            }
         })
+        return PermissionService.mapSinglePermission(perm);
     }
+
+
+
+    // Restore une permission
+    public async RestorePermission(id:number):  Promise<Permission | null>{
+        const perm = await prisma.permission.update({
+            where:{id,archive:true},
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                },
+            },
+            data:{
+                archive:false,
+                archivedAt:null
+            }
+        })
+        return PermissionService.mapSinglePermission(perm);
+    } 
 
 
     // Function : Prend Un tableau(Name Permissions) et retourne un tableau(Id Permission)
@@ -74,7 +188,8 @@ export default class PermissionService {
             where: {
                 name: {
                     in: names
-                }
+                },
+                archive:false
             },
             select: {
                 id: true, // Récupère [{id: 1}, {id: 2}, ...]

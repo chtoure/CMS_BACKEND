@@ -1,19 +1,65 @@
 
 import type { Prisma } from "../generated/prisma/client.ts";
+import type { Permission } from "../Types/Permission.ts";
 import type { Role } from "../Types/Role.ts";
+import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts";
+import type { QueryFilters } from "../Utils/queryFilter.ts";
 import RolePermissionService from "./RolePermissionService.ts";
+
+
 
 
 export default class RoleService {
 
+
+  // Transforme la structure Prisma (table pivot) en structure plate (permissions directes)
+  static mapRoles(roles: any[]): Role[] {
+    return roles.map(role => ({
+      ...role,
+      // On extrait l'objet 'permission' de chaque entrée de la table pivot
+      permissions: role.permissions?.map((rp: any) => rp.permission) ?? []
+    }));
+  }
+
+
+   // Version pour un seul rôle
+   static mapSingleRole(role: any): Role {
+    return {
+      ...role,
+      permissions: role.permissions?.map((rp: any) => rp.permission) ?? []
+    };
+  }
+
+  
+
+   private buildWhereClause(filter?:QueryFilters): Prisma.RoleWhereInput {
+        const where: Prisma.RoleWhereInput = {};
+
+        if (filter?.archive !== undefined) {
+            where.archive = filter.archive;
+        }
+
+        if (filter?.search?.trim()) {
+            const query = filter.search.trim();
+            where.OR = [
+                { name: { contains: query } },
+                { description: { contains: query } }
+            ];
+        }
+
+        return where;
+    }
+  
 
     // Creation d'un role
     public async createRole(data: Prisma.RoleUncheckedCreateInput,permissionIds: number[] = []): Promise<Role> {
         const role = await prisma.role.create({
             data,
             include: {  
-                permissions:true,
+                permissions:{
+                    include:{permission:true}
+                },
                 users:true
              }
         });
@@ -28,42 +74,61 @@ export default class RoleService {
             await RolePermissionService.CreateRolePermissions(rolePermissionData);
         }
 
-        return role;
+        return RoleService.mapSingleRole(role);
     }
 
 
-    // Recuperer tous les roles
-    public async getAllRoles(): Promise<Role[]> {
-       return prisma.role.findMany({
-        include:{
-            permissions:true,
-            users:true
-        }
-       });
-    }
 
+    public async getRoles (filter?:QueryFilters){
+        const roles = await Paginator.paginate<Role>(prisma.role, {
+            page: filter?.page,
+            limit: filter?.limit,
+            where: this.buildWhereClause(filter),
+            include: {
+                users: true,
+                permissions: {
+                    include: {
+                        permission: true // On inclut l'objet Permission réel
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const resultRole = RoleService.mapRoles(roles.results);
+        return {
+            ...roles,
+            results: resultRole
+        };
+    }
 
     // Récupère un role par ID
     public async getRoleById(id: number): Promise<Role | null> {
-        return prisma.role.findUnique({
-            where:{id},
+        const role = await prisma.role.findUnique({
+            where:{id,archive:false},
             include:{
-                permissions:true,
+                 permissions:{
+                    include:{permission:true}
+                },
                 users:true
             }
         });
+        return RoleService.mapSingleRole(role);
     }
 
 
     // Récupère un role par name
     public async getRoleByName(name: string): Promise<Role | null> {
-        return prisma.role.findUnique({
+        const role = await prisma.role.findUnique({
             where:{name},
             include:{
-                permissions:true,
+                 permissions:{
+                    include:{permission:true}
+                },
                 users:true
             }
         });
+        return RoleService.mapSingleRole(role);
     }
 
     // Update Role
@@ -92,10 +157,26 @@ export default class RoleService {
     }
 
 
-    // Delete Role
+    // Archiver un  Role
     public async deleteRole(id: number): Promise<Role> {
-        return prisma.role.delete({
-            where:{id}
+        return prisma.role.update({
+            where:{id, archive:false},
+            data:{
+                archive:true,
+                archivedAt: new Date()
+            }            
+        })
+    }
+
+
+    // Restorer un role archivé
+    public async restoreRole(id: number): Promise<Role> {
+        return prisma.role.update({
+            where:{id, archive:true},
+            data:{
+                archive:false,
+                archivedAt:null
+            }            
         })
     }
 
@@ -103,6 +184,14 @@ export default class RoleService {
     // Retirer la permission d'un role (Je souhaite le gerer avec l'archivage)
     public async removePermissionFromRole(roleId: number, permissionId: number) {
         await RolePermissionService.deleteRolePermission({roleId,permissionId});
+        return this.getRoleById(roleId);
+
+    }
+
+
+    // Restore la permission  d'un role retirer
+     public async restorePermissionFromRole(roleId: number, permissionId: number) {
+        await RolePermissionService.restoreRolePermission({roleId,permissionId});
         return this.getRoleById(roleId);
 
     }
@@ -124,5 +213,21 @@ export default class RoleService {
         }
 
         return this.getRoleById(roleId);
+    }
+
+    // recuperer les permission d'un role by id
+    public async getPermissions(roleId: number): Promise<Permission[]> {
+        const roleWithPermissions = await prisma.role.findUnique({
+            where: { id: roleId,archive:false },
+            include: {
+                permissions: {
+                    include: {
+                        permission: true 
+                    }
+                }
+            }
+        });
+
+        return roleWithPermissions?.permissions.map(rp => rp.permission) || [];
     }
 }

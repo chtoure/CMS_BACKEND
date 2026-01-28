@@ -22,6 +22,7 @@ export class EmailService {
             toName: "Utilisateur Compositor"
         };
 
+        
         try {
             // Appel API (Http::withoutVerifying() en Laravel = httpsAgent avec rejectUnauthorized: false en Node)
             const response = await axios.post(this.API_URL, payload);
