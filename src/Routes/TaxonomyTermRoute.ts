@@ -15,4 +15,6 @@ export function taxonomyTermRoutes(app: Express, validateBody: Function): void {
     app.get("/termsSlug/:slug", taxonomyTermController.getTermBySlug.bind(taxonomyTermController));
     app.put("/terms/:id", AuthMiddleware, validateBody(taxonomyTermUpdateSchema), taxonomyTermController.updateTerm.bind(taxonomyTermController));
     app.delete("/terms/:id", AuthMiddleware, taxonomyTermController.deleteTerm.bind(taxonomyTermController));
+    app.get("/taxonomiesTerms/:taxonomyIds", taxonomyTermController.getTaxonomyTermsByTaxonomyIds.bind(taxonomyTermController));
+    
 }

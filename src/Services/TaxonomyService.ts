@@ -98,20 +98,7 @@ export default class TaxonomyService {
 
         return TaxonomyService.castingTaxonomy(item);
     }
-
-    // Get terms by taxonomy IDs
-    public async getTaxonomyTermsByTaxonomyIds(taxonomyIds: number[]): Promise<TaxonomyTerm[] | null> {
-        const item = await prisma.taxonomy.findMany({
-            where: { id: { in: taxonomyIds }, archive: false },
-            include: {
-                terms: true
-            }
-        });
-
-        if (!item) return null;
-
-        return TaxonomyTermService.castingTerms(item);
-    }
+    
 
     // Update
     public async updateTaxonomy(id: number, data: UpdateTaxonomy): Promise<Taxonomy> {
