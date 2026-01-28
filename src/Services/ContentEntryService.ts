@@ -121,7 +121,7 @@ export default class ContentEntryService {
             const validTerms = await tx.taxonomyTerm.findMany({
                 where: {
                     id: { in: validIds },
-                    taxonomy: { slug: (field as any).taxonomy_slug }
+                    taxonomy: { id: {in:(field as any).taxonomyIds} }
                 },
                 select: { id: true }
             });

@@ -110,4 +110,13 @@ export default class TaxonomyTermService {
         });
 
     }
+
+    public async getTaxonomyTermsByTaxonomyIds(taxonomyIds: number[]): Promise<TaxonomyTerm[] | null> {
+        const item = await prisma.taxonomyTerm.findMany({
+            where: { 
+                taxonomyId: { in: taxonomyIds },
+                taxonomy: { archive: false } },
+        });
+        return item;
+    }
 }
