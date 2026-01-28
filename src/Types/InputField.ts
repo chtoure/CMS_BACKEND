@@ -51,7 +51,7 @@ interface IMediaConfig {
 
 interface ITaxonomyConfig {
   type: FieldType.TAXONOMY;
-  taxonomy_slug: string;
+  taxonomyIds: number[];
   multiple: boolean;
   renderType: 'combobox' | 'badges' | 'checkbox';
 }

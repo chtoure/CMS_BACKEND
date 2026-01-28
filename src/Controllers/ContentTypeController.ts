@@ -18,7 +18,9 @@ export default class ContentTypeController {
     public async create(req: Request, res: Response) {
         try {
             const data = req.body;
-            const result = await contentTypeService.createContentType(data);
+            const taxonomyIds = await contentTypeService.syncTaxonomyContentType(data.fields_schema);
+            const result = await contentTypeService.createContentType(data,taxonomyIds);
+
             //sync relations
             await contentTypeService.syncRelationsContentTypeCreate(result.id,result.fields_schema);
             return res.status(HTTP_STATUS_CREATED).json(result);
@@ -102,7 +104,8 @@ export default class ContentTypeController {
             const ancienContent = await contentTypeService.getContentTypeById(Number(req.params.id));
             if (!ancienContent) return res.status(HTTP_STATUS_NOT_FOUND).json({"message":"content non trouver"})
 
-            const resultContent = await contentTypeService.updateContentType(Number(req.params.id), req.body);
+            const taxonomyIds = await contentTypeService.syncTaxonomyContentType(fields_schema);
+            const resultContent = await contentTypeService.updateContentType(Number(req.params.id), req.body,taxonomyIds);
             //sync relations
             await contentTypeService.syncRelationsContentTypeUpdate(resultContent.id,resultContent.fields_schema);
             

@@ -1,10 +1,11 @@
 
 import prisma from "../Utils/PrismaClient.ts";
-import type { Taxonomy, RegisterTaxonomy, UpdateTaxonomy } from "../Types/Taxonomy.ts";
+import type { Taxonomy, RegisterTaxonomy, UpdateTaxonomy, TaxonomyTerm } from "../Types/Taxonomy.ts";
 import { AppError } from "../Utils/ErrorPrisma.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import TaxonomyTermService from "./TaxonomyTermService.ts";
 
 export default class TaxonomyService {
 
@@ -96,6 +97,20 @@ export default class TaxonomyService {
         if (!item) return null;
 
         return TaxonomyService.castingTaxonomy(item);
+    }
+
+    // Get terms by taxonomy IDs
+    public async getTaxonomyTermsByTaxonomyIds(taxonomyIds: number[]): Promise<TaxonomyTerm[] | null> {
+        const item = await prisma.taxonomy.findMany({
+            where: { id: { in: taxonomyIds }, archive: false },
+            include: {
+                terms: true
+            }
+        });
+
+        if (!item) return null;
+
+        return TaxonomyTermService.castingTerms(item);
     }
 
     // Update
