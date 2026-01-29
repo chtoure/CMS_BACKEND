@@ -16,6 +16,11 @@ datasource db {
 
 //      Partie Authentification
 
+enum StatusUser {
+  ACTIVE
+  EN_ATTENTE
+}
+
 model User {
   id              Int         @id @default(autoincrement())
   full_name       String
@@ -30,8 +35,11 @@ model User {
   updatedAt       DateTime    @updatedAt         
   role            Role?        @relation(fields: [role_id], references: [id])
   entries         ContentEntry[]
+  contentTypes    ContentType[]
+  taxonomies      Taxonomy[]
   archive   Boolean     @default(false)
   archivedAt DateTime?
+  status StatusUser @default(EN_ATTENTE)
 }
 
 
@@ -146,6 +154,8 @@ model ContentType {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
   archive   Boolean     @default(false)
   archivedAt DateTime? 
 }
@@ -225,6 +235,8 @@ model Taxonomy {
   terms       TaxonomyTerm[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
   archive   Boolean     @default(false)
   archivedAt DateTime?
 }
