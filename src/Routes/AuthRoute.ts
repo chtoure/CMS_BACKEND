@@ -23,5 +23,7 @@ export  function authRoutes(app:Express,validateBody:Function) : void {
     app.post("/send-verification-code",emailController.sendVerificationEmail.bind(emailController));
     app.post("/verify-code/:id",emailController.verifyCode.bind(emailController));
     app.post("/reset-password/:id",validateBody(userLoginSchema),authController.reinitialisationPasswordLogin.bind(authController));
+    app.post("/sendComfirmEmail",authController.sendConfirmationEmail.bind(authController));
+    app.get("/confirm-receipt",authController.confirmEmailReceipt.bind(authController));
 
 }

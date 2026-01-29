@@ -35,6 +35,8 @@ export interface RegisterTaxonomy {
     name: string;
     slug: string;
     description?: string;
+    userId: number
+
 }
 
 export interface UpdateTaxonomy {

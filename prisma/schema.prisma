@@ -40,6 +40,9 @@ model User {
   archive   Boolean     @default(false)
   archivedAt DateTime?
   status StatusUser @default(EN_ATTENTE)
+  confirmationToken String?
+  isPendingAt DateTime? @default(now())
+  isActiveAt DateTime?
 }
 
 

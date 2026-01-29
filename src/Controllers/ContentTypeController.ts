@@ -19,7 +19,10 @@ export default class ContentTypeController {
         try {
             const data = req.body;
             const taxonomyIds = await contentTypeService.syncTaxonomyContentType(data.fields_schema);
-            const result = await contentTypeService.createContentType(data,taxonomyIds);
+            const result = await contentTypeService.createContentType({
+                ...data,
+                userId: req.user?.sub,
+            },taxonomyIds);
 
             //sync relations
             await contentTypeService.syncRelationsContentTypeCreate(result.id,result.fields_schema);

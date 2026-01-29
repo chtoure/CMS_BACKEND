@@ -77,7 +77,10 @@ export default class ContentTypeService {
                     taxonomies: {
                     connect: taxonomyIds.map(id => ({ id }))
                     }
-                })
+                }),
+               user : {
+                connect: { id: data.userId }
+               }
             } as Prisma.ContentTypeCreateInput
         });
 

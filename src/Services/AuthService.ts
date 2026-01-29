@@ -27,12 +27,12 @@ export default class AuthService{
     createAccesToken(userId: number, full_name: string, role: Role | null): string {
 
         // Recuperation des clés
-        const ACCESS_SECRET:string = process.env.ACCESS_SECRET ?? "SECRET_ACCESS_KEY";
-        const ACCESS_EXPIRY = (process.env.ACCESS_EXPIRY ?? "15m") as StringValue;
+        const ACCESS_SECRET = process.env.ACCESS_SECRET || "SECRET_ACCESS_KEY";
+        const ACCESS_EXPIRY = process.env.ACCESS_EXPIRY || "15m";
 
         // Definition d'option jwt
         const accessOptions: SignOptions = {
-            expiresIn: ACCESS_EXPIRY
+            expiresIn: ACCESS_EXPIRY as any
         };
 
         //  Définition de Payload
@@ -49,12 +49,12 @@ export default class AuthService{
     async createRefreshToken(userId: number):Promise<string | null>{
 
         // Recuperation des clés
-        const REFRESH_SECRET:string = process.env.REFRESH_SECRET ?? "SECRET_REFRESH_KEY";
-        const REFRESH_EXPIRY = (process.env.REFRESH_EXPIRY ?? "7d") as StringValue;
+        const REFRESH_SECRET = process.env.REFRESH_SECRET || "SECRET_REFRESH_KEY";
+        const REFRESH_EXPIRY = process.env.REFRESH_EXPIRY || "7d";
 
         // Definition d'option jwt
          const refreshOptions: SignOptions = {
-            expiresIn: REFRESH_EXPIRY
+            expiresIn: REFRESH_EXPIRY as any
         };
 
         //  Définition de Payload

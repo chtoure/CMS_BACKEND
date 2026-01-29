@@ -6,8 +6,11 @@ import * as bcrypt from 'bcrypt';
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import crypto from "crypto";
+import { EmailService } from "./EmailService.ts";
 
 const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
+
 
  
 
@@ -80,7 +83,7 @@ export default class UserService {
     // Récupère un utilisateur non archivé par email
     public async getUserByEmailNonArchive(email: string): Promise<User | null> {
         return prisma.user.findUnique({
-            where:{email,archive:false},
+            where:{email,archive:false,status:"ACTIVE"},
             include:{role:true} 
         });
     }
@@ -112,7 +115,8 @@ export default class UserService {
             where:{id, archive:false},
             data:{
                 archive:true,
-                archivedAt: new Date()
+                archivedAt: new Date(),
+                isActiveAt:null            
             },
             include:{role:true}
         })
@@ -125,7 +129,8 @@ export default class UserService {
             where:{id, archive:true},
             data:{
                 archive:false,
-                archivedAt:null
+                archivedAt:null,
+                isActiveAt:new Date()
             },
             include:{role:true}
         })
@@ -166,4 +171,53 @@ export default class UserService {
         });
     }
 
+
+    public generateTemporaryPassword(): string {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+        let password = "Default-"; // Préfixe pour personnaliser au nom de votre app
+        
+        // Génère 8 caractères aléatoires parmi la liste sécurisée
+        for (let i = 0; i < 8; i++) {
+            const randomIndex = crypto.randomInt(0, chars.length);
+            password += chars.charAt(randomIndex);
+            
+            // Ajoute un tiret au milieu pour la lisibilité
+            if (i === 3) password += "-";
+        }
+        
+        return password;
+    }
+
+
+    public async resendConfirmationEmail(userId: number): Promise<boolean> {
+        const newToken = crypto.randomBytes(32).toString('hex');
+        
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { confirmationToken: newToken }
+        });
+
+        const result = await EmailService.sendVerificationEmail(user.email, newToken);
+        return result
+    }
+
+
+    public async confirmEmail(token: string, email: string): Promise<{user:User,password:string} | null> {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
+        if (user.confirmationToken !== token) return null;
+
+        const password = this.generateTemporaryPassword();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                status:"ACTIVE",
+                confirmationToken:null,
+                isPendingAt:null,
+                isActiveAt:new Date(),
+                password_hash:await this.hashPassword(password) 
+            } 
+        });
+        return {user,password};
+    }
 }
