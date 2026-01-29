@@ -22,13 +22,13 @@ export function contentEntryRoutes(app: Express): void {
     app.post("/content-entries/:slug", AuthMiddleware, validateDynamicContent, entryController.createEntry.bind(entryController));
     
     // Mise à jour complète d'une entrée
-    app.put("/content-entries/:id", AuthMiddleware, validateDynamicContent, entryController.updateEntry.bind(entryController));
+    app.put("/content-entries/:id/:slug", AuthMiddleware, validateDynamicContent, entryController.updateEntry.bind(entryController));
 
     // Changer le statut (PUBLISHED, DRAFT...)
     app.patch("/content-entries/:id/status", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController));
     
     // Archiver ou Restaurer (on passe { "archive": true/false } dans le body)
-    app.put("/content-entries/:id/archive", AuthMiddleware, validateBody(toggleArchiveSchema), entryController.toggleArchive.bind(entryController));
+    app.put("/content-entries/:id/archive", AuthMiddleware, entryController.toggleArchive.bind(entryController));
 
     // Suppression définitive
     app.delete("/content-entries/:id", AuthMiddleware, entryController.deleteEntry.bind(entryController));

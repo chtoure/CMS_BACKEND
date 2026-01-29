@@ -55,8 +55,6 @@ export default class MediaController {
             return res.status(HTTP_STATUS_OK).json(paginateData);
 
         } catch (error) {
-
-            console.log(error);
             
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors de la récupération des médias", 
@@ -111,10 +109,6 @@ async createMedia(req: Request, res: Response) {
         const mimetype = req.file.mimetype;
         const filename = req.file.filename;
 
-        /**
-         * Détermination dynamique du chemin et du type
-         * basée sur la logique du middleware Multer
-         */
         if (mimetype.startsWith('image/')) {
             mediaPayload.file_path = `media/uploads/images/${filename}`;
             mediaPayload.type = 'image';
