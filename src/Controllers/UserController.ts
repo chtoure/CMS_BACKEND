@@ -111,7 +111,7 @@ export default class UserController {
 
 
     // User archiver
-    async deleteUser(req:Request,res:Response){
+    async archivedUser(req:Request,res:Response){
 
         try {
             
@@ -166,6 +166,20 @@ export default class UserController {
         }
     }
 
+
+    async deleteDefinitivelyUser(req:Request,res:Response){
+
+        try {
+            
+            const user = await userService.deleteDefinitivelyUser(Number(req.params.id));
+            res.status(HTTP_STATUS_OK).json(user);
+
+        } catch (error) {
+            console.log('Erreur lors de la suppression de l\'utilisateur:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
 
     
 

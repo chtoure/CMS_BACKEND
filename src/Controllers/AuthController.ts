@@ -252,10 +252,7 @@ export default class AuthController {
         public async confirmEmailReceipt(req: Request, res: Response): Promise<Response> {
             const { token,email } = req.query;
             try {
-                
-                console.log(token,email);
                 if(!token || !email) return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Paramètres de confirmation invalide.' });
-
                 const result = await userService.confirmEmail(token as string,email as string);
 
                 if (!result || !result.password) {

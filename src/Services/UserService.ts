@@ -8,6 +8,7 @@ import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import crypto from "crypto";
 import { EmailService } from "./EmailService.ts";
+import { AppError } from "../Utils/ErrorPrisma.ts";
 
 const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
 
@@ -232,4 +233,33 @@ export default class UserService {
         });
         return {user,password};
     }
+
+
+
+    public async deleteDefinitivelyUser(id:number): Promise<User>{
+        const user = await prisma.user.findUnique({
+            where: { id },
+            include:{
+                role:true,
+                _count:{
+                    select:{
+                        entries:true,
+                        contentTypes:true,
+                        taxonomies:true
+                    }
+                }
+            } 
+        });
+        
+        if (!user) throw new AppError("Utilisateur non trouvé ou non archivé.");
+        if (user.archive === false || user.status === "ACTIVE") throw new AppError("Utilisateur non archivé ou non en attente.");
+        if (user.role?.name) throw new AppError("Impossible de supprimer : l'utilisateur a un Rôle.");
+        if (user._count.entries > 0) throw new AppError("Impossible de supprimer : l'utilisateur a créé des entrées.");
+        if (user._count.contentTypes > 0) throw new AppError("Impossible de supprimer : l'utilisateur a créé des types.");
+        
+        return await prisma.user.delete({
+            where:{id}
+        })
+    }       
+
 }
