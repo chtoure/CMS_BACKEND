@@ -1,6 +1,6 @@
 
 import type { Request, Response } from "express";
-import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_INTERNAL_SERVER_ERROR, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from "../Utils/Constantes/ConstantesHttp.ts";
 import TaxonomyService from "../Services/TaxonomyService.ts";
 import TaxonomyTermService from "../Services/TaxonomyTermService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
@@ -15,7 +15,8 @@ export default class TaxonomyController {
     public async create(req: Request, res: Response) {
         const { name,slug,description,terms } = req.body;
         try {
-            const data = { name,slug,description };
+            if (!req.user?.sub) return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Utilisateur non authentifié' });
+            const data = { name,slug,description,userId: req.user?.sub };
             const result = await taxonomyService.createTaxonomy(data);
             if (terms.length > 0) {
                 const termsData = terms.map((term:string) => ({

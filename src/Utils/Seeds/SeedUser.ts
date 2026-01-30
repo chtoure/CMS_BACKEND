@@ -19,7 +19,9 @@ async function  seedAddUser() {
             email: 'chabaneu7@gmail.com',
             full_name: 'TAKPAA Wella Gilbo',
             password_hash: password_hash,
+            status: "ACTIVE",
             isLoggedIn: false,
+            isActiveAt:new Date() 
         },
     });
 
@@ -30,7 +32,9 @@ async function  seedAddUser() {
             email: 'takpaagilbert@gmail.com',
             full_name: 'TAKPAA Wella Gilbert',
             password_hash: password_hash,
+            status: "ACTIVE",
             isLoggedIn: false,
+            isActiveAt:new Date() 
         },
     });
 

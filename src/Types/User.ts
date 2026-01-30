@@ -18,5 +18,7 @@ export interface User {
     isLoggedIn: boolean;
     resetCode?: string | null;
     codeExpiration?: Date | null;
-    archive : boolean;   
+    archive : boolean;
+    status : string;
+    confirmationToken?: string | null;  
 }
