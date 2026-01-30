@@ -19,6 +19,7 @@ datasource db {
 enum StatusUser {
   ACTIVE
   EN_ATTENTE
+  INACTIVE
 }
 
 model User {

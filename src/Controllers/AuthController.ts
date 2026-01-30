@@ -92,7 +92,7 @@ export default class AuthController {
                 }
 
                 // Message de Retour 
-                const message="Inscription réussie .";
+                const message="Inscription réussie. Vérifier votre mail pour activer votre compte.";
                 // Function : Creation de Tokens et Retour
                 return AuthController.handleAuthentification(res, newUser,message,HTTP_STATUS_CREATED) ;
 
@@ -237,9 +237,9 @@ export default class AuthController {
             try {
                 const result = await userService.resendConfirmationEmail(Number(req.params.id));
                 if (!result) {
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Erreur lors de l\'envoi de l\'email de confirmation.' });
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: "Échec de l'envoi ou compte déjà validé." });
                 }
-                return res.status(HTTP_STATUS_OK).json({ message: 'Email de confirmation envoyé.' });
+                return res.status(HTTP_STATUS_OK).json({ message: 'Email de confirmation envoyé avec succès.' });
             } catch (error) {
                 console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
                 const errorMessage = handlePrismaError(error);

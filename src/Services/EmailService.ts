@@ -7,7 +7,7 @@ export class EmailService {
     private static API_URL = process.env.API_URL_SENDEMAIL || 'https://cpay.enerlog.net/message/send/mail';
     private static APP_NAME = process.env.APP_NAME || 'Compositor';
     private static BASE_URL= process.env.APP_URL || "http://localhost:3000/" ;
-    private static LOGIN_URL= process.env.URL_LOGIN_FRONT || "http://localhost:3000/login" ;
+    private static LOGIN_URL= process.env.URL_LOGIN_FRONT || "http://localhost:5173/site/admin/auth/login" ;
 
     /**
      * Envoie le code de vérification en utilisant l'API Enerlog

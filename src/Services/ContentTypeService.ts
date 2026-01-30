@@ -69,22 +69,23 @@ export default class ContentTypeService {
 
     // Create
     public async createContentType (data: RegisterContentType,taxonomyIds?:number[]): Promise<ContentType> {
+        const { userId, fields_schema, ...cleanData } = data;
+
         const itemContentType = await prisma.contentType.create({
-            data:{
-                ...data,
-                fields_schema: data.fields_schema as unknown as Prisma.InputJsonValue,
+            data: {
+                ...cleanData,
+                fields_schema: fields_schema as unknown as Prisma.InputJsonValue,
+                user: {
+                    connect: { id: userId }
+                },
                 ...(taxonomyIds && taxonomyIds.length > 0 && {
                     taxonomies: {
-                    connect: taxonomyIds.map(id => ({ id }))
+                        connect: taxonomyIds.map(id => ({ id }))
                     }
-                }),
-               user : {
-                connect: { id: data.userId }
-               }
-            } as Prisma.ContentTypeCreateInput
+                })
+            }
         });
 
-        // On fait le casting
         return ContentTypeService.castingContentType(itemContentType);
     }
 

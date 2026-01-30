@@ -116,7 +116,8 @@ export default class UserService {
             data:{
                 archive:true,
                 archivedAt: new Date(),
-                isActiveAt:null            
+                isActiveAt:null,
+                status:"INACTIVE"            
             },
             include:{role:true}
         })
@@ -130,7 +131,8 @@ export default class UserService {
             data:{
                 archive:false,
                 archivedAt:null,
-                isActiveAt:new Date()
+                isActiveAt:new Date(),
+                status:"ACTIVE"
             },
             include:{role:true}
         })
@@ -190,16 +192,26 @@ export default class UserService {
 
 
     public async resendConfirmationEmail(userId: number): Promise<boolean> {
+    try {
         const newToken = crypto.randomBytes(32).toString('hex');
         
         const user = await prisma.user.update({
-            where: { id: userId },
+            where: { 
+                id: userId,
+                status: "EN_ATTENTE" 
+            },
             data: { confirmationToken: newToken }
         });
 
-        const result = await EmailService.sendVerificationEmail(user.email, newToken);
-        return result
+        return await EmailService.sendVerificationEmail(user.email, newToken);
+
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            throw new Error("Impossible de renvoyer l'email : le compte est déjà validé ou inexistant.");
+        }
+        throw error; 
     }
+}
 
 
     public async confirmEmail(token: string, email: string): Promise<{user:User,password:string} | null> {
