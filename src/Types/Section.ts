@@ -1,13 +1,13 @@
 import type { IBlockFieldDefinition } from "./Builder.ts";
 
 
-interface IBloc {
+export interface ISection {
   id: number;          
   templateId: number;  
   pageRevisionId: number; 
-  
-  parentId?: string | null; 
   order: number;            
+  parentId?: string | null; 
+  
 
   block_json: {
     metadata?: {
