@@ -1,8 +1,8 @@
 import prisma from "../Utils/PrismaClient.ts";
-import type { IComponent, IRegisterComponent, IUpdateComponent } from "../Types/Component.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import type { IComponent, IRegisterComponent, IUpdateComponent } from "../Types/component.ts";
 
 
 
@@ -74,8 +74,7 @@ export default class ComponentService {
         });
 
         if (!item) return null;
-
-       
+      
        return ComponentService.castingComponent(item);
     }
 
@@ -99,8 +98,7 @@ export default class ComponentService {
                  default_props: data.default_props as unknown as Prisma.InputJsonValue,
             }
         });
-
-        
+      
         return ComponentService.castingComponent(componentUpdated);
     }
 
@@ -109,8 +107,7 @@ export default class ComponentService {
         const componentDeleted = await prisma.component.delete({
             where: { id }
         });
-
-        
+       
         return ComponentService.castingComponent(componentDeleted);
     }
 

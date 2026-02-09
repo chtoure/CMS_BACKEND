@@ -1,13 +1,10 @@
 import type { IBlockFieldDefinition } from "./Builder.ts";
 
 
-export interface ISection {
+interface ISection {
   id: number;          
-  templateId: number;  
   pageRevisionId: number; 
-  order: number;            
-  parentId?: string | null; 
-  
+  order: number;
 
   block_json: {
     metadata?: {
@@ -16,4 +13,38 @@ export interface ISection {
     content: Record<string, IBlockFieldDefinition>;
     styles: Record<string, IBlockFieldDefinition>;
   };
+}
+
+
+
+interface IRegisterSection {
+  pageRevisionId: number;
+  order: number;
+  block_json: {
+    metadata?: {
+      adminLabel?: string;
+    };
+    content: Record<string, IBlockFieldDefinition>;
+    styles: Record<string, IBlockFieldDefinition>;
+  };
+}
+
+
+interface IUpdateSection {
+  pageRevisionId?: number;
+  order?: number;
+  block_json?: {
+    metadata?: {
+      adminLabel?: string;
+    };
+    content: Record<string, IBlockFieldDefinition>;
+    styles: Record<string, IBlockFieldDefinition>;
+  };
+}
+
+
+export type {
+    ISection,
+    IRegisterSection,
+    IUpdateSection
 }

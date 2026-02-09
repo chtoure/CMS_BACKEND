@@ -7,7 +7,7 @@ interface IBlocTemplate {
   componentId: number;
   order: number;
   parentId?: number | null;
-  sectionId?: number | null;
+  sectionId: number;
 
   props_schema: IPropsSchema;
   default_json: {
@@ -25,7 +25,7 @@ interface IRegisterBlocTemplate {
   componentId: number;
   order: number;
   parentId?: number | null;
-  sectionId?: number | null;
+  sectionId: number;
 
   props_schema: IPropsSchema;
   default_json: {

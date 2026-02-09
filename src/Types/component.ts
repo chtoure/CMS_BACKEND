@@ -1,22 +1,52 @@
-import type { Prisma } from "../generated/prisma/client.ts";
+import type { IBlockFieldDefinition, IPropsSchema } from "./Builder.ts";
 
 
-type JsonValue = 
-  | string 
-  | number  
-  | null 
-  | undefined 
-  | Function 
-  | { [key: string]: JsonValue } 
-  | Prisma.JsonValue[];
-
-interface Component {
-    name: string;
-    tag: string;
-    description: string;
-    default_props: JsonValue;
+interface IComponent {
+  id: number;
+  name: string;
+  tag: string;
+  description: string | null;
+  icon: string | null;
+  
+  // default_props: IPropsSchema;
+  default_props: {
+    content: Record<string, IBlockFieldDefinition>;
+    styles: Record<string, IBlockFieldDefinition>;
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
+
+
+interface IRegisterComponent {
+    name: string;
+    tag: string;
+    description: string | null;
+    icon: string | null;
+    default_props: {
+        content: Record<string, IBlockFieldDefinition>;
+        styles: Record<string, IBlockFieldDefinition>;
+    };
+}
+
+
+
+interface IUpdateComponent {
+    name?: string;
+    tag?: string;
+    description?: string | null;
+    icon?: string | null;
+    default_props?: {
+        content: Record<string, IBlockFieldDefinition>;
+        styles: Record<string, IBlockFieldDefinition>;
+    };
+}
+
+
+
 export type {
-    Component
-};
+  IComponent,
+  IRegisterComponent,
+  IUpdateComponent
+}

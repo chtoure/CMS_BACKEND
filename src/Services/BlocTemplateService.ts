@@ -95,8 +95,7 @@ export default class BlocTemplateService {
         });
 
         if (!item) return null;
-
-       
+   
        return BlocTemplateService.castingBlocTemplate(item);
     }
 
@@ -111,7 +110,6 @@ export default class BlocTemplateService {
                  default_json: data.default_json as unknown as Prisma.InputJsonValue,
             }
         });
-
         
         return BlocTemplateService.castingBlocTemplate(blocTemplateUpdated);
     }
@@ -121,7 +119,6 @@ export default class BlocTemplateService {
         const blocTemplateDeleted = await prisma.blocTemplate.delete({
             where: { id }
         });
-
         
         return BlocTemplateService.castingBlocTemplate(blocTemplateDeleted);
     }
