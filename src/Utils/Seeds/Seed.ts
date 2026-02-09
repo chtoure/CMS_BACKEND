@@ -1,4 +1,5 @@
 import prisma from "../PrismaClient.ts";
+import { seedAddComponent } from "./SeedComponent.ts";
 import { seedAddParameter } from "./SeedParameter.ts";
 import { seedAddPermission } from "./SeedPermission.ts";
 import { seedAddRole } from "./SeedRole.ts";
@@ -12,6 +13,7 @@ async function main() {
         await seedAddRole();
         await seedAddPermission();
         await seedAddRolePermission();
+        await seedAddComponent();
     } catch (error) {
         console.error("Erreur lors de l'execution du seed :", error);
     }
