@@ -302,6 +302,8 @@ model Component {
   icon          String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  // Relations
+  blocTemplates BlocTemplate[]
 
 }
 
@@ -314,17 +316,17 @@ model BlocTemplate {
   componentId  Int      
   props_schema Json     
   default_json Json
-  parentId       number?
+  parentId       Int?
   sectionId      Int?
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
   // Relations
-  component    Component @relation(fields: [componentId], references: [id])
-  parent         BlocTemplate?    @relation("BlocTemplateHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children       BlocTemplate[]   @relation("BlocTemplateHierarchy", onDelete: Cascade)
-  section        Section? @relation(fields: [sectionId], references: [id])
+  component      Component @relation(fields: [componentId], references: [id])
+  parent         BlocTemplate? @relation("SubBlocks", fields: [parentId], references: [id], onDelete: Cascade)
+  children       BlocTemplate[] @relation("SubBlocks")
+  section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
 
 }
 
@@ -335,7 +337,7 @@ model Section {
   order          Int      
   block_json     Json
 
-  blocTemplates  BlocTemplate[] @relation("BlocTemplateHierarchy", onDelete: Cascade)
+  blocTemplates  BlocTemplate[] @relation("SectionBlocks")
   pageRevisionId Int
   pageRevision   PageRevision @relation(fields: [pageRevisionId], references: [id])
 
@@ -350,7 +352,7 @@ model Page {
   id          Int            @id @default(autoincrement())
   slug        String         @unique
   title       String
-  revisions   PageRevision[]
+  pageRevisions   PageRevision[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
