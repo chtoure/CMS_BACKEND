@@ -32,8 +32,7 @@ export default class ComponentService {
             const query = filter.search.trim();
             where.OR = [
                 { name: { contains: query } },
-                { tag: { contains: query } },
-                { description: { contains: query } }
+                { tag: { contains: query } }
             ];
         }
 
@@ -41,15 +40,23 @@ export default class ComponentService {
     }
 
     
-    async createComponent(data: IRegisterComponent): Promise<IComponent> {
-        const component = await prisma.component.create({
-           data:{
-            ...data,
-            default_props: data.default_props as unknown as Prisma.InputJsonValue
-           }
+    async createComponents(data: IRegisterComponent[]): Promise<IComponent[]> {
+        const queries = data.map(comp => {
+            return prisma.component.upsert({
+                where: { tag: comp.tag },
+                update: {
+                    ...comp,
+                    default_props: comp.default_props as unknown as Prisma.InputJsonValue,
+                },
+                create: {
+                    ...comp,
+                    default_props: comp.default_props as unknown as Prisma.InputJsonValue,
+                }
+            });
         });
 
-        return ComponentService.castingComponent(component);
+        const components = await prisma.$transaction(queries);
+        return ComponentService.castingComponents(components);
     }
 
 

@@ -14,6 +14,7 @@ import { contentTypeRoutes } from "./ContentTypeRoute.ts";
 import { contentEntryRoutes } from "./ContentEntryRoute.ts";
 import { taxonomyRoutes } from "./TaxonomyRoute.ts";
 import { taxonomyTermRoutes } from "./TaxonomyTermRoute.ts";
+import { componentRoutes } from "./ComponentRoute.ts";
 
 
 
@@ -43,5 +44,9 @@ export default (app:Express): void  => {
     // Module Taxonomy
     taxonomyRoutes(app, validateBody);
     taxonomyTermRoutes(app, validateBody);
+
+
+    // Module Builder
+    componentRoutes(app, validateBody);
 
 }

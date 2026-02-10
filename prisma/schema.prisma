@@ -22,11 +22,21 @@ enum StatusUser {
   INACTIVE
 }
 
+
 enum Status {
   DRAFT
   PUBLISHED
   ARCHIVED
 }
+
+
+enum ComponentFamily {
+  static
+  interactive
+  container
+  input
+}
+
 
 
 //      Partie Authentification
@@ -293,17 +303,19 @@ model TaxonomyTerm {
 
 model Component {
 
-  id            Int            @id @default(autoincrement())
-  name          String
-  tag           String         @unique
+  id                Int            @id @default(autoincrement())
+  name              String
+  tag               String         @unique
+  icon              String
 
-  description   String?
-  default_props Json  
-  icon          String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  family            ComponentFamily
+  supportedActions  Json
+  default_props     Json
+    
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
   // Relations
-  blocTemplates BlocTemplate[]
+  blocTemplates     BlocTemplate[]
 
 }
 
