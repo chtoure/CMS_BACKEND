@@ -325,8 +325,7 @@ model BlocTemplate {
   name         String   @unique
   order        Int   
 
-  componentId  Int      
-  props_schema Json     
+  componentId  Int
   default_json Json
   parentId       Int?
   sectionId      Int

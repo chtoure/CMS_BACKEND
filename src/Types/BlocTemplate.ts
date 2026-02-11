@@ -1,4 +1,5 @@
-import type { IPropsSchema, IBlockFieldDefinition } from "./Builder.ts";
+import type { IComponent } from "./component.ts";
+import type { IComponentPropsType } from "./PropsBuilder.ts";
 
 
 interface IBlocTemplate {
@@ -9,29 +10,22 @@ interface IBlocTemplate {
   parentId?: number | null;
   sectionId: number;
 
-  props_schema: IPropsSchema;
-  default_json: {
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
+  default_json: IComponentPropsType;
   createdAt: Date;
   updatedAt: Date;
+  component?: IComponent;
  
 }
 
 
 
 interface IRegisterBlocTemplate {
+
   componentId: number;
   order: number;
   parentId?: number | null;
   sectionId: number;
 
-  props_schema: IPropsSchema;
-  default_json: {
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
 }
 
 
@@ -40,14 +34,10 @@ interface IUpdateBlocTemplate {
   name?: string;        
   componentId?: number;
   order?: number;
-  parentId?: number | null;
-  sectionId?: number | null;
+  parentId?: number;
+  sectionId?: number;
 
-  props_schema?: IPropsSchema;
-  default_json?: {
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
+  default_json?: IComponentPropsType;
 }
 
 

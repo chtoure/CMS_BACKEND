@@ -5,6 +5,9 @@ import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import { getFormattedDate } from "../Utils/FonctionsUtilitaires.ts";
 import ComponentService from "./ComponentService.ts";
+import type { IComponent } from "../Types/component.ts";
+import type { IComponentPropsType } from "../Types/PropsBuilder.ts";
+import { merge } from 'lodash'; // Très performant pour le deep merge
 
 
 
@@ -15,8 +18,7 @@ export default class BlocTemplateService {
     static castingBlocTemplate(data : any): IBlocTemplate {
          return {
             ...data,   
-            props_schema: data.props_schema as unknown as IBlocTemplate['props_schema'],
-            default_json: data.default_json as unknown as IBlocTemplate['default_json'],
+            default_json: data.default_json as unknown as IComponent['default_props'],
         } as IBlocTemplate;
     }
 
@@ -25,8 +27,7 @@ export default class BlocTemplateService {
     static castingBlocTemplates(items:any[]):IBlocTemplate[]{
         return items.map(item => ({
             ...item,
-            props_schema: item.props_schema as unknown as IBlocTemplate['props_schema'],
-            default_json: item.default_json as unknown as IBlocTemplate['default_json'],
+            default_json: item.default_json as unknown as IComponent['default_props'],
         })) as IBlocTemplate[];
     }
 
@@ -58,6 +59,17 @@ export default class BlocTemplateService {
     }
 
 
+    // Fusionne les props par defaut du composant avec les props par defaut du bloc template
+    private async mergeDefaultJson(blocTemplate: IBlocTemplate): Promise<IComponent['default_props']> {
+
+        const mergedProps = merge({}, blocTemplate.component?.default_props, blocTemplate.default_json);
+        return mergedProps;
+
+    }    
+      
+
+   
+
     async createBlocTemplate(data: IRegisterBlocTemplate): Promise<IBlocTemplate> {
 
         const nameBlocTemplate = await this.generateNameBlocTemplate(data.componentId);
@@ -65,8 +77,7 @@ export default class BlocTemplateService {
            data:{
             ...data,
             name: nameBlocTemplate,
-            props_schema: data.props_schema as unknown as Prisma.InputJsonValue,
-            default_json: data.default_json as unknown as Prisma.InputJsonValue
+            default_json: {}
            }
         });
 
@@ -106,7 +117,6 @@ export default class BlocTemplateService {
             // On cast pour éviter les erreurs de compatibilité JSON
             data: {
                  ...data,
-                 props_schema: data.props_schema as unknown as Prisma.InputJsonValue,
                  default_json: data.default_json as unknown as Prisma.InputJsonValue,
             }
         });
