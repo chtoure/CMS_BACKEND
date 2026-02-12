@@ -66,5 +66,6 @@ const ComponentListSchema = Joi.array().items(registerComponentSchema);
 
 export {
     registerComponentSchema,
-    ComponentListSchema
+    ComponentListSchema,
+    componentPropsSchema
 }

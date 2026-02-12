@@ -1,3 +1,4 @@
+import type { ISection } from "./Section.ts";
 
 interface IPageRevision {
     id: number;
@@ -6,16 +7,16 @@ interface IPageRevision {
     version: number;
     createdAt: Date;
     updatedAt: Date;
+    sections?: ISection[];
 }
 
 interface IRegisterPageRevision {
     pageId: number;
-    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+    status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     version?: number;
 }
 
 interface IUpdatePageRevision {
-    id: number;
     pageId?: number;
     status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     version?: number;

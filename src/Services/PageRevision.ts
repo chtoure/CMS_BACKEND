@@ -33,7 +33,8 @@ export default class PageRevisionService {
             page: filter?.page,
             limit: filter?.limit,
             where: this.buildWhereClause(filter),
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: { sections: true }
         });
 
         return {
@@ -44,7 +45,7 @@ export default class PageRevisionService {
 
     public async getPageRevisionById(id: number): Promise<IPageRevision | null> {
         const item = await prisma.pageRevision.findUnique({
-            where: { id }
+            where: { id },
         });
 
         if (!item) return null;

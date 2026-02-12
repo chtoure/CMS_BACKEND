@@ -34,7 +34,8 @@ export default class PageService {
             page: filter?.page,
             limit: filter?.limit,
             where: this.buildWhereClause(filter),
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: { pageRevisions: true }
         });
 
         return {
@@ -45,7 +46,8 @@ export default class PageService {
 
     public async getPageById(id: number): Promise<IPage | null> {
         const item = await prisma.page.findUnique({
-            where: { id }
+            where: { id },
+            include: { pageRevisions: true }
         });
 
         if (!item) return null;

@@ -1,3 +1,4 @@
+import type { IPageRevision } from "./PageRevision.ts";
 
 
 interface IPage {
@@ -6,6 +7,7 @@ interface IPage {
     slug: string;
     createdAt: Date;
     updatedAt: Date;
+    pageRevisions?: IPageRevision[];
 }
 
 

@@ -1,18 +1,14 @@
-import type { IBlockFieldDefinition } from "./Builder.ts";
+import type { IGetBlocTemplates } from "./BlocTemplate.ts";
+import type { IComponentPropsType } from "./PropsBuilder.ts";
 
 
 interface ISection {
   id: number;          
   pageRevisionId: number; 
   order: number;
-
-  block_json: {
-    metadata?: {
-      adminLabel?: string;
-    };
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
+  block_json: IComponentPropsType;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 
@@ -20,31 +16,32 @@ interface ISection {
 interface IRegisterSection {
   pageRevisionId: number;
   order: number;
-  block_json: {
-    metadata?: {
-      adminLabel?: string;
-    };
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
+  block_json?: IComponentPropsType;
 }
 
 
 interface IUpdateSection {
   pageRevisionId?: number;
   order?: number;
-  block_json?: {
-    metadata?: {
-      adminLabel?: string;
-    };
-    content: Record<string, IBlockFieldDefinition>;
-    styles: Record<string, IBlockFieldDefinition>;
-  };
+  block_json?: IComponentPropsType;
+}
+
+
+
+interface IPageRender {
+    id: number;
+    pageRevisionId: number;
+    order: number;
+    block_json: IComponentPropsType;
+    components: IGetBlocTemplates[];
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 
 export type {
     ISection,
     IRegisterSection,
-    IUpdateSection
+    IUpdateSection,
+    IPageRender
 }

@@ -41,10 +41,22 @@ interface IUpdateBlocTemplate {
 }
 
 
+// Interface pour construire l'arbre des blocTemplates 
+// (Qui s'affiche dans le Builder)
+interface IGetBlocTemplates {
+    id: number;
+    name: string;
+    order: number;
+    tag: string;
+    defaultProps: IComponentPropsType;
+    children: IGetBlocTemplates[];
+}
+
 
 
 export type {
     IBlocTemplate,
     IRegisterBlocTemplate,
-    IUpdateBlocTemplate
+    IUpdateBlocTemplate,
+    IGetBlocTemplates
 };

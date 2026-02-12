@@ -1,11 +1,14 @@
 import prisma from "../Utils/PrismaClient.ts";
-import type { ISection, IRegisterSection, IUpdateSection } from "../Types/Section.ts";
+import type { ISection, IRegisterSection, IUpdateSection, IPageRender } from "../Types/Section.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import BlocTemplateService from "./BlocTemplateService.ts";
 
 
 
+
+const blocTemplateService = new BlocTemplateService();
 
 export default class SectionService {
     
@@ -42,7 +45,7 @@ export default class SectionService {
         const section = await prisma.section.create({
            data:{
             ...data,
-            block_json: data.block_json as unknown as Prisma.InputJsonValue
+            block_json: data.block_json as unknown as Prisma.InputJsonValue || {}
            }
         });
 
@@ -62,6 +65,29 @@ export default class SectionService {
             results: SectionService.castingSections(data.results)
         };
     }
+
+
+    // Rendu de la page 
+    public async renderPage(pageRevisionId: number):Promise<IPageRender[]> {
+        const sections = await prisma.section.findMany({
+            where: { pageRevisionId },
+            orderBy: { order: 'asc' }
+        });
+
+        const pageData = await Promise.all(
+            sections.map(async (section) => {
+                const blocTemplates = await blocTemplateService.getTreeSection(section.id);
+                return {
+                    ...section,
+                    block_json: section.block_json as unknown as ISection['block_json'],
+                    components: blocTemplates
+                };
+            })
+        );
+
+        return pageData;
+    }
+
 
     public async getSectionById(id: number): Promise<ISection | null> {
         const item = await prisma.section.findUnique({

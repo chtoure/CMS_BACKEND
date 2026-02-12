@@ -1,5 +1,5 @@
 import prisma from "../Utils/PrismaClient.ts";
-import type { IBlocTemplate, IRegisterBlocTemplate, IUpdateBlocTemplate } from "../Types/BlocTemplate.ts";
+import type { IBlocTemplate, IGetBlocTemplates, IRegisterBlocTemplate, IUpdateBlocTemplate } from "../Types/BlocTemplate.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
@@ -16,20 +16,33 @@ const componentService = new ComponentService();
 export default class BlocTemplateService {
     
     static castingBlocTemplate(data : any): IBlocTemplate {
+        const mergedProps = this.mergeDefaultJson(data);
          return {
             ...data,   
-            default_json: data.default_json as unknown as IComponent['default_props'],
+            default_json: mergedProps,
         } as IBlocTemplate;
     }
 
 
 
     static castingBlocTemplates(items:any[]):IBlocTemplate[]{
-        return items.map(item => ({
-            ...item,
-            default_json: item.default_json as unknown as IComponent['default_props'],
-        })) as IBlocTemplate[];
+        return items.map(item => {
+            return this.castingBlocTemplate(item);
+        }) as IBlocTemplate[];
     }
+
+
+    // Fusionne les props par defaut du composant avec les props par defaut du bloc template
+    static mergeDefaultJson(blocTemplate: IBlocTemplate): IComponent['default_props'] {
+
+        const mergedProps = merge(
+            {},
+            blocTemplate.component?.default_props,
+            blocTemplate.default_json
+        );
+        return mergedProps;
+
+    } 
 
 
     private buildWhereClause(filter?:QueryFilters): Prisma.BlocTemplateWhereInput {
@@ -59,14 +72,19 @@ export default class BlocTemplateService {
     }
 
 
-    // Fusionne les props par defaut du composant avec les props par defaut du bloc template
-    private async mergeDefaultJson(blocTemplate: IBlocTemplate): Promise<IComponent['default_props']> {
-
-        const mergedProps = merge({}, blocTemplate.component?.default_props, blocTemplate.default_json);
-        return mergedProps;
-
-    }    
       
+    private buildRecursiveTree(blocks: any[], parentId: number | null = null): IGetBlocTemplates[] {
+        return blocks
+            .filter(block => block.parentId === parentId)
+            .map(block => ({
+                id: block.id,
+                name: block.name,
+                order: block.order,
+                tag: block.component?.tag || '',
+                defaultProps: BlocTemplateService.mergeDefaultJson(block),
+                children: this.buildRecursiveTree(blocks, block.id)
+            }))
+    }  
 
    
 
@@ -90,6 +108,7 @@ export default class BlocTemplateService {
             page: filter?.page,
             limit: filter?.limit,
             where: this.buildWhereClause(filter),
+            include: { component: true },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -99,10 +118,22 @@ export default class BlocTemplateService {
         };
     }
 
+    // Recuperer les blocTemplates d'une section sous forme d'arbre 
+    public async getTreeSection(sectionId: number):Promise<IGetBlocTemplates[]> {
+        const blocTemplates = await prisma.blocTemplate.findMany({
+            where: { sectionId },
+            include: { component: true },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        return this.buildRecursiveTree(blocTemplates);
+    }
+
 
     public async getBlocTemplateById(id: number): Promise<IBlocTemplate | null> {
         const item = await prisma.blocTemplate.findUnique({
-            where: { id }
+            where: { id },
+            include: { component: true }
         });
 
         if (!item) return null;
@@ -111,9 +142,11 @@ export default class BlocTemplateService {
     }
 
 
+
     public async updateBlocTemplate(id: number, data: IUpdateBlocTemplate): Promise<IBlocTemplate> {
         const blocTemplateUpdated = await prisma.blocTemplate.update({
             where: { id },
+            include: { component: true },
             // On cast pour éviter les erreurs de compatibilité JSON
             data: {
                  ...data,
@@ -127,7 +160,8 @@ export default class BlocTemplateService {
 
     public async deleteBlocTemplate(id: number): Promise<IBlocTemplate> {
         const blocTemplateDeleted = await prisma.blocTemplate.delete({
-            where: { id }
+            where: { id },
+            include: { component: true }
         });
         
         return BlocTemplateService.castingBlocTemplate(blocTemplateDeleted);
