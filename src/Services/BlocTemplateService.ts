@@ -6,9 +6,7 @@ import { Paginator } from "../Utils/Paginator.ts";
 import { getFormattedDate } from "../Utils/FonctionsUtilitaires.ts";
 import ComponentService from "./ComponentService.ts";
 import type { IComponent } from "../Types/component.ts";
-import type { IComponentPropsType } from "../Types/PropsBuilder.ts";
-import { merge } from 'lodash'; // Très performant pour le deep merge
-
+import merge from 'lodash/merge.js';
 
 
 const componentService = new ComponentService();
