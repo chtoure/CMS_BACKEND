@@ -22,6 +22,7 @@ interface IStaticField {
 }
 
 
+
 // Partie Source : Variable
 interface IVariableField {
   source: ValueSource.VARIABLE;
