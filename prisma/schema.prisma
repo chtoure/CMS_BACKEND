@@ -14,13 +14,32 @@ datasource db {
 }
 
 
-//      Partie Authentification
+
 
 enum StatusUser {
   ACTIVE
   EN_ATTENTE
   INACTIVE
 }
+
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+
+enum ComponentFamily {
+  static
+  interactive
+  container
+  input
+}
+
+
+
+//      Partie Authentification
 
 model User {
   id              Int         @id @default(autoincrement())
@@ -109,6 +128,9 @@ enum VariableType {
   BOOLEAN
 }
 
+
+//     Partie Variables
+
 model Collection {
   id          Int          @id @default(autoincrement())
   name        String       @unique
@@ -128,6 +150,9 @@ model Variable {
   updatedAt     DateTime   @updatedAt
 }
 
+
+//     Partie Parametrage
+
 model Parameter {
   id            Int      @id @default(autoincrement()) 
   entity_name   String   
@@ -139,6 +164,11 @@ model Parameter {
   updatedAt     DateTime @updatedAt
 }
 
+
+
+
+
+//     Partie Type de Contenu
 
 model ContentType {
   id            Int            @id @default(autoincrement())
@@ -187,6 +217,8 @@ model ContentTypeRelation {
 
 
 
+//     Partie Contenu
+
 model ContentEntry {
   id              Int           @id @default(autoincrement())
   contentTypeId   Int
@@ -230,6 +262,9 @@ model ContentEntryRelation {
   @@index([targetMediaId])
 }
 
+
+// Partie Taxonomie (Classification des Contenus)
+
 model Taxonomy {
   id              Int            @id @default(autoincrement())
   name            String
@@ -261,28 +296,89 @@ model TaxonomyTerm {
 }
 
 
-enum Status {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
 
 
-model Composant {
-  id               Int   @id @default(autoincrement())
-  tag              String   @unique
-  name             String
-  icon             String
-  family           String  
-  supportedActions Json
-  defaultProps     Json
-  blocs            BlocTemplate[]
+//     Partie Bulder (Blocs , Page , PageRevision)
+
+
+model Component {
+
+  id                Int            @id @default(autoincrement())
+  name              String
+  tag               String         @unique
+  icon              String
+
+  family            ComponentFamily
+  supportedActions  Json
+  default_props     Json
+    
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  // Relations
+  blocTemplates     BlocTemplate[]
+
 }
 
 
 model BlocTemplate {
-  id               Int   @id @default(autoincrement())
-  composantId      Int 
-  composant        Composant @relation(fields: [composantId], references: [id])
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  order        Int   
+
+  componentId  Int
+  default_json Json
+  parentId       Int?
+  sectionId      Int
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  component      Component @relation(fields: [componentId], references: [id])
+  parent         BlocTemplate? @relation("SubBlocks", fields: [parentId], references: [id], onDelete: Cascade)
+  children       BlocTemplate[] @relation("SubBlocks")
+  section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
+
 }
 
+
+
+model Section {
+  id             Int      @id @default(autoincrement())
+  order          Int      
+  block_json     Json
+
+  blocTemplates  BlocTemplate[] @relation("SectionBlocks")
+  pageRevisionId Int
+  pageRevision   PageRevision @relation(fields: [pageRevisionId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+
+
+model Page {
+
+  id          Int            @id @default(autoincrement())
+  slug        String         @unique
+  title       String
+  pageRevisions   PageRevision[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+}
+
+model PageRevision {
+
+  id          Int      @id @default(autoincrement())
+  status      Status   @default(DRAFT) 
+  version     Int      @default(1)
+  
+  pageId      Int
+  page        Page     @relation(fields: [pageId], references: [id])
+  
+  sections    Section[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

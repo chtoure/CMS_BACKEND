@@ -1,22 +1,45 @@
-import type { Prisma } from "../generated/prisma/client.ts";
+import type { CliquableAction, ComponentFamily, IComponentPropsType } from "./PropsBuilder.ts";
 
 
-type JsonValue = 
-  | string 
-  | number  
-  | null 
-  | undefined 
-  | Function 
-  | { [key: string]: JsonValue } 
-  | Prisma.JsonValue[];
+interface IComponent {
+  id: number;
+  name: string;
+  tag: string;
+  icon: string;
+  family: ComponentFamily;
+  supportedActions: CliquableAction['action'][];
+  default_props: IComponentPropsType;
 
-interface Component {
-    name: string;
-    tag: string;
-    description: string;
-    default_props: JsonValue;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
+
+
+interface IRegisterComponent {
+    name: string;
+    tag: string;
+    icon: string;
+    family: ComponentFamily;
+    supportedActions: CliquableAction['action'][];
+    default_props: IComponentPropsType;
+}
+
+
+
+interface IUpdateComponent {
+    name?: string;
+    tag?: string;
+    icon?: string;
+    family?: ComponentFamily;
+    supportedActions?: CliquableAction['action'][];
+    default_props?: IComponentPropsType;
+}
+
+
+
 export type {
-    Component
-};
+  IComponent,
+  IRegisterComponent,
+  IUpdateComponent
+}
