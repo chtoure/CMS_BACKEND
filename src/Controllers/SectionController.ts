@@ -15,6 +15,7 @@ export default class SectionController {
 
     public async createSection(req: Request, res: Response){
         try {
+            console.log('section',req.body);
             const section = await this.sectionService.createSection(req.body);
             return res.status(HTTP_STATUS_CREATED).json(section);
         } catch (error) {
@@ -28,6 +29,17 @@ export default class SectionController {
         try {
             const sections = await this.sectionService.getSections(req.query);
             return res.status(HTTP_STATUS_OK).json(sections);
+        } catch (error) {
+            console.log(error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
+    public async getSectionByRevisionId(req: Request, res: Response){
+        try {
+            const section = await this.sectionService.getSectionByRevisionId(Number(req.params.id));
+            return res.status(HTTP_STATUS_OK).json(section);
         } catch (error) {
             console.log(error);
             const errorMessage = handlePrismaError(error);

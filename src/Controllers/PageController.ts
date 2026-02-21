@@ -3,6 +3,7 @@ import PageService from "../Services/PageService.ts";
 import type { Request,Response } from "express";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import { RequestHelper } from "../Utils/queryFilter.ts";
 
 
 export default class PageController {
@@ -14,7 +15,10 @@ export default class PageController {
     public async createPage(req:Request,res:Response){
         try {
             const data = req.body;
-            const page = await this.pageService.createPage(data);
+            const page = await this.pageService.createPage({
+                ...data,
+                userId: req.user?.sub
+            });
             return res.status(HTTP_STATUS_CREATED).json(page);
         } catch (error) {
             console.error('Erreur lors de la creation de la revision:', error);
@@ -25,7 +29,8 @@ export default class PageController {
 
      public async getPages(req: Request, res: Response){
         try {
-            const pages = await this.pageService.getPages(req.query);
+            const filters = RequestHelper.getFilters(req);
+            const pages = await this.pageService.getPages(filters);
             return res.status(HTTP_STATUS_OK).json(pages);
         } catch (error) {
             console.log(error);

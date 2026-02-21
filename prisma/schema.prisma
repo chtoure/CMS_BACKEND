@@ -57,6 +57,8 @@ model User {
   entries         ContentEntry[]
   contentTypes    ContentType[]
   taxonomies      Taxonomy[]
+  pages           Page[]
+  pageRevisions   PageRevision[]
   archive   Boolean     @default(false)
   archivedAt DateTime?
   status StatusUser @default(EN_ATTENTE)
@@ -310,7 +312,7 @@ model Component {
 
   family            ComponentFamily
   supportedActions  Json
-  default_props     Json
+  defaultProps     Json
     
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -326,9 +328,11 @@ model BlocTemplate {
   order        Int   
 
   componentId  Int
-  default_json Json
+  props Json
   parentId       Int?
   sectionId      Int
+  section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
+
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -337,7 +341,6 @@ model BlocTemplate {
   component      Component @relation(fields: [componentId], references: [id])
   parent         BlocTemplate? @relation("SubBlocks", fields: [parentId], references: [id], onDelete: Cascade)
   children       BlocTemplate[] @relation("SubBlocks")
-  section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
 
 }
 
@@ -362,8 +365,10 @@ model Page {
 
   id          Int            @id @default(autoincrement())
   slug        String         @unique
-  title       String
+  name       String
   pageRevisions   PageRevision[]
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -377,6 +382,9 @@ model PageRevision {
   
   pageId      Int
   page        Page     @relation(fields: [pageId], references: [id])
+
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
   
   sections    Section[]
   createdAt   DateTime @default(now())

@@ -1,47 +1,69 @@
-import type { IGetBlocTemplates } from "./BlocTemplate.ts";
-import type { IComponentPropsType } from "./PropsBuilder.ts";
+import type { BlocTemplate } from "./BlocTemplate.ts";
+import type { BaseStyles, ResponsiveProp } from "./style.ts";
 
 
-interface ISection {
+export interface sectionStyle {
+  padding?: ResponsiveProp<number | string>;
+  bg?: ResponsiveProp<string>;
+  opacity?: ResponsiveProp<number>;
+  display?: ResponsiveProp<'hidden' | 'block' | 'flex' | 'grid'>;
+  columns?: ResponsiveProp<number>;
+  gap?: ResponsiveProp<number>;
+  direction?: ResponsiveProp<'horizontal' | 'vertical'>;
+  justify?: ResponsiveProp<'start' | 'center' | 'end' | 'between'>;
+  align?: ResponsiveProp<'start' | 'center' | 'end' | 'between'>;
+  borderWidth?: ResponsiveProp<number | string>;
+  borderColor?: ResponsiveProp<string>;
+  borderStyle?: ResponsiveProp<'solid' | 'dashed' | 'dotted' | 'double' | 'hidden'>;
+
+}
+
+interface SectionProps {
+  styles?: sectionStyle;
+}
+
+
+interface Section {
   id: number;          
   pageRevisionId: number; 
   order: number;
-  block_json: IComponentPropsType;
+  blocTemplates?: BlocTemplate[];
+  block_json: SectionProps;
   createdAt: Date;
   updatedAt: Date;
 }
 
 
 
-interface IRegisterSection {
+interface RegisterSection {
   pageRevisionId: number;
   order: number;
-  block_json?: IComponentPropsType;
+  block_json?: SectionProps;
 }
 
 
-interface IUpdateSection {
+interface UpdateSection {
   pageRevisionId?: number;
   order?: number;
-  block_json?: IComponentPropsType;
+  block_json?: SectionProps;
 }
 
 
 
-interface IPageRender {
+interface PageRender {
     id: number;
     pageRevisionId: number;
-    order: number;
-    block_json: IComponentPropsType;
-    components: IGetBlocTemplates[];
+    block_json: SectionProps;
+    components: BlocTemplate[];
     createdAt: Date;
     updatedAt: Date;
 }
 
 
 export type {
-    ISection,
-    IRegisterSection,
-    IUpdateSection,
-    IPageRender
+    Section,
+    RegisterSection,
+    UpdateSection,
+    PageRender,
+    SectionProps
 }
