@@ -10,8 +10,9 @@ export  function pageRevisionRoutes(app:Express,validateBody:Function) : void {
     const pageRevisionController = new PageRevisionController();
 
     app.get("/page-revision", AuthMiddleware, pageRevisionController.getPageRevisions.bind(pageRevisionController));
-    app.post("/page-revision/:pageId", AuthMiddleware, pageRevisionController.createPageRevision.bind(pageRevisionController));
+    app.post("/page-revision", AuthMiddleware, pageRevisionController.createPageRevision.bind(pageRevisionController));
     app.get("/page-revision/:id", AuthMiddleware, pageRevisionController.getPageRevisionById.bind(pageRevisionController));
+    app.get("/page-revisions/page/:id", AuthMiddleware, pageRevisionController.getPageRevisionsByPageId.bind(pageRevisionController));
     app.put("/page-revision/:id", AuthMiddleware, validateBody(updatePageRevisionSchema), pageRevisionController.updatePageRevision.bind(pageRevisionController));
     app.delete("/page-revision/:id", AuthMiddleware, pageRevisionController.deletePageRevision.bind(pageRevisionController));
 }

@@ -8,7 +8,7 @@ import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 export  function pageRoutes(app:Express,validateBody:Function) : void {
     const pageController = new PageController();
 
-    app.get("/page", AuthMiddleware, pageController.getPages.bind(pageController));
+    app.get("/pages", AuthMiddleware, pageController.getPages.bind(pageController));
     app.post("/page", AuthMiddleware, validateBody(registerPageSchema), pageController.createPage.bind(pageController));
     app.get("/page/:id", AuthMiddleware, pageController.getPageById.bind(pageController));
     app.put("/page/:id", AuthMiddleware, validateBody(updatePageSchema), pageController.updatePage.bind(pageController));

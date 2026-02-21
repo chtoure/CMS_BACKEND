@@ -2,26 +2,26 @@ import prisma from "../Utils/PrismaClient.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
-import type { IComponent, IRegisterComponent, IUpdateComponent } from "../Types/component.ts";
+import type { AnyComponent, ComponentProps } from "../Types/component.ts";
 
 
 
 export default class ComponentService {
 
-     static castingComponent(data : any): IComponent {
+     static castingComponent(data : any): AnyComponent {
          return {
             ...data,   
-            default_props: data.default_props as unknown as IComponent['default_props'],
-        } as IComponent;
+            default_props: data.default_props as unknown as ComponentProps,
+        } as AnyComponent;
     }
 
 
 
-    static castingComponents(items:any[]):IComponent[]{
+    static castingComponents(items:any[]):AnyComponent[]{
         return items.map(item => ({
             ...item,
-            default_props: item.default_props as unknown as IComponent['default_props'],
-        })) as IComponent[];
+            default_props: item.default_props as unknown as ComponentProps,
+        })) as AnyComponent[];
     }
 
 
@@ -40,17 +40,17 @@ export default class ComponentService {
     }
 
     
-    async createComponents(data: IRegisterComponent[]): Promise<IComponent[]> {
+    async createComponents(data: AnyComponent[]): Promise<AnyComponent[]> {
         const queries = data.map(comp => {
             return prisma.component.upsert({
                 where: { tag: comp.tag },
                 update: {
                     ...comp,
-                    default_props: comp.default_props as unknown as Prisma.InputJsonValue,
+                    defaultProps: comp.defaultProps as unknown as Prisma.InputJsonValue,
                 },
                 create: {
                     ...comp,
-                    default_props: comp.default_props as unknown as Prisma.InputJsonValue,
+                    defaultProps: comp.defaultProps as unknown as Prisma.InputJsonValue,
                 }
             });
         });
@@ -61,7 +61,7 @@ export default class ComponentService {
 
 
     public async getComponents(filter?:QueryFilters){
-        const data = await Paginator.paginate<IComponent>(prisma.component, {
+        const data = await Paginator.paginate<AnyComponent>(prisma.component, {
             page: filter?.page,
             limit: filter?.limit,
             where: this.buildWhereClause(filter),
@@ -75,7 +75,7 @@ export default class ComponentService {
     }
 
 
-    public async getComponentById(id: number): Promise<IComponent | null> {
+    public async getComponentById(id: number): Promise<AnyComponent | null> {
         const item = await prisma.component.findUnique({
             where: { id }
         });
@@ -86,7 +86,7 @@ export default class ComponentService {
     }
 
 
-    public async getComponentByTag(tag: string): Promise<IComponent | null> {
+    public async getComponentByTag(tag: string): Promise<AnyComponent | null> {
         const component = await prisma.component.findUnique({
             where: { tag }
         });
@@ -96,13 +96,13 @@ export default class ComponentService {
 
 
 
-    public async updateComponent(id: number, data: IUpdateComponent): Promise<IComponent> {
+    public async updateComponent(id: number, data: AnyComponent): Promise<AnyComponent> {
         const componentUpdated = await prisma.component.update({
             where: { id },
             // On cast pour éviter les erreurs de compatibilité JSON
             data: {
                  ...data,
-                 default_props: data.default_props as unknown as Prisma.InputJsonValue,
+                 defaultProps: data.defaultProps as unknown as Prisma.InputJsonValue,
             }
         });
       
@@ -110,7 +110,7 @@ export default class ComponentService {
     }
 
 
-    public async deleteComponent(id: number): Promise<IComponent> {
+    public async deleteComponent(id: number): Promise<AnyComponent> {
         const componentDeleted = await prisma.component.delete({
             where: { id }
         });

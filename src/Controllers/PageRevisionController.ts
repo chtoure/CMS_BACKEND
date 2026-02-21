@@ -1,6 +1,6 @@
 
 import type { Request,Response } from "express";
-import PageRevisionService from "../Services/PageRevision.ts";
+import PageRevisionService from "../Services/PageRevisionService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 
@@ -12,9 +12,13 @@ export default class PageRevisionController {
     }
 
     public async createPageRevision(req:Request,res:Response){
-        const {pageId} = req.params;
         try {
-            const pageRevision = await this.pageRevisionService.createPageRevision({pageId: Number(pageId)});
+            const data = req.body;
+            const pageRevision = await this.pageRevisionService.createPageRevision({
+                ...data,
+                pageId: Number(data.pageId),
+                userId: req.user?.sub!
+            });
             return res.status(HTTP_STATUS_CREATED).json(pageRevision);
         } catch (error) {
             console.log('Erreur lors de la creation de la pageRevision:', error);
@@ -40,6 +44,17 @@ export default class PageRevisionController {
             return res.status(HTTP_STATUS_OK).json(pageRevision);
         } catch (error) {
             console.log('Erreur lors de la recuperation de la pageRevision:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
+    public async getPageRevisionsByPageId(req: Request, res: Response){
+        try {
+            const pageRevision = await this.pageRevisionService.getPageRevisionsByPageId(Number(req.params.id));
+            return res.status(HTTP_STATUS_OK).json(pageRevision);
+        } catch (error) {
+            console.log('Erreur lors de la recuperation des pageRevisions:', error);
             const errorMessage = handlePrismaError(error);
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }

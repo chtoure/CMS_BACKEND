@@ -1,62 +1,61 @@
-import type { IComponent } from "./component.ts";
-import type { IComponentPropsType } from "./PropsBuilder.ts";
+import type { AnyComponent, ComponentProps } from "./component.ts";
+import type { BaseStyles } from "./style.ts";
 
 
-interface IBlocTemplate {
+interface BlocTemplate <T = BaseStyles> {
   id: number;
   name: string;        
   componentId: number;
   order: number;
   parentId?: number | null;
-  sectionId: number;
-
-  default_json: IComponentPropsType;
+  sectionId?: number;
+  children?: BlocTemplate<T>[];
+  props: ComponentProps<T>;
   createdAt: Date;
   updatedAt: Date;
-  component?: IComponent;
+  component?: AnyComponent;
+  archive: boolean;
+  archivedAt: Date | null;
  
 }
 
 
 
-interface IRegisterBlocTemplate {
-
+interface RegisterBlocTemplate {
   componentId: number;
   order: number;
   parentId?: number | null;
-  sectionId: number;
+  sectionId?: number;
 
 }
 
 
 
-interface IUpdateBlocTemplate {
+interface UpdateBlocTemplate <T = BaseStyles>{
   name?: string;        
   componentId?: number;
   order?: number;
   parentId?: number;
   sectionId?: number;
-
-  default_json?: IComponentPropsType;
+  props?: ComponentProps<T>;
 }
 
 
 // Interface pour construire l'arbre des blocTemplates 
 // (Qui s'affiche dans le Builder)
-interface IGetBlocTemplates {
-    id: number;
-    name: string;
-    order: number;
-    tag: string;
-    defaultProps: IComponentPropsType;
-    children: IGetBlocTemplates[];
-}
+// interface BlocTemplate <T = BaseStyles> {
+//     id: number;
+//     name: string;
+//     order: number;
+//     tag: string;
+//     defaultProps: ComponentProps<T>;
+//     children: BlocTemplate<T>[];
+// }
 
 
 
 export type {
-    IBlocTemplate,
-    IRegisterBlocTemplate,
-    IUpdateBlocTemplate,
-    IGetBlocTemplates
+    UpdateBlocTemplate,
+    BlocTemplate,
+    RegisterBlocTemplate
 };

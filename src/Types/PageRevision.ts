@@ -1,29 +1,30 @@
-import type { ISection } from "./Section.ts";
+import type { Section } from "./Section.ts";
 
-interface IPageRevision {
+interface PageRevision {
     id: number;
     pageId: number;
     status: string;
     version: number;
     createdAt: Date;
     updatedAt: Date;
-    sections?: ISection[];
+    sections?: Section[];
 }
 
-interface IRegisterPageRevision {
+interface RegisterPageRevision {
     pageId: number;
     status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     version?: number;
+    userId: number;
 }
 
-interface IUpdatePageRevision {
+interface UpdatePageRevision {
     pageId?: number;
     status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     version?: number;
 }
 
 export type { 
-    IPageRevision, 
-    IRegisterPageRevision, 
-    IUpdatePageRevision 
+    PageRevision, 
+    RegisterPageRevision, 
+    UpdatePageRevision 
 };

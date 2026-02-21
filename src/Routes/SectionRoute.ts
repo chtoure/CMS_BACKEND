@@ -11,9 +11,13 @@ export function sectionRoutes(app: Express,validateBody:Function){
 
     // Routes SectionController
     app.post("/section",AuthMiddleware,validateBody(registerSectionSchema),sectionController.createSection.bind(sectionController));
-    app.get("/section",AuthMiddleware, sectionController.getSections.bind(sectionController));
+    app.put("/section/:id",AuthMiddleware, sectionController.updateSection.bind(sectionController));
     app.get("/section/:id",AuthMiddleware, sectionController.getSectionById.bind(sectionController));
-    app.get("/render-page/:pageId",AuthMiddleware, sectionController.getFullPage.bind(sectionController));
-    app.put("/section/:id",AuthMiddleware,validateBody(updateSectionSchema), sectionController.updateSection.bind(sectionController));
+    app.get("/section/revision/:id",AuthMiddleware, sectionController.getSectionByRevisionId.bind(sectionController));
     app.delete("/section/:id",AuthMiddleware, sectionController.deleteSection.bind(sectionController));
+
+
+    // app.post("/section",AuthMiddleware,validateBody(registerSectionSchema),sectionController.createSection.bind(sectionController));
+    // app.get("/section",AuthMiddleware, sectionController.getSections.bind(sectionController));
+    // app.get("/render-page/:pageId",AuthMiddleware, sectionController.getFullPage.bind(sectionController));
 }

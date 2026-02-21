@@ -9,10 +9,17 @@ export function blocTemplateRoutes(app: Express,validateBody:Function){
     const blocTemplateController = new BlocTemplateController();
 
     // Routes BlocTemplateController
-    app.post("/bloc-template",AuthMiddleware,validateBody(registerBlocTemplateSchema),blocTemplateController.createBlocTemplate.bind(blocTemplateController));
-    app.get("/bloc-template",AuthMiddleware, blocTemplateController.getBlocTemplates.bind(blocTemplateController));
-    app.get("/bloc-template/:id",AuthMiddleware, blocTemplateController.getBlocTemplateById.bind(blocTemplateController));
-    app.get("/render-section/:sectionId",AuthMiddleware, blocTemplateController.getTreeSection.bind(blocTemplateController));
-    app.put("/bloc-template/:id",AuthMiddleware,validateBody(updateBlocTemplateSchema), blocTemplateController.updateBlocTemplate.bind(blocTemplateController));
+    // app.post("/bloc-template",AuthMiddleware,validateBody(registerBlocTemplateSchema),blocTemplateController.createBlocTemplate.bind(blocTemplateController));
+
+    app.post("/bloc-template",AuthMiddleware ,blocTemplateController.createBlocTemplate.bind(blocTemplateController));
+    app.put("/bloc-template/:id",AuthMiddleware, blocTemplateController.updateBlocTemplate.bind(blocTemplateController));
+
+    // app.put("/bloc-template/:id",AuthMiddleware,validateBody(updateBlocTemplateSchema), blocTemplateController.updateBlocTemplate.bind(blocTemplateController));
+    app.get("/bloc-templates",AuthMiddleware, blocTemplateController.getBlocTemplates.bind(blocTemplateController));
     app.delete("/bloc-template/:id",AuthMiddleware, blocTemplateController.deleteBlocTemplate.bind(blocTemplateController));
+
+    app.get("/bloc-template/:id",AuthMiddleware, blocTemplateController.getBlocTemplateById.bind(blocTemplateController));
+
+    app.get("/bloc-template-tree/:sectionId",AuthMiddleware, blocTemplateController.getTreeSection.bind(blocTemplateController));
 }
+
