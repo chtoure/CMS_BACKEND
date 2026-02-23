@@ -16,6 +16,7 @@ interface IComponent {
 
 
 
+
 interface IRegisterComponent {
     name: string;
     tag: string;
