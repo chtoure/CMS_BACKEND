@@ -17,7 +17,9 @@ interface BlocTemplate <T = BaseStyles> {
   component?: AnyComponent;
   archive: boolean;
   archivedAt: Date | null;
- 
+  modelId?: number | null;
+  model?: BlocTemplate;
+  customBlocTemplates?: BlocTemplate[]
 }
 
 
@@ -28,7 +30,7 @@ interface RegisterBlocTemplate {
   is_custom: boolean;
   parentId?: number | null;
   sectionId?: number | null;
-
+  modelId?: number | null;
 }
 
 

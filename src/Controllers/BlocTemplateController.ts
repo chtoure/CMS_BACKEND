@@ -5,8 +5,6 @@ import type { RegisterBlocTemplate } from "../Types/BlocTemplate.ts";
 import type { Request, Response } from "express";
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
-import { log } from "console";
-
 
 export default class BlocTemplateController {
     
@@ -20,7 +18,6 @@ export default class BlocTemplateController {
 
     public async createBlocTemplate(req: Request, res: Response){
         try {
-            console.log(req.body);
             const data = req.body as RegisterBlocTemplate;
             const blocTemplate = await this.blocTemplateService.createBlocTemplate(data);
             return res.status(HTTP_STATUS_CREATED).json(blocTemplate);
@@ -71,8 +68,6 @@ export default class BlocTemplateController {
     public async getBlocTemplatesCustom(req: Request, res: Response){
         try {
             const blocTemplates = await this.blocTemplateService.getBlocTemplatesCustom();
-
-            console.log(blocTemplates);
             
             return res.status(HTTP_STATUS_OK).json(blocTemplates);
         } catch (error) {
@@ -85,7 +80,6 @@ export default class BlocTemplateController {
 
     public async updateBlocTemplate(req: Request, res: Response){
         try {
-            console.log('blocTemplate', req.body);
             const blocTemplate = await this.blocTemplateService.updateBlocTemplate(Number(req.params.id), req.body);
             return res.status(HTTP_STATUS_OK).json(blocTemplate);
         } catch (error) {

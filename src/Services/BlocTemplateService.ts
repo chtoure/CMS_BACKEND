@@ -14,14 +14,12 @@ const componentService = new ComponentService();
 export default class BlocTemplateService {
     
     static castingBlocTemplate(data : any): BlocTemplate {
-        console.log(data);
         
         const mergedProps = this.mergeDefaultJson(data);
         const dd=  {
             ...data,   
             props: mergedProps,
         } as BlocTemplate;
-        console.log('ddd',dd);
         
         return dd;
     }
@@ -176,7 +174,7 @@ export default class BlocTemplateService {
 
     public async updateBlocTemplate(id: number, data: UpdateBlocTemplate): Promise<BlocTemplate> {
         const { sectionId, parentId, componentId, ...rest } = data;
-
+        
         const updateData: Prisma.BlocTemplateUpdateInput = {
             ...rest,
             props: data.props as unknown as Prisma.InputJsonValue,
@@ -202,6 +200,7 @@ export default class BlocTemplateService {
 
         // return BlocTemplateService.castingBlocTemplate(blocTemplateUpdated);
         return blocTemplateUpdated as unknown as BlocTemplate;
+        
     }
         
 
