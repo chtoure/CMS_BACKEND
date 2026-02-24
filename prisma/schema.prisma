@@ -325,12 +325,13 @@ model Component {
 model BlocTemplate {
   id           Int      @id @default(autoincrement())
   name         String   @unique
-  order        Int   
+  order        Int 
+  is_custom    Boolean  @default(false)  
 
   componentId  Int
   props Json
   parentId       Int?
-  sectionId      Int
+  sectionId      Int?
   section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
 
 

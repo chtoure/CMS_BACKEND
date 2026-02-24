@@ -5,6 +5,7 @@ import type { RegisterBlocTemplate } from "../Types/BlocTemplate.ts";
 import type { Request, Response } from "express";
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import { log } from "console";
 
 
 export default class BlocTemplateController {
@@ -59,6 +60,20 @@ export default class BlocTemplateController {
     public async getTreeSection(req: Request, res: Response){
         try {
             const blocTemplates = await this.blocTemplateService.getTreeSection(Number(req.params.sectionId));
+            return res.status(HTTP_STATUS_OK).json(blocTemplates);
+        } catch (error) {
+            console.log(error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
+    public async getBlocTemplatesCustom(req: Request, res: Response){
+        try {
+            const blocTemplates = await this.blocTemplateService.getBlocTemplatesCustom();
+
+            console.log(blocTemplates);
+            
             return res.status(HTTP_STATUS_OK).json(blocTemplates);
         } catch (error) {
             console.log(error);

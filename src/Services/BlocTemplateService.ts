@@ -94,7 +94,6 @@ export default class BlocTemplateService {
     async createBlocTemplate(data: RegisterBlocTemplate): Promise<BlocTemplate> {
 
         const nameBlocTemplate = await this.generateNameBlocTemplate(data.componentId);
-        console.log(nameBlocTemplate);
 
         const component = await componentService.getComponentById(data.componentId);
         if (!component) throw new Error(`Composant avec ID ${data.componentId} non trouvé`);
@@ -147,6 +146,18 @@ export default class BlocTemplateService {
         // return this.buildRecursiveTree(blocTemplates) as unknown as BlocTemplate[];
     }
 
+
+    public async getBlocTemplatesCustom():Promise<BlocTemplate[]> {
+        const blocTemplates = await prisma.blocTemplate.findMany({
+            where: { is_custom: true },
+            include: { 
+                component: true,
+                children: true
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+        return blocTemplates as unknown as BlocTemplate[];
+    }
 
     public async getBlocTemplateById(id: number): Promise<BlocTemplate | null> {
         const item = await prisma.blocTemplate.findUnique({

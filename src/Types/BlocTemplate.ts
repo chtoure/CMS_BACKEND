@@ -8,9 +8,10 @@ interface BlocTemplate <T = BaseStyles> {
   componentId: number;
   order: number;
   parentId?: number | null;
-  sectionId?: number;
+  sectionId?: number | null;
   children?: BlocTemplate<T>[];
   props: ComponentProps<T>;
+  is_custom: boolean;
   createdAt: Date;
   updatedAt: Date;
   component?: AnyComponent;
@@ -24,8 +25,9 @@ interface BlocTemplate <T = BaseStyles> {
 interface RegisterBlocTemplate {
   componentId: number;
   order: number;
+  is_custom: boolean;
   parentId?: number | null;
-  sectionId?: number;
+  sectionId?: number | null;
 
 }
 
@@ -35,8 +37,9 @@ interface UpdateBlocTemplate <T = BaseStyles>{
   name?: string;        
   componentId?: number;
   order?: number;
-  parentId?: number;
-  sectionId?: number;
+  is_custom: boolean;
+  parentId?: number | null;
+  sectionId?: number | null;
   props?: ComponentProps<T>;
 }
 
