@@ -13,22 +13,17 @@ datasource db {
   provider = "sqlite"
 }
 
-
-
-
 enum StatusUser {
   ACTIVE
   EN_ATTENTE
   INACTIVE
 }
 
-
 enum Status {
   DRAFT
   PUBLISHED
   ARCHIVED
 }
-
 
 enum ComponentFamily {
   static
@@ -37,61 +32,55 @@ enum ComponentFamily {
   input
 }
 
-
-
 //      Partie Authentification
 
 model User {
-  id              Int         @id @default(autoincrement())
-  full_name       String
-  email           String      @unique
-  password_hash   String
-  refreshToken    String?     @unique
-  role_id         Int?
-  isLoggedIn      Boolean
-  resetCode       String?
-  codeExpiration  DateTime?     
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt         
-  role            Role?        @relation(fields: [role_id], references: [id])
-  entries         ContentEntry[]
-  contentTypes    ContentType[]
-  taxonomies      Taxonomy[]
-  pages           Page[]
-  pageRevisions   PageRevision[]
-  archive   Boolean     @default(false)
-  archivedAt DateTime?
-  status StatusUser @default(EN_ATTENTE)
+  id                Int            @id @default(autoincrement())
+  full_name         String
+  email             String         @unique
+  password_hash     String
+  refreshToken      String?        @unique
+  role_id           Int?
+  isLoggedIn        Boolean
+  resetCode         String?
+  codeExpiration    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  role              Role?          @relation(fields: [role_id], references: [id])
+  entries           ContentEntry[]
+  contentTypes      ContentType[]
+  taxonomies        Taxonomy[]
+  pages             Page[]
+  pageRevisions     PageRevision[]
+  archive           Boolean        @default(false)
+  archivedAt        DateTime?
+  status            StatusUser     @default(EN_ATTENTE)
   confirmationToken String?
-  isPendingAt DateTime? @default(now())
-  isActiveAt DateTime?
+  isPendingAt       DateTime?      @default(now())
+  isActiveAt        DateTime?
 }
-
-
 
 model Role {
-  id              Int         @id @default(autoincrement())
-  name            String      @unique
-  description     String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  users           User[]
-  permissions     RolePermission[]
-  archive   Boolean     @default(false)
-  archivedAt DateTime? 
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       User[]
+  permissions RolePermission[]
+  archive     Boolean          @default(false)
+  archivedAt  DateTime?
 }
 
-
-
 model Permission {
-  id              Int              @id @default(autoincrement())
-  name            String           @unique
-  description     String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  roles           RolePermission[]
-  archive   Boolean     @default(false)
-  archivedAt DateTime?
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+  archive     Boolean          @default(false)
+  archivedAt  DateTime?
 }
 
 model RolePermission {
@@ -102,26 +91,24 @@ model RolePermission {
   updatedAt    DateTime   @updatedAt
   permission   Permission @relation(fields: [permissionId], references: [id])
   role         Role       @relation(fields: [roleId], references: [id])
-  @@unique([roleId, permissionId]) 
-  archive   Boolean     @default(false)
-  archivedAt DateTime? 
-}
+  archive      Boolean    @default(false)
+  archivedAt   DateTime?
 
+  @@unique([roleId, permissionId])
+}
 
 //     Partie Mediatheque
 
-
 model Media {
-  id           Int        @id @default(autoincrement())
-  file_path    String
-  type         String
-  alt          String?
-  parameter   Parameter[]
+  id            Int                    @id @default(autoincrement())
+  file_path     String
+  type          String
+  alt           String?
+  parameter     Parameter[]
   usedInEntries ContentEntryRelation[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 }
-
 
 enum VariableType {
   COLOR
@@ -130,127 +117,112 @@ enum VariableType {
   BOOLEAN
 }
 
-
 //     Partie Variables
 
 model Collection {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  type        VariableType
-  variables   Variable[]   
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  type      VariableType
+  variables Variable[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model Variable {
-  id            Int        @id @default(autoincrement())
-  name          String
-  value         String     
-  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  collectionId  Int
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id           Int        @id @default(autoincrement())
+  name         String
+  value        String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
-
 
 //     Partie Parametrage
 
 model Parameter {
-  id            Int      @id @default(autoincrement()) 
-  entity_name   String   
-  title         String   
-  media         Media?   @relation(fields: [mediaId], references: [id], onDelete: SetNull)
-  mediaId       Int?    
-  description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  entity_name String
+  title       String
+  media       Media?   @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId     Int?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
-
-
-
-
 
 //     Partie Type de Contenu
 
 model ContentType {
-  id            Int            @id @default(autoincrement())
-  name          String         @unique
-  slug          String         @unique
+  id            Int     @id @default(autoincrement())
+  name          String  @unique
+  slug          String  @unique
   description   String?
-  fields_schema Json  
+  fields_schema Json
 
   // Les ContentTypes dont je references(mes parents logiques)
-  parentContentTypes  ContentTypeRelation[] @relation("TypeProprietaire")
-  
+  parentContentTypes ContentTypeRelation[] @relation("TypeProprietaire")
+
   // Les ContentTypes qui me references(mes enfants logiques)
   childrenContentTypes ContentTypeRelation[] @relation("TypeCible")
 
-  entries       ContentEntry[]
-  taxonomies    Taxonomy[]     @relation("ContentTypeTaxonomies")
+  entries    ContentEntry[]
+  taxonomies Taxonomy[]     @relation("ContentTypeTaxonomies")
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  userId          Int
-  user            User          @relation(fields: [userId], references: [id])
-  archive   Boolean     @default(false)
-  archivedAt DateTime? 
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+  archive    Boolean   @default(false)
+  archivedAt DateTime?
 }
 
-
-
-
-
-
 model ContentTypeRelation {
-  id        Int         @id @default(autoincrement())
-  
+  id Int @id @default(autoincrement())
+
   // Celui qui possède le champ relation
-  proprietaireId      Int         
-  proprietaire        ContentType @relation("TypeProprietaire", fields: [proprietaireId], references: [id], onDelete: Cascade)
+  proprietaireId Int
+  proprietaire   ContentType @relation("TypeProprietaire", fields: [proprietaireId], references: [id], onDelete: Cascade)
 
   // Celui qui est pointé/référencé
-  cibleId             Int         
-  cible               ContentType @relation("TypeCible", fields: [cibleId], references: [id], onDelete: Cascade)
+  cibleId Int
+  cible   ContentType @relation("TypeCible", fields: [cibleId], references: [id], onDelete: Cascade)
 
   @@unique([proprietaireId, cibleId])
 }
 
-
-
-
-
 //     Partie Contenu
 
 model ContentEntry {
-  id              Int           @id @default(autoincrement())
-  contentTypeId   Int
-  contentType     ContentType   @relation(fields: [contentTypeId], references: [id])
-  userId          Int
-  user            User          @relation(fields: [userId], references: [id])
-  data_json       Json         
-  status          Status        @default(DRAFT)
-  taxonomyTerms      TaxonomyTerm[]    @relation("EntryTaxonomyTerms")
-  
+  id            Int            @id @default(autoincrement())
+  contentTypeId Int
+  contentType   ContentType    @relation(fields: [contentTypeId], references: [id])
+  userId        Int
+  user          User           @relation(fields: [userId], references: [id])
+  data_json     Json
+  status        Status         @default(DRAFT)
+  taxonomyTerms TaxonomyTerm[] @relation("EntryTaxonomyTerms")
+
   outgoingRelations ContentEntryRelation[] @relation("OutgoingRelations")
   incomingRelations ContentEntryRelation[] @relation("IncomingRelations")
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  archivedAt      DateTime? 
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
 }
 
 model ContentEntryRelation {
-  id        Int      @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   fieldName String
 
-  sourceId  Int
-  source    ContentEntry @relation("OutgoingRelations", fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId Int
+  source   ContentEntry @relation("OutgoingRelations", fields: [sourceId], references: [id], onDelete: Cascade)
 
   targetEntryId Int?
   targetEntry   ContentEntry? @relation("IncomingRelations", fields: [targetEntryId], references: [id], onDelete: Cascade)
 
   targetMediaId Int?
-  targetMedia   Media?        @relation(fields: [targetMediaId], references: [id], onDelete: Cascade)
+  targetMedia   Media? @relation(fields: [targetMediaId], references: [id], onDelete: Cascade)
 
   targetTaxonomyId Int?
   targetTaxonomy   TaxonomyTerm? @relation(fields: [targetTaxonomyId], references: [id], onDelete: Cascade)
@@ -258,135 +230,119 @@ model ContentEntryRelation {
   @@unique([sourceId, targetEntryId, fieldName])
   @@unique([sourceId, targetMediaId, fieldName])
   @@unique([sourceId, targetTaxonomyId, fieldName])
-  
   @@index([sourceId])
   @@index([targetEntryId])
   @@index([targetMediaId])
 }
 
-
 // Partie Taxonomie (Classification des Contenus)
 
 model Taxonomy {
-  id              Int            @id @default(autoincrement())
-  name            String
-  slug            String         @unique
-  description     String?
-  contentTypes    ContentType[]  @relation("ContentTypeTaxonomies")
-  terms       TaxonomyTerm[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  userId          Int
-  user            User          @relation(fields: [userId], references: [id])
-  archive   Boolean     @default(false)
-  archivedAt DateTime?
+  id           Int            @id @default(autoincrement())
+  name         String
+  slug         String         @unique
+  description  String?
+  contentTypes ContentType[]  @relation("ContentTypeTaxonomies")
+  terms        TaxonomyTerm[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  userId       Int
+  user         User           @relation(fields: [userId], references: [id])
+  archive      Boolean        @default(false)
+  archivedAt   DateTime?
 }
 
-
 model TaxonomyTerm {
-  id          Int          @id @default(autoincrement())
-  name        String       // ex: "Sport"
-  slug        String       @unique // ex: "sport"
-  
+  id   Int    @id @default(autoincrement())
+  name String // ex: "Sport"
+  slug String @unique // ex: "sport"
+
   // La taxonomie parente
-  taxonomyId  Int
-  taxonomy    Taxonomy     @relation(fields: [taxonomyId], references: [id])
+  taxonomyId Int
+  taxonomy   Taxonomy @relation(fields: [taxonomyId], references: [id])
 
   contentEntryRelations ContentEntryRelation[]
 
-  entries     ContentEntry[] @relation("EntryTaxonomyTerms")
+  entries ContentEntry[] @relation("EntryTaxonomyTerms")
 }
-
-
-
 
 //     Partie Bulder (Blocs , Page , PageRevision)
 
-
 model Component {
+  id   Int    @id @default(autoincrement())
+  name String
+  tag  String @unique
+  icon String
 
-  id                Int            @id @default(autoincrement())
-  name              String
-  tag               String         @unique
-  icon              String
-
-  family            ComponentFamily
-  supportedActions  Json
+  family           ComponentFamily
+  supportedActions Json
   defaultProps     Json
-    
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   // Relations
-  blocTemplates     BlocTemplate[]
-
+  blocTemplates BlocTemplate[]
 }
-
 
 model BlocTemplate {
-  id           Int      @id @default(autoincrement())
-  name         String   @unique
-  order        Int   
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  order     Int
+  is_custom Boolean @default(false)
 
-  componentId  Int
-  props Json
-  parentId       Int?
-  sectionId      Int
-  section        Section? @relation("SectionBlocks",fields: [sectionId], references: [id])
+  componentId Int
+  props       Json
+  parentId    Int?
+  sectionId   Int?
+  modelId     Int?
+  section     Section? @relation("SectionBlocks", fields: [sectionId], references: [id])
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relations
-  component      Component @relation(fields: [componentId], references: [id])
-  parent         BlocTemplate? @relation("SubBlocks", fields: [parentId], references: [id], onDelete: Cascade)
-  children       BlocTemplate[] @relation("SubBlocks")
-
+  component           Component      @relation(fields: [componentId], references: [id])
+  parent              BlocTemplate?  @relation("SubBlocks", fields: [parentId], references: [id], onDelete: Cascade)
+  children            BlocTemplate[] @relation("SubBlocks")
+  model               BlocTemplate?  @relation("BlocTemplateModel", fields: [modelId], references: [id], onDelete: SetNull)
+  customBlocTemplates BlocTemplate[] @relation("BlocTemplateModel")
 }
 
-
-
 model Section {
-  id             Int      @id @default(autoincrement())
-  order          Int      
-  block_json     Json
+  id         Int  @id @default(autoincrement())
+  order      Int
+  block_json Json
 
   blocTemplates  BlocTemplate[] @relation("SectionBlocks")
   pageRevisionId Int
-  pageRevision   PageRevision @relation(fields: [pageRevisionId], references: [id])
+  pageRevision   PageRevision   @relation(fields: [pageRevisionId], references: [id])
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-
 model Page {
-
-  id          Int            @id @default(autoincrement())
-  slug        String         @unique
-  name       String
-  pageRevisions   PageRevision[]
-  userId      Int
-  user        User          @relation(fields: [userId], references: [id])
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
+  id            Int            @id @default(autoincrement())
+  slug          String         @unique
+  name          String
+  pageRevisions PageRevision[]
+  userId        Int
+  user          User           @relation(fields: [userId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model PageRevision {
+  id      Int    @id @default(autoincrement())
+  status  Status @default(DRAFT)
+  version Int    @default(1)
 
-  id          Int      @id @default(autoincrement())
-  status      Status   @default(DRAFT) 
-  version     Int      @default(1)
-  
-  pageId      Int
-  page        Page     @relation(fields: [pageId], references: [id])
+  pageId Int
+  page   Page @relation(fields: [pageId], references: [id])
 
-  userId      Int
-  user        User          @relation(fields: [userId], references: [id])
-  
-  sections    Section[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  sections  Section[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

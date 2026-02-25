@@ -21,5 +21,7 @@ export function blocTemplateRoutes(app: Express,validateBody:Function){
     app.get("/bloc-template/:id",AuthMiddleware, blocTemplateController.getBlocTemplateById.bind(blocTemplateController));
 
     app.get("/bloc-template-tree/:sectionId",AuthMiddleware, blocTemplateController.getTreeSection.bind(blocTemplateController));
+
+    app.get("/bloc-templates-components-custom",AuthMiddleware, blocTemplateController.getBlocTemplatesCustom.bind(blocTemplateController));
 }
 
