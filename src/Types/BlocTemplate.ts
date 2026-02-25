@@ -46,18 +46,6 @@ interface UpdateBlocTemplate <T = BaseStyles>{
 }
 
 
-// Interface pour construire l'arbre des blocTemplates 
-// (Qui s'affiche dans le Builder)
-// interface BlocTemplate <T = BaseStyles> {
-//     id: number;
-//     name: string;
-//     order: number;
-//     tag: string;
-//     defaultProps: ComponentProps<T>;
-//     children: BlocTemplate<T>[];
-// }
-
-
 
 export type {
     UpdateBlocTemplate,

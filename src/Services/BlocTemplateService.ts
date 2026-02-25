@@ -5,55 +5,29 @@ import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import { getFormattedDate } from "../Utils/FonctionsUtilitaires.ts";
 import ComponentService from "./ComponentService.ts";
-import type { Component } from "../Types/component.ts";
-import merge from 'lodash/merge.js';
-
+import { StyleInheritance } from "../Utils/StyleInheritance.ts";
 
 const componentService = new ComponentService();
 
 export default class BlocTemplateService {
-    
-    static castingBlocTemplate(data : any): BlocTemplate {
-        
-        const mergedProps = this.mergeDefaultJson(data);
-        const dd=  {
-            ...data,   
-            props: mergedProps,
-        } as BlocTemplate;
-        
-        return dd;
+
+    static castingBlocTemplate(data: any): BlocTemplate {
+        // Applique l'héritage prototypal (merge model.props + instance.props)
+        return StyleInheritance.applyInheritance(data) as BlocTemplate;
+    }
+
+    static castingBlocTemplates(items: any[]): BlocTemplate[] {
+        return items.map(item => BlocTemplateService.castingBlocTemplate(item));
     }
 
 
-
-    static castingBlocTemplates(items:any[]):BlocTemplate[]{
-        return items.map(item => {
-            return this.castingBlocTemplate(item);
-        }) as BlocTemplate[];
-    }
-
-
-    // Fusionne les props par defaut du composant avec les props par defaut du bloc template
-    static mergeDefaultJson(blocTemplate: BlocTemplate): Component['defaultProps'] {
-        const mergedProps = merge(
-            {},
-            blocTemplate.component?.defaultProps,
-            blocTemplate.props
-        );
-        return mergedProps;
-
-    } 
-
-
-    private buildWhereClause(filter?:QueryFilters): Prisma.BlocTemplateWhereInput {
+    private buildWhereClause(filter?: QueryFilters): Prisma.BlocTemplateWhereInput {
         const where: Prisma.BlocTemplateWhereInput = {};
 
         if (filter?.search?.trim()) {
             const query = filter.search.trim();
             where.OR = [
                 { name: { contains: query } }
-                // { tag: { contains: query } },
-                // { description: { contains: query } }
             ];
         }
 
@@ -62,122 +36,108 @@ export default class BlocTemplateService {
 
 
     private async generateNameBlocTemplate(componentId: number): Promise<string> {
-
         const component = await componentService.getComponentById(componentId);
         if (!component) throw new Error(`Composant avec ID ${componentId} non trouvé`);
-
-        const nameBlocTemplate = `${component.name}-${getFormattedDate()}`;
-        return nameBlocTemplate;
-
+        return `${component.name}-${getFormattedDate()}`;
     }
 
 
-      
-    // private buildRecursiveTree(blocks: any[], parentId: number | null = null): BlocTemplate[] {
-    //     return blocks
-    //         .filter(block => block.parentId === parentId)
-    //         .map(block => ({
-    //             id: block.id,
-    //             name: block.name,
-    //             order: block.order,
-    //             tag: block.component?.tag || '',
-    //             props: BlocTemplateService.mergeDefaultJson(block),
-    //             children: this.buildRecursiveTree(blocks, block.id)
-    //         }))
-    // }  
-    
-
-   
-
     async createBlocTemplate(data: RegisterBlocTemplate): Promise<BlocTemplate> {
-
         const nameBlocTemplate = await this.generateNameBlocTemplate(data.componentId);
 
         const component = await componentService.getComponentById(data.componentId);
         if (!component) throw new Error(`Composant avec ID ${data.componentId} non trouvé`);
 
         const blocTemplate = await prisma.blocTemplate.create({
-           data:{
-            ...data,
-            name: nameBlocTemplate,
-            props: component.defaultProps as unknown as Prisma.InputJsonValue,
-           },
-           include: { component: true }
+            data: {
+                ...data,
+                name: nameBlocTemplate,
+                props: component.defaultProps as unknown as Prisma.InputJsonValue,
+            },
+            include: { 
+                component: true,
+                model: true 
+            }
         });
 
-        return blocTemplate as unknown as BlocTemplate;
-
-        // return BlocTemplateService.castingBlocTemplate(blocTemplate);
+        return BlocTemplateService.castingBlocTemplate(blocTemplate);
     }
 
 
-    public async getBlocTemplates(filter?:QueryFilters){
-        const data = await Paginator.paginate<BlocTemplate>(prisma.blocTemplate, {
+    public async getBlocTemplates(filter?: QueryFilters) {
+        const data = await Paginator.paginate<any>(prisma.blocTemplate, {
             page: filter?.page,
             limit: filter?.limit,
             where: this.buildWhereClause(filter),
-            include: { component: true },
+            include: { 
+                component: true,
+                model: true
+            },
             orderBy: { createdAt: 'desc' }
         });
 
-        return data as unknown as BlocTemplate[];
-
-        // return {
-        //     ...data,
-        //     results: BlocTemplateService.castingBlocTemplates(data.results)
-        // };
+        return {
+            ...data,
+            results: BlocTemplateService.castingBlocTemplates(data.results)
+        } as any;
     }
 
-    // Recuperer les blocTemplates d'une section sous forme d'arbre 
-    public async getTreeSection(sectionId: number):Promise<BlocTemplate[]> {
+
+    public async getTreeSection(sectionId: number): Promise<BlocTemplate[]> {
         const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { sectionId },
-            include: { 
+            where: { sectionId, parentId: null }, // On ne prend que les racines pour l'arbre
+            include: {
                 component: true,
-                children: true
+                model: true,
+                children: {
+                    include: {
+                        component: true,
+                        model: true,
+                        children: true // On pourrait avoir besoin d'une récursion plus profonde
+                    }
+                }
             },
-            orderBy: { createdAt: 'asc' },
+            orderBy: { order: 'asc' },
         });
 
-        return blocTemplates as unknown as BlocTemplate[];
-
-        // return this.buildRecursiveTree(blocTemplates) as unknown as BlocTemplate[];
+        return BlocTemplateService.castingBlocTemplates(blocTemplates);
     }
 
 
-    public async getBlocTemplatesCustom():Promise<BlocTemplate[]> {
+    public async getBlocTemplatesCustom(): Promise<BlocTemplate[]> {
         const blocTemplates = await prisma.blocTemplate.findMany({
             where: { is_custom: true },
-            include: { 
+            include: {
                 component: true,
+                model: true,
                 children: true
             },
             orderBy: { createdAt: 'asc' },
         });
-        return blocTemplates as unknown as BlocTemplate[];
+        return BlocTemplateService.castingBlocTemplates(blocTemplates);
     }
+
 
     public async getBlocTemplateById(id: number): Promise<BlocTemplate | null> {
         const item = await prisma.blocTemplate.findUnique({
             where: { id },
-            include: { component: true }
+            include: { 
+                component: true,
+                model: true
+            }
         });
 
         if (!item) return null;
-        
-        return item as unknown as BlocTemplate;
-   
-    //    return BlocTemplateService.castingBlocTemplate(item);
+
+        return BlocTemplateService.castingBlocTemplate(item);
     }
 
 
-
     public async updateBlocTemplate(id: number, data: UpdateBlocTemplate): Promise<BlocTemplate> {
-        const { sectionId, parentId, componentId, ...rest } = data;
-        
+        const { sectionId, parentId, componentId, props, ...rest } = data;
+
         const updateData: Prisma.BlocTemplateUpdateInput = {
             ...rest,
-            props: data.props as unknown as Prisma.InputJsonValue,
         };
 
         if (sectionId) {
@@ -192,17 +152,33 @@ export default class BlocTemplateService {
             updateData.component = { connect: { id: componentId } };
         }
 
-        const blocTemplateUpdated = await prisma.blocTemplate.update({
+        if (props) {
+            let finalProps = props;
+
+            // Si c'est une instance (a un modelId), on ne sauvegarde que les surcharges (diff)
+            const current = await prisma.blocTemplate.findUnique({
+                where: { id },
+                include: { model: true }
+            });
+
+            if (current?.modelId && current.model) {
+                finalProps = StyleInheritance.computeOverrides(current.model.props, props);
+            }
+
+            updateData.props = finalProps as unknown as Prisma.InputJsonValue;
+        }
+
+        const updated = await prisma.blocTemplate.update({
             where: { id },
-            include: { component: true },
-            data: updateData
+            include: { 
+                component: true,
+                model: true
+            },
+            data: updateData,
         });
 
-        // return BlocTemplateService.castingBlocTemplate(blocTemplateUpdated);
-        return blocTemplateUpdated as unknown as BlocTemplate;
-        
+        return BlocTemplateService.castingBlocTemplate(updated);
     }
-        
 
 
     public async deleteBlocTemplate(id: number): Promise<BlocTemplate> {
@@ -210,7 +186,7 @@ export default class BlocTemplateService {
             where: { id },
             include: { component: true }
         });
-        
+
         return BlocTemplateService.castingBlocTemplate(blocTemplateDeleted);
     }
 
