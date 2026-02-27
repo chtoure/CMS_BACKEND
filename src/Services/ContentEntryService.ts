@@ -9,6 +9,7 @@ import type {
 import type { IFieldDefinition } from "../Types/InputField.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
+import type { IContenusQuery } from "../Types/params.ts";
 
 export default class ContentEntryService {
 
@@ -257,4 +258,29 @@ export default class ContentEntryService {
             return this.updateStatus(id, "DRAFT");
         }
     }
+
+
+
+    public async getEntriesByContentTypeIdControl(contentTypeId: number, filters?: IContenusQuery) {
+        // On prépare la base de la requête
+        const queryOptions: any = {
+            where: {
+                contentTypeId: contentTypeId
+            },
+            include: { 
+                contentType: true 
+            },
+            orderBy: {
+                [filters?.sortBy || 'createdAt']: filters?.order || 'desc'
+            }
+        };
+
+        // On n'ajoute 'take' que si filters.limit existe (évite le undefined conflictuel)
+        if (filters?.limit) {
+            queryOptions.take = Number(filters.limit);
+        }
+
+        return prisma.contentEntry.findMany(queryOptions);
+    }
+
 }

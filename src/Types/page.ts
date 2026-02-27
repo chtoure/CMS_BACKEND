@@ -1,29 +1,33 @@
-import type { IPageRevision } from "./PageRevision.ts";
+import type { PageRevision } from "./PageRevision.ts";
+import type { User } from "./User.ts";
 
 
-interface IPage {
+interface Page {
     id: number;
-    title: string;
+    name: string;
     slug: string;
     createdAt: Date;
     updatedAt: Date;
-    pageRevisions?: IPageRevision[];
+    userId?: number;
+    user?: User;
+    pageRevisions?: PageRevision[];
 }
 
 
-interface IRegisterPage {
-    title: string;
+interface RegisterPage {
+    name: string;
     slug: string;
+    userId: number
 }
 
-interface IUpdatePage {
-    title?: string;
+interface UpdatePage {
+    name?: string;
     slug?: string;
 }
 
 
 export type {
-    IPage,
-    IRegisterPage,
-    IUpdatePage
+    Page,
+    RegisterPage,
+    UpdatePage
 }

@@ -8,7 +8,7 @@ const userService = new UserService()
 async function  seedAddUser() {
 
     // Hachage du password
-    const password_hash = await userService.hashPassword("defaultPassword123");
+    const password_hash = await userService.hashPassword("12345678");
     console.log('Début du peuplement de la base de données...');
 
     // Creation 

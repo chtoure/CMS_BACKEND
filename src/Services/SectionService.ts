@@ -1,5 +1,5 @@
 import prisma from "../Utils/PrismaClient.ts";
-import type { ISection, IRegisterSection, IUpdateSection, IPageRender } from "../Types/Section.ts";
+import type { Section, RegisterSection, UpdateSection, PageRender, SectionProps } from "../Types/Section.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
@@ -12,18 +12,18 @@ const blocTemplateService = new BlocTemplateService();
 
 export default class SectionService {
     
-    static castingSection(data : any): ISection {
+    static castingSection(data : any): Section {
         return {
             ...data,   
-            block_json: data.block_json as unknown as ISection['block_json'],
-        } as ISection;
+            block_json: data.block_json as unknown as SectionProps,
+        } as Section;
     }
 
-    static castingSections(items:any[]):ISection[]{
+    static castingSections(items:any[]):Section[]{
         return items.map(item => ({
             ...item,
-            block_json: item.block_json as unknown as ISection['block_json'],
-        })) as ISection[];
+            block_json: item.block_json as unknown as SectionProps,
+        })) as Section[];
     }
 
     private buildWhereClause(filter?:QueryFilters): Prisma.SectionWhereInput {
@@ -41,7 +41,7 @@ export default class SectionService {
         return where;
     }
 
-    public async createSection(data: IRegisterSection): Promise<ISection> {
+    public async createSection(data: RegisterSection): Promise<Section> {
         const section = await prisma.section.create({
            data:{
             ...data,
@@ -53,7 +53,7 @@ export default class SectionService {
     }
 
     public async getSections(filter?:QueryFilters){
-        const data = await Paginator.paginate<ISection>(prisma.section, {
+        const data = await Paginator.paginate<Section>(prisma.section, {
             page: filter?.page,
             limit: filter?.limit,
             // where: this.buildWhereClause(filter),
@@ -66,30 +66,7 @@ export default class SectionService {
         };
     }
 
-
-    // Rendu de la page 
-    public async renderPage(pageRevisionId: number):Promise<IPageRender[]> {
-        const sections = await prisma.section.findMany({
-            where: { pageRevisionId },
-            orderBy: { order: 'asc' }
-        });
-
-        const pageData = await Promise.all(
-            sections.map(async (section) => {
-                const blocTemplates = await blocTemplateService.getTreeSection(section.id);
-                return {
-                    ...section,
-                    block_json: section.block_json as unknown as ISection['block_json'],
-                    components: blocTemplates
-                };
-            })
-        );
-
-        return pageData;
-    }
-
-
-    public async getSectionById(id: number): Promise<ISection | null> {
+    public async getSectionById(id: number): Promise<Section | null> {
         const item = await prisma.section.findUnique({
             where: { id }
         });
@@ -99,7 +76,25 @@ export default class SectionService {
         return SectionService.castingSection(item);
     }
 
-    public async updateSection(id: number, data: IUpdateSection): Promise<ISection> {
+    public async getSectionByRevisionId(revisionId: number):Promise<Section[]> {
+        const section = await prisma.section.findMany({
+            where: { pageRevisionId: revisionId },
+            include: { 
+                blocTemplates: {
+                    include: { 
+                        component: true,
+                        children: true
+                    }
+                }
+            }
+        });
+
+        if (!section) return [];
+
+        return section as unknown as Section[];
+    }
+
+    public async updateSection(id: number, data: UpdateSection): Promise<Section> {
         const sectionUpdated = await prisma.section.update({
             where: { id },
             data: {
@@ -111,7 +106,7 @@ export default class SectionService {
         return SectionService.castingSection(sectionUpdated);
     }
 
-    public async deleteSection(id: number): Promise<ISection> {
+    public async deleteSection(id: number): Promise<Section> {
         const sectionDeleted = await prisma.section.delete({
             where: { id }
         });

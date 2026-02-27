@@ -15,6 +15,7 @@ export default class SectionController {
 
     public async createSection(req: Request, res: Response){
         try {
+            console.log('section',req.body);
             const section = await this.sectionService.createSection(req.body);
             return res.status(HTTP_STATUS_CREATED).json(section);
         } catch (error) {
@@ -35,10 +36,9 @@ export default class SectionController {
         }
     }
 
-    // Rendu d'une page complete
-    public async getFullPage(req: Request, res: Response){
+    public async getSectionByRevisionId(req: Request, res: Response){
         try {
-            const section = await this.sectionService.renderPage(Number(req.params.id));
+            const section = await this.sectionService.getSectionByRevisionId(Number(req.params.id));
             return res.status(HTTP_STATUS_OK).json(section);
         } catch (error) {
             console.log(error);
@@ -46,6 +46,18 @@ export default class SectionController {
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+    // Rendu d'une page complete
+    // public async getFullPage(req: Request, res: Response){
+    //     try {
+    //         const section = await this.sectionService.renderPage(Number(req.params.id));
+    //         return res.status(HTTP_STATUS_OK).json(section);
+    //     } catch (error) {
+    //         console.log(error);
+    //         const errorMessage = handlePrismaError(error);
+    //         return res.status(getErrorStatus(error)).json({ message: errorMessage });
+    //     }
+    // }
 
     public async getSectionById(req: Request, res: Response){
         try {
