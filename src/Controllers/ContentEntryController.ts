@@ -135,4 +135,20 @@ export default class ContentEntryController {
             });
         }
     }
+
+
+    public async getEntriesByContentTypeIdControl(req: Request, res: Response) {
+        try {
+            console.log("blockCMSData");
+            
+            const filters = RequestHelper.getContenusFilters(req);
+            const dataContenus = await contentEntryService.getEntriesByContentTypeIdControl(Number(req.params.id), filters);
+            console.log(dataContenus);
+            
+            return res.status(HTTP_STATUS_OK).json(dataContenus);
+        } catch (error: any) {
+            console.log(error);            
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
 }

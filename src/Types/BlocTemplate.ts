@@ -26,7 +26,6 @@ interface RegisterBlocTemplate {
   order: number;
   parentId?: number | null;
   sectionId?: number;
-
 }
 
 
