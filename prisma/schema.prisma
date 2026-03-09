@@ -30,6 +30,7 @@ enum ComponentFamily {
   interactive
   container
   input
+  complex
 }
 
 //      Partie Authentification

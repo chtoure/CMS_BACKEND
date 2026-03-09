@@ -43,6 +43,9 @@ export default class BlocTemplateService {
 
 
     async createBlocTemplate(data: RegisterBlocTemplate): Promise<BlocTemplate> {
+
+        // console.log("create de bloc", data);
+        
         const nameBlocTemplate = await this.generateNameBlocTemplate(data.componentId);
 
         const component = await componentService.getComponentById(data.componentId);
@@ -134,13 +137,18 @@ export default class BlocTemplateService {
 
 
     public async updateBlocTemplate(id: number, data: UpdateBlocTemplate): Promise<BlocTemplate> {
+
+        console.log('mis ajour du bloc', data);
+        
         const { sectionId, parentId, componentId, props, ...rest } = data;
 
         const updateData: Prisma.BlocTemplateUpdateInput = {
             ...rest,
         };
 
-        if (sectionId) {
+        if (rest.is_custom === true) {
+            updateData.section = { disconnect: true };
+        }else if (sectionId) {
             updateData.section = { connect: { id: sectionId } };
         }
 
@@ -152,20 +160,41 @@ export default class BlocTemplateService {
             updateData.component = { connect: { id: componentId } };
         }
 
-        if (props) {
-            let finalProps = props;
-
-            // Si c'est une instance (a un modelId), on ne sauvegarde que les surcharges (diff)
+        if (props !== undefined || data.is_custom !== undefined) {
             const current = await prisma.blocTemplate.findUnique({
                 where: { id },
-                include: { model: true }
+                include: { 
+                    model: {
+                        include: { model: true } // Supporte au moins 2 niveaux d'héritage pour le merge d'update
+                    }
+                }
             });
 
-            if (current?.modelId && current.model) {
-                finalProps = StyleInheritance.computeOverrides(current.model.props, props);
-            }
+            if (current) {
+                const isNowCustom = current.is_custom;
+                
+                // On calcule le style "complet" tel qu'il serait AVANT cet update
+                const currentFullStyle = StyleInheritance.computeEffectiveProps(current);
+                
+                // On fusionne avec les nouvelles propriétés envoyées (si présentes)
+                // Note : si props est {}, on considère que c'est une volonté de vider les styles ? 
+                // Généralement, le front envoie l'objet complet qu'il voit.
+                const newFullStyle = props ? StyleInheritance.merge(currentFullStyle, props) : currentFullStyle;
 
-            updateData.props = finalProps as unknown as Prisma.InputJsonValue;
+                if (isNowCustom) {
+                    // APLATISSEMENT : On enregistre le style COMPLET et on déconnecte
+                    updateData.props = newFullStyle as unknown as Prisma.InputJsonValue;
+                    updateData.model = { disconnect: true };
+                } else if (current.modelId) {
+                    // INSTANCE : On calcule le DIFF par rapport au modèle parent pour ne stocker que les surcharges
+                    // On récupère les props du modèle parent direct
+                    const modelProps = (current.model as any)?.props || {};
+                    const diffProps = StyleInheritance.computeOverrides(modelProps, newFullStyle);
+                    updateData.props = diffProps as unknown as Prisma.InputJsonValue;
+                } else if (props !== undefined) {
+                    updateData.props = props as unknown as Prisma.InputJsonValue;
+                }
+            }
         }
 
         const updated = await prisma.blocTemplate.update({

@@ -33,6 +33,15 @@ export class StyleInheritance {
     }
 
     /**
+     * Calcule les propriétés effectives totales d'un bloc (Modèle + Instance).
+     */
+    static computeEffectiveProps(bloc: any): any {
+        if (!bloc) return {};
+        const baseProps = bloc.model?.props ? this.computeEffectiveProps(bloc.model) : {};
+        return this.merge(baseProps, bloc.props);
+    }
+
+    /**
      * Calcule uniquement les propriétés qui diffèrent entre le modèle et les propriétés soumises.
      * C'est une opération de "diff" profond.
      */
