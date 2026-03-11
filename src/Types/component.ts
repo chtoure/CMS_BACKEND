@@ -52,6 +52,8 @@ interface Component <T = BaseStyles> {
   defaultProps:  ComponentProps<T>;
 }
 
+
+
 type AnyComponent = 
   | Component<ContainerStyles>
   | Component<StaticStyles>
