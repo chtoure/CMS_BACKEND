@@ -17,10 +17,9 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['interactive'],
     defaultProps: {
       styles: {
-        variant: "default",
-        // rounded: "md",
-        bg: "#e2e2e2ff",
-        padding: 10,
+        variant: { type: "static", value: "default" },
+        // bg: { type: "static", value: "#007bff" },
+        padding: { type: "static", value: 10 },
       },
       params: [
         {
@@ -34,10 +33,10 @@ const componentsData: AnyComponent[] = [
         }
       ],
       data: {
-        content: "Cliquez ici",
+        content: { type: "static", value: "Cliquez ici" },
         cliquable: {
-          action: "NAVIGATE_TO",
-          action_params: { url: "/" }
+          action: "SHOW_ALERT",
+          action_params: { message: { type: "static", value: "Cliquez ici" } }
         }
       },
       children: []
@@ -51,14 +50,11 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['container'],
     defaultProps: {
       styles: {
-        padding: 6,
-        // rounded: "xl",
-        // shadow: "md",
-        // bg: "",
-        // border: "#CA2C2C",
-        display:"block",
-        align: "center",
-        justify: "between"
+        padding: { type: "static", value: 6 },
+        bg: { type: "static", value: "#ffffff" },
+        display: { type: "static", value: "block" },
+        align: { type: "static", value: "center" },
+        justify: { type: "static", value: "between" }
       },
       params:[],
       data: {},
@@ -73,10 +69,10 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['static'],
     defaultProps: {
       styles: {
-        fontSize: { default: "10", md: "20" },
-        textColor: "#060505",
-        textAlign: "left",
-        marginBottom: 4
+        fontSize: { type: "static", value: { default: "16px", md: "18px" } },
+        textColor: { type: "static", value: "#060505" },
+        textAlign: { type: "static", value: "left" },
+        marginBottom: { type: "static", value: 4 }
       },
       params: [
         {
@@ -90,8 +86,8 @@ const componentsData: AnyComponent[] = [
         }
       ],
       data: {
-        content: "Ceci est un texte par défaut",
-        tag: "p"
+        content: { type: "static", value: "Ceci est un texte par défaut" },
+        tag: { type: "static", value: "p" }
       },
       children: []
     }
@@ -104,10 +100,7 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['static'],
     defaultProps: {
       styles: {
-        // rounded: "lg",
-        // shadow: "sm",
-        display: "block",
-        // marginBottom: 4
+        display: { type: "static", value: "block" },
       },
       params: [
         {
@@ -130,11 +123,9 @@ const componentsData: AnyComponent[] = [
         }
       ],
       data: {
-        src: "https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=2912&auto=format&fit=crop",
-        alt: "Image de démonstration",
-        // width: "100%",
-        // height: 300,
-        objectFit: "cover"
+        src: { type: "static", value: "/image.jpg" },
+        alt: { type: "static", value: "Image de démonstration" },
+        objectFit: { type: "static", value: "cover" }
       },
       children: []
     }
@@ -147,8 +138,8 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['static'],
     defaultProps: {
       styles: {
-        textColor: "#e2e2e2ff",
-        marginBottom: 2
+        textColor: { type: "static", value: "#e2e2e2ff" },
+        marginBottom: { type: "static", value: 2 }
       },
       params: [
         {
@@ -162,9 +153,9 @@ const componentsData: AnyComponent[] = [
         }
       ],
       data: {
-        icon: "Star",
-        size: 32,
-        strokeWidth: 2
+        icon: { type: "static", value: "Star" },
+        size: { type: "static", value: 32 },
+        strokeWidth: { type: "static", value: 2 }
       },
       children: []
     }
@@ -177,10 +168,7 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['input'],
     defaultProps: {
       styles: {
-        // marginBottom: 4,
-        // border: "#CA2C2C",
-        // rounded: "md",
-        padding: 2
+        padding: { type: "static", value: 2 }
       },
       params: [
         {
@@ -212,11 +200,66 @@ const componentsData: AnyComponent[] = [
         }
       ],
       data: {
-        type: "text",
-        label: "Votre nom",
-        placeholder: "Entrez votre nom...",
-        name: "username",
-        required: true
+        type: { type: "static", value: "text" },
+        label: { type: "static", value: "Votre nom" },
+        placeholder: { type: "static", value: "Entrez votre nom..." },
+        name: { type: "static", value: "username" },
+        required: { type: "static", value: true }
+      },
+      children: []
+    }
+  },{
+    name: "Slider",
+    tag: "SliderBuilder",
+    icon: "SquarePlay",
+    family: "complex",
+    supportedActions: ACTIONS_BY_FAMILY['complex'],
+    defaultProps: {
+      styles: {
+        padding: { type: "static", value: 0 },
+        bg: { type: "static", value: "transparent" },
+        rounded: { type: "static", value: "none" }
+      },
+      data: { 
+        autoPlay: { type: "static", value: true }, 
+        speed: { type: "static", value: 3000 }, 
+        showPagination: { type: "static", value: true }, 
+        showArrows: { type: "static", value: true }, 
+        loop: { type: "static", value: true } 
+      },
+      children: []
+    }
+  },
+  {
+    name: "Accordéon",
+    tag: "AccordionBuilder",
+    icon: "ListCollapse",
+    family: "complex",
+    supportedActions: ACTIONS_BY_FAMILY['complex'],
+    defaultProps: {
+      styles: { marginBottom: { type: "static", value: 4 } },
+      data: { 
+        title: { type: "static", value: "Nouvelle Question" }, 
+        isOpen: { type: "static", value: false }, 
+        transitionSpeed: { type: "static", value: 300 } 
+      },
+      children: []
+    }
+  },{
+    name: "Lien",
+    tag: "LinkBuilder",
+    icon: "ExternalLink",
+    family: "static",
+    supportedActions: ACTIONS_BY_FAMILY['static'],
+    defaultProps: {
+      styles: {
+        textColor: {type:"static", value:"#3b82f6"},
+        textAlign: {type:"static", value:"left"}
+      },
+      data: {
+        text: "Lien personnalisé",
+        url: "",
+        target: "_self"
       },
       children: []
     }

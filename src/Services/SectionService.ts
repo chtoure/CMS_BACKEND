@@ -1,29 +1,28 @@
 import prisma from "../Utils/PrismaClient.ts";
-import type { Section, RegisterSection, UpdateSection, PageRender, SectionProps } from "../Types/Section.ts";
+import type { Section, RegisterSection, UpdateSection, SectionProps } from "../Types/Section.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import BlocTemplateService from "./BlocTemplateService.ts";
 
-
-
-
-const blocTemplateService = new BlocTemplateService();
-
 export default class SectionService {
     
     static castingSection(data : any): Section {
+        // Casting des blocs inclus dans la section si présents
+        let blocTemplates = data.blocTemplates;
+        if (blocTemplates) {
+            blocTemplates = BlocTemplateService.castingBlocTemplates(blocTemplates);
+        }
+
         return {
             ...data,   
             block_json: data.block_json as unknown as SectionProps,
+            blocTemplates: blocTemplates
         } as Section;
     }
 
     static castingSections(items:any[]):Section[]{
-        return items.map(item => ({
-            ...item,
-            block_json: item.block_json as unknown as SectionProps,
-        })) as Section[];
+        return items.map(item => this.castingSection(item));
     }
 
     private buildWhereClause(filter?:QueryFilters): Prisma.SectionWhereInput {
@@ -31,11 +30,7 @@ export default class SectionService {
 
         if (filter?.search?.trim()) {
             const query = filter.search.trim();
-            where.OR = [
-                // { name: { contains: query } },
-                // { tag: { contains: query } },
-                // { description: { contains: query } }
-            ];
+            where.OR = [];
         }
 
         return where;
@@ -68,7 +63,16 @@ export default class SectionService {
 
     public async getSectionById(id: number): Promise<Section | null> {
         const item = await prisma.section.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                blocTemplates: {
+                    include: {
+                        component: true,
+                        model: true,
+                        children: true
+                    }
+                }
+            }
         });
 
         if (!item) return null;
@@ -77,21 +81,29 @@ export default class SectionService {
     }
 
     public async getSectionByRevisionId(revisionId: number):Promise<Section[]> {
-        const section = await prisma.section.findMany({
+        const sections = await prisma.section.findMany({
             where: { pageRevisionId: revisionId },
             include: { 
                 blocTemplates: {
+                    where: { parentId: null }, // Uniquement les blocs racines
                     include: { 
                         component: true,
-                        children: true
+                        model: true,
+                        children: {
+                            include: {
+                                component: true,
+                                model: true,
+                                children: true
+                            }
+                        }
                     }
                 }
             }
         });
 
-        if (!section) return [];
+        if (!sections) return [];
 
-        return section as unknown as Section[];
+        return SectionService.castingSections(sections);
     }
 
     public async updateSection(id: number, data: UpdateSection): Promise<Section> {
@@ -100,6 +112,15 @@ export default class SectionService {
             data: {
                  ...data,
                  block_json: data.block_json as unknown as Prisma.InputJsonValue,
+            },
+            include: {
+                blocTemplates: {
+                    include: {
+                        component: true,
+                        model: true,
+                        children: true
+                    }
+                }
             }
         });
 

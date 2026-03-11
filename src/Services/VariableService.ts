@@ -33,19 +33,22 @@ export default class VariableService {
     public async getVariablesByCollection(collectionId: number) {
         return prisma.variable.findMany({
             where: { collectionId },
-            orderBy: { name: 'asc' }
+            orderBy: { name: 'asc' },
+            
         });
     }
 
     public async getVariableById(id: number) {
         return prisma.variable.findUnique({
-            where : {id}
+            where : {id},
+            include:{collection: true}
         })
     }
 
     public async getAllVariables() {
         return prisma.variable.findMany({
-            orderBy: { name: 'asc' }
+            orderBy: { name: 'asc' },
+            include:{collection: true}
         });
     }
 }

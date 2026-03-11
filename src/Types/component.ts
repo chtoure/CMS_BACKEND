@@ -8,12 +8,13 @@ type ModalAction = { action: 'OPEN_MODAL'; action_params: { modalId: string } };
 type CliquableAction = NavigateAction | AlertAction | ModalAction;
 
 // Familles et Capacités
-type ComponentFamily = 'static' | 'interactive' | 'container' | 'input';
+type ComponentFamily = 'static' | 'interactive' | 'container' | 'input' | 'complex' ;
 
 const FAMILY_CAPABILITIES: Record<ComponentFamily, { canHaveChildren: boolean }> = {
   static: { canHaveChildren: false },
   interactive: { canHaveChildren: false },
   container: { canHaveChildren: true }, 
+  complex: { canHaveChildren: true },
   input: { canHaveChildren: false },
 };
 
@@ -22,6 +23,7 @@ const ACTIONS_BY_FAMILY: Record<ComponentFamily, CliquableAction['action'][]> = 
   interactive: ['NAVIGATE_TO', 'SHOW_ALERT', 'OPEN_MODAL'],
   container: ['OPEN_MODAL'],
   input: ['SHOW_ALERT'],
+  complex: ['NAVIGATE_TO', 'OPEN_MODAL'],
 };
 
 // Support Responsif
@@ -70,6 +72,14 @@ interface AnyComponentInstance extends Omit<Component<AllStyles>, 'defaultProps'
   children: AnyComponentInstance[]; // <--- C'est ici que la magie opère !
 }
 
+type VariableProperty<T> = {
+  type: 'static';
+  value: T;
+} | {
+  type: 'variable';
+  value: string; 
+};
+
 export type {
   NavigateAction,
   AlertAction,
@@ -80,65 +90,11 @@ export type {
   Component,
   AnyComponent,
   AnyComponentInstance,
-  ComponentProps
+  ComponentProps,
+  VariableProperty
 }
 
 export {
   FAMILY_CAPABILITIES,
   ACTIONS_BY_FAMILY,
 }
-
-
-
-
-
-
-
-
-
-
-// import type { CliquableAction, ComponentFamily, IComponentPropsType } from "./PropsBuilder.ts";
-
-
-// interface IComponent {
-//   id: number;
-//   name: string;
-//   tag: string;
-//   icon: string;
-//   family: ComponentFamily;
-//   supportedActions: CliquableAction['action'][];
-//   default_props: IComponentPropsType;
-
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
-
-
-
-// interface IRegisterComponent {
-//     name: string;
-//     tag: string;
-//     icon: string;
-//     family: ComponentFamily;
-//     supportedActions: CliquableAction['action'][];
-//     default_props: IComponentPropsType;
-// }
-
-
-
-// interface IUpdateComponent {
-//     name?: string;
-//     tag?: string;
-//     icon?: string;
-//     family?: ComponentFamily;
-//     supportedActions?: CliquableAction['action'][];
-//     default_props?: IComponentPropsType;
-// }
-
-
-
-// export type {
-//   IComponent,
-//   IRegisterComponent,
-//   IUpdateComponent
-// }
