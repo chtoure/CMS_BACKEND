@@ -64,11 +64,20 @@ export default class BlocTemplateService {
     }
 
 
+    // private async generateNameBlocTemplate(componentId: number): Promise<string> {
+    //     const component = await componentService.getComponentById(componentId);
+    //     if (!component) throw new Error(`Composant avec ID ${componentId} non trouvé`);
+    //     return `${component.name}-${getFormattedDate()}`;
+    // }
+
+
     private async generateNameBlocTemplate(componentId: number): Promise<string> {
         const component = await componentService.getComponentById(componentId);
         if (!component) throw new Error(`Composant avec ID ${componentId} non trouvé`);
-        return `${component.name}-${getFormattedDate()}`;
+        const randomSuffix = Math.random().toString(36).substring(2, 7); // Ex: "7x9a2"
+        return `${component.name}-${getFormattedDate()}-${randomSuffix}`;
     }
+
 
 
     async createBlocTemplate(data: RegisterBlocTemplate): Promise<BlocTemplate> {
@@ -264,7 +273,7 @@ export default class BlocTemplateService {
                         // SI C'EST UN MÉDIA : On transforme l'ID en URL
                         if (type.targetType === ValueSource.IMAGE && typeof val === 'number') { 
                             const media = await mediaService.getMediaById(val);
-                            data[param.name] = media?.file_path;
+                            data[param.name] = media ? `${process.env.APP_URL || ''}${media.file_path}` : null;
                         } else {
                             data[param.name] = val;
                         }
@@ -288,24 +297,62 @@ export default class BlocTemplateService {
 
     private async resolveCMSData(block: any): Promise<any> {
         // On cherche s'il y a un paramètre de type CONTENUS
-        const contenuParam = block.params?.find((p: IComponentParams) => p.type.source === ValueSource.CONTENUS);
+        const contenuParam = block.props.params?.find((p: IComponentParams) => p.type.source === ValueSource.CONTENUS);
 
         if (!contenuParam) return null;
 
         const config = contenuParam.type.config;
 
-        if (config.mode === 'single') {
-            // Récupération d'une seule entrée
-            return await contentEntryService.getContentEntryById(config.entryId);
+
+       if (config.mode === 'single') {
+            const entry = await contentEntryService.getContentEntryById(config.entryId);
+            // Retourner les données aplaties de l'entrée
+            return entry ? { id: entry.id, ...(entry.data_json as any || {}) } : null;
         } 
         
         if (config.mode === 'query') {
-            // Récupération d'une liste d'entrées
             const items = await contentEntryService.getEntriesByContentTypeIdControl(contenuParam.type.contentTypeId, config);
-            // On injecte directement les items dans le bloc pour que le front puisse v-for
-            block.data.item = items;
-            block.data.is_collection = true;
-            return null; // Les data sont dans items, pas besoin de contexte unique
+            
+            // On récupère le schéma pour identifier les champs de type média
+            const ct = await prisma.contentType.findUnique({
+                where: { id: contenuParam.type.contentTypeId },
+                select: { fields_schema: true }
+            });
+            const fields = ct?.fields_schema ? (typeof ct.fields_schema === 'string' ? JSON.parse(ct.fields_schema) : ct.fields_schema) : [];
+            const mediaFields = fields.filter((f: any) => f.type === 'media' || f.type === 'FieldType.MEDIA');
+
+            // On collecte tous les IDs de médias
+            const mediaIds = new Set<number>();
+            items.forEach((item: any) => {
+                const data = item.data_json || {};
+                mediaFields.forEach((f: any) => {
+                    const val = data[f.name];
+                    if (typeof val === 'number') mediaIds.add(val);
+                });
+            });
+
+            // On récupère les URLs depuis le MediaService
+            const medias = await mediaService.getMediaByIds(Array.from(mediaIds));
+
+            // On retourne un objet collection avec les items aplatis et les images résolues
+            return {
+                items: items.map((item: any) => {
+                    const resolvedData = { ...(item.data_json || {}) };
+                    mediaFields.forEach((f: any) => {
+                       const val = resolvedData[f.name];
+                       if (typeof val === 'number') {
+                           const media = medias.find((m: any) => m.id === val);
+                           if (media) resolvedData[f.name] = `${process.env.APP_URL || ''}${media.file_path}`;
+                       }
+                    });
+
+                    return {
+                        id: item.id,
+                        ...resolvedData
+                    };
+                }),
+                is_collection: true
+            };
         }
 
         return null;
@@ -319,7 +366,11 @@ export default class BlocTemplateService {
         parentContext: any = null
     ): Promise<any[]> {
         // On filtre les blocs du niveau actuel
-        const currentLevelBlocks = blocks.filter(block => block.parentId === parentId);
+        const currentLevelBlocks = blocks
+            .filter(block => block.parentId === parentId)
+            // Ajout du tri ascendant pour respecter la disposition Builder
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        
         const hydratedBlocks = [];
 
         for (const block of currentLevelBlocks) {
@@ -331,7 +382,7 @@ export default class BlocTemplateService {
 
             // On utilise parentContext (donné par le parent) ou blockInjectedData (propre au bloc)
             const resolvedData = await this.hydrateParams(
-                block.params || [], 
+                baseProps.params || [], 
                 baseProps.data || {}, 
                 parentContext || blockInjectedData
             );
@@ -344,6 +395,7 @@ export default class BlocTemplateService {
                 tag: block.component?.tag || '',
                 family: block.component?.family || '',
                 styles: baseProps.styles, // On garde les styles tels quels
+                params: baseProps.params || [],
                 data: {
                     ...resolvedData,
                     // On injecte les items si c'est une requête de collection

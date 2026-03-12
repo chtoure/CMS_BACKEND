@@ -38,9 +38,15 @@ export default class PageService {
                     create:{
                         userId: data.userId
                     }
+                },
+                navItem: {
+                    create: {
+                        label: data.name,
+                        value: `/${data.slug}`
+                    }
                 }
             },
-            include: { pageRevisions: true } 
+            include: { pageRevisions: true, navItem: true } 
         });
     }
 

@@ -35,8 +35,8 @@ const componentsData: AnyComponent[] = [
       data: {
         content: { type: "static", value: "Cliquez ici" },
         cliquable: {
-          action: "SHOW_ALERT",
-          action_params: { message: { type: "static", value: "Cliquez ici" } }
+          action: "TOGGLE_VISIBILITY",
+          action_params: { blockId: { type: "static", value: "" } }
         }
       },
       children: []
@@ -160,55 +160,56 @@ const componentsData: AnyComponent[] = [
       children: []
     }
   },
+  // {
+  //   name: "Champ Saisie",
+  //   tag: "InputBuilder",
+  //   icon: "FormInput",
+  //   family: "input",
+  //   supportedActions: ACTIONS_BY_FAMILY['input'],
+  //   defaultProps: {
+  //     styles: {
+  //       padding: { type: "static", value: 2 }
+  //     },
+  //     params: [
+  //       {
+  //         name: "label",
+  //         label: "Label",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "Votre nom"
+  //         },
+  //         required: true,
+  //       },
+  //       {
+  //         name: "placeholder",
+  //         label: "Placeholder",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "Entrez votre nom..."
+  //         },
+  //         required: true,
+  //       },
+  //       {
+  //         name: "name",
+  //         label: "Name",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "username"
+  //         },
+  //         required: true,
+  //       }
+  //     ],
+  //     data: {
+  //       type: { type: "static", value: "text" },
+  //       label: { type: "static", value: "Votre nom" },
+  //       placeholder: { type: "static", value: "Entrez votre nom..." },
+  //       name: { type: "static", value: "username" },
+  //       required: { type: "static", value: true }
+  //     },
+  //     children: []
+  //   }
+  // },
   {
-    name: "Champ Saisie",
-    tag: "InputBuilder",
-    icon: "FormInput",
-    family: "input",
-    supportedActions: ACTIONS_BY_FAMILY['input'],
-    defaultProps: {
-      styles: {
-        padding: { type: "static", value: 2 }
-      },
-      params: [
-        {
-          name: "label",
-          label: "Label",
-          type: {
-            source: ValueSource.STATIC,
-            value: "Votre nom"
-          },
-          required: true,
-        },
-        {
-          name: "placeholder",
-          label: "Placeholder",
-          type: {
-            source: ValueSource.STATIC,
-            value: "Entrez votre nom..."
-          },
-          required: true,
-        },
-        {
-          name: "name",
-          label: "Name",
-          type: {
-            source: ValueSource.STATIC,
-            value: "username"
-          },
-          required: true,
-        }
-      ],
-      data: {
-        type: { type: "static", value: "text" },
-        label: { type: "static", value: "Votre nom" },
-        placeholder: { type: "static", value: "Entrez votre nom..." },
-        name: { type: "static", value: "username" },
-        required: { type: "static", value: true }
-      },
-      children: []
-    }
-  },{
     name: "Slider",
     tag: "SliderBuilder",
     icon: "SquarePlay",
@@ -216,7 +217,7 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['complex'],
     defaultProps: {
       styles: {
-        padding: { type: "static", value: 0 },
+        padding: { type: "static", value: 10 },
         bg: { type: "static", value: "transparent" },
         rounded: { type: "static", value: "none" }
       },
