@@ -330,6 +330,23 @@ model Page {
   user          User           @relation(fields: [userId], references: [id])
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  navItem       NavItem?
+}
+
+model NavItem {
+  id        Int       @id @default(autoincrement())
+  label     String
+  value     String    @unique
+
+  parentId  Int?
+  parent    NavItem?  @relation("SubNavItems", fields: [parentId], references: [id], onDelete: Cascade)
+  children  NavItem[] @relation("SubNavItems")
+
+  pageId    Int?      @unique
+  page      Page?     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model PageRevision {

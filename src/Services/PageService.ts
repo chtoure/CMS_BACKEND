@@ -3,7 +3,9 @@ import type { Page, RegisterPage, UpdatePage } from "../Types/page.ts";
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import prisma from "../Utils/PrismaClient.ts";
+import BlocTemplateService from "./BlocTemplateService.ts";
 
+const blocTemplateService = new BlocTemplateService();
 
 export default class PageService {
 
@@ -36,9 +38,15 @@ export default class PageService {
                     create:{
                         userId: data.userId
                     }
+                },
+                navItem: {
+                    create: {
+                        label: data.name,
+                        value: `${data.slug}`
+                    }
                 }
             },
-            include: { pageRevisions: true } 
+            include: { pageRevisions: true, navItem: true } 
         });
     }
 
@@ -89,6 +97,60 @@ export default class PageService {
         });
 
         return pageDeleted;
+    }
+
+
+    public async renderPage(slug: string) {
+        const page = await prisma.page.findUnique({
+            where: { slug },
+            include: { 
+                pageRevisions: {
+                    where: { status: 'PUBLISHED' },
+                    include: {
+                        sections: {
+                            include: {
+                                blocTemplates: {
+                                    include: { component: true } // Important pour le tag
+                                }
+                            }
+                        }
+                    }
+                }, 
+            }
+        });
+
+        if (!page || !page.pageRevisions[0]) return null;
+
+        const revision = page.pageRevisions[0];
+
+        // Dans ton service Backend
+        const layout = await Promise.all(
+            revision.sections.map(async (section) => {
+                // On récupère le JSON brut de la section
+                const sectionProps = typeof section.block_json === 'string' 
+                    ? JSON.parse(section.block_json) 
+                    : section.block_json;
+
+                return {
+                    id: section.id,
+                    order: section.order,
+                    styles: sectionProps, 
+                    data: {}, 
+                    children: await blocTemplateService.buildRecursiveTree(
+                        section.blocTemplates, 
+                        null
+                    )
+                };
+            })
+        );
+
+        // console.log('layout', JSON.stringify(layout, null, 2)); 
+
+        // On retourne la page avec les sections transformées
+        return {
+            slug: page.slug,
+            layout: layout // C'est ce JSON que le Frontend recevra
+        };
     }
 }
 

@@ -2,7 +2,7 @@
 import PageService from "../Services/PageService.ts";
 import type { Request,Response } from "express";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
-import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
+import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "../Utils/Constantes/ConstantesHttp.ts";
 import { RequestHelper } from "../Utils/queryFilter.ts";
 
 
@@ -65,6 +65,23 @@ export default class PageController {
         try {
             const page = await this.pageService.deletePage(Number(req.params.id));
             return res.status(HTTP_STATUS_OK).json(page);
+        } catch (error) {
+            console.log(error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
+
+    public async renderFullPage(req:Request,res:Response){
+        const { slug } = req.params
+        try {
+            if (!slug) {
+                const pageRender = await this.pageService.renderPage("/");
+                return res.status(HTTP_STATUS_OK).json(pageRender);
+            }
+            const pageRender = await this.pageService.renderPage("/"+slug);
+            return res.status(HTTP_STATUS_OK).json(pageRender);
         } catch (error) {
             console.log(error);
             const errorMessage = handlePrismaError(error);

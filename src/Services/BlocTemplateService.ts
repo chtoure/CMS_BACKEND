@@ -5,9 +5,17 @@ import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
 import { getFormattedDate } from "../Utils/FonctionsUtilitaires.ts";
 import ComponentService from "./ComponentService.ts";
+import type { Component } from "../Types/component.ts";
+import merge from 'lodash/merge.js';
+import { ValueSource, type IComponentParams } from "../Types/params.ts";
+import MediaService from "./MediaService.ts";
+import ContentEntryService from "./ContentEntryService.ts";
+
 import { StyleInheritance } from "../Utils/StyleInheritance.ts";
 
 const componentService = new ComponentService();
+const mediaService = new MediaService();
+const contentEntryService = new ContentEntryService();
 
 export default class BlocTemplateService {
 
@@ -16,6 +24,27 @@ export default class BlocTemplateService {
         return StyleInheritance.applyInheritance(data) as BlocTemplate;
     }
 
+    // static castingBlocTemplates(items:any[]):BlocTemplate[]{
+    //     return items.map(item => {
+    //         return this.castingBlocTemplate(item);
+    //     }) as BlocTemplate[];
+    // }
+
+
+    // Fusionne les props par defaut du composant avec les props par defaut du bloc template
+    static mergeDefaultJson(blocTemplate: BlocTemplate): Component['defaultProps'] {
+        const mergedProps = merge(
+            {},
+            blocTemplate.component?.defaultProps,
+            blocTemplate.props
+        );
+        console.log('blocTemplate', blocTemplate.props.styles);
+        console.log('mergedProps', mergedProps.styles);
+        
+        
+        return mergedProps;
+
+    } 
     static castingBlocTemplates(items: any[]): BlocTemplate[] {
         return items.map(item => BlocTemplateService.castingBlocTemplate(item));
     }
@@ -35,11 +64,20 @@ export default class BlocTemplateService {
     }
 
 
+    // private async generateNameBlocTemplate(componentId: number): Promise<string> {
+    //     const component = await componentService.getComponentById(componentId);
+    //     if (!component) throw new Error(`Composant avec ID ${componentId} non trouvé`);
+    //     return `${component.name}-${getFormattedDate()}`;
+    // }
+
+
     private async generateNameBlocTemplate(componentId: number): Promise<string> {
         const component = await componentService.getComponentById(componentId);
         if (!component) throw new Error(`Composant avec ID ${componentId} non trouvé`);
-        return `${component.name}-${getFormattedDate()}`;
+        const randomSuffix = Math.random().toString(36).substring(2, 7); // Ex: "7x9a2"
+        return `${component.name}-${getFormattedDate()}-${randomSuffix}`;
     }
+
 
 
     async createBlocTemplate(data: RegisterBlocTemplate): Promise<BlocTemplate> {
@@ -217,6 +255,158 @@ export default class BlocTemplateService {
         });
 
         return BlocTemplateService.castingBlocTemplate(blocTemplateDeleted);
+    }
+
+
+    private async hydrateParams(params: IComponentParams[], currentData: any, context: any): Promise<any> {
+        const data = { ...currentData };
+
+        for (const param of params) {
+            const type = param.type;
+
+            switch(type.source) {
+                // Cas : Source PARENT
+                case ValueSource.PARENT:
+                    if (context && type.parentKey) {
+                        let val = context[type.parentKey];
+
+                        // SI C'EST UN MÉDIA : On transforme l'ID en URL
+                        if (type.targetType === ValueSource.IMAGE && typeof val === 'number') { 
+                            const media = await mediaService.getMediaById(val);
+                            data[param.name] = media ? `${process.env.APP_URL || ''}${media.file_path}` : null;
+                        } else {
+                            data[param.name] = val;
+                        }
+                    }
+                    break;
+
+                // Cas : Source IMAGE
+                case ValueSource.IMAGE:
+                    data[param.name] = type.src;
+                    break;
+
+                // Cas : Source STATIC
+                case ValueSource.STATIC:
+                    data[param.name] = type.value;
+                    break;
+            }
+        }
+        return data;
+    }
+
+
+    private async resolveCMSData(block: any): Promise<any> {
+        // On cherche s'il y a un paramètre de type CONTENUS
+        const contenuParam = block.props.params?.find((p: IComponentParams) => p.type.source === ValueSource.CONTENUS);
+
+        if (!contenuParam) return null;
+
+        const config = contenuParam.type.config;
+
+
+       if (config.mode === 'single') {
+            const entry = await contentEntryService.getContentEntryById(config.entryId);
+            // Retourner les données aplaties de l'entrée
+            return entry ? { id: entry.id, ...(entry.data_json as any || {}) } : null;
+        } 
+        
+        if (config.mode === 'query') {
+            const items = await contentEntryService.getEntriesByContentTypeIdControl(contenuParam.type.contentTypeId, config);
+            
+            // On récupère le schéma pour identifier les champs de type média
+            const ct = await prisma.contentType.findUnique({
+                where: { id: contenuParam.type.contentTypeId },
+                select: { fields_schema: true }
+            });
+            const fields = ct?.fields_schema ? (typeof ct.fields_schema === 'string' ? JSON.parse(ct.fields_schema) : ct.fields_schema) : [];
+            const mediaFields = fields.filter((f: any) => f.type === 'media' || f.type === 'FieldType.MEDIA');
+
+            // On collecte tous les IDs de médias
+            const mediaIds = new Set<number>();
+            items.forEach((item: any) => {
+                const data = item.data_json || {};
+                mediaFields.forEach((f: any) => {
+                    const val = data[f.name];
+                    if (typeof val === 'number') mediaIds.add(val);
+                });
+            });
+
+            // On récupère les URLs depuis le MediaService
+            const medias = await mediaService.getMediaByIds(Array.from(mediaIds));
+
+            // On retourne un objet collection avec les items aplatis et les images résolues
+            return {
+                items: items.map((item: any) => {
+                    const resolvedData = { ...(item.data_json || {}) };
+                    mediaFields.forEach((f: any) => {
+                       const val = resolvedData[f.name];
+                       if (typeof val === 'number') {
+                           const media = medias.find((m: any) => m.id === val);
+                           if (media) resolvedData[f.name] = `${process.env.APP_URL || ''}${media.file_path}`;
+                       }
+                    });
+
+                    return {
+                        id: item.id,
+                        ...resolvedData
+                    };
+                }),
+                is_collection: true
+            };
+        }
+
+        return null;
+    }
+
+
+
+    public async buildRecursiveTree(
+        blocks: any[], 
+        parentId: number | null = null, 
+        parentContext: any = null
+    ): Promise<any[]> {
+        // On filtre les blocs du niveau actuel
+        const currentLevelBlocks = blocks
+            .filter(block => block.parentId === parentId)
+            // Ajout du tri ascendant pour respecter la disposition Builder
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        
+        const hydratedBlocks = [];
+
+        for (const block of currentLevelBlocks) {
+            // Fusion des props par défaut (ta logique actuelle)
+            const baseProps = BlocTemplateService.mergeDefaultJson(block);
+
+            // Cette étape récupère le contenu ou liste de contenu
+            const blockInjectedData = await this.resolveCMSData(block);
+
+            // On utilise parentContext (donné par le parent) ou blockInjectedData (propre au bloc)
+            const resolvedData = await this.hydrateParams(
+                baseProps.params || [], 
+                baseProps.data || {}, 
+                parentContext || blockInjectedData
+            );
+
+            // Construction du bloc hydraté
+            hydratedBlocks.push({
+                id: block.id,
+                name: block.name,
+                order: block.order,
+                tag: block.component?.tag || '',
+                family: block.component?.family || '',
+                styles: baseProps.styles, // On garde les styles tels quels
+                params: baseProps.params || [],
+                data: {
+                    ...resolvedData,
+                    // On injecte les items si c'est une requête de collection
+                    ...(blockInjectedData?.items ? { items: blockInjectedData.items, is_collection: true } : {})
+                },
+                // Récursivité : on descend en passant le contexte actuel aux enfants
+                children: await this.buildRecursiveTree(blocks, block.id, blockInjectedData)
+            });
+        }
+
+        return hydratedBlocks;
     }
 
 }
