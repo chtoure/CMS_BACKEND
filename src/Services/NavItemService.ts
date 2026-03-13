@@ -13,7 +13,14 @@ export default class NavItemService {
         // Fetch all nav items, potentially eager-loading children for a recursive menu
         return prisma.navItem.findMany({
             where: {
-                parentId: null // Top level items
+                parentId: null, // Top level items
+                page: {
+                  pageRevisions: {
+                    some: {
+                        status: 'PUBLISHED'
+                    } 
+                  } 
+                }
             },
             include: {
                 children: {

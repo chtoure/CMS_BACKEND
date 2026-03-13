@@ -42,7 +42,7 @@ export default class PageService {
                 navItem: {
                     create: {
                         label: data.name,
-                        value: `/${data.slug}`
+                        value: `${data.slug}`
                     }
                 }
             },

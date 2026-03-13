@@ -18,6 +18,7 @@ const FAMILY_CAPABILITIES: Record<ComponentFamily, { canHaveChildren: boolean }>
   input: { canHaveChildren: false },
 };
 
+
 const ACTIONS_BY_FAMILY: Record<ComponentFamily, CliquableAction['action'][]> = {
   static: [],
   interactive: ['NAVIGATE_TO', 'SHOW_ALERT', 'OPEN_MODAL'],

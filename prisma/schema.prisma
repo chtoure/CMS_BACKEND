@@ -336,7 +336,7 @@ model Page {
 model NavItem {
   id        Int       @id @default(autoincrement())
   label     String
-  value     String
+  value     String    @unique
 
   parentId  Int?
   parent    NavItem?  @relation("SubNavItems", fields: [parentId], references: [id], onDelete: Cascade)

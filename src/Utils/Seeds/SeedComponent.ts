@@ -257,6 +257,26 @@ const componentsData: AnyComponent[] = [
         textColor: {type:"static", value:"#3b82f6"},
         textAlign: {type:"static", value:"left"}
       },
+      params: [
+        {
+          name: "text",
+          label: "Texte du lien",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Lien personnalisé"
+          },
+          required: true,
+        },
+        {
+          name: "url",
+          label: "URL",
+          type: {
+            source: ValueSource.STATIC,
+            value: ""
+          },
+          required: true,
+        }
+      ],
       data: {
         text: "Lien personnalisé",
         url: "",
