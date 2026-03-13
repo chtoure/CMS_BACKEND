@@ -1,9 +1,7 @@
-
 import Joi from "joi";
-import type { IComponentPropsType } from "../../Types/PropsBuilder.ts";
+import { ValueSource } from "../../Types/params.ts";
 
-
-// Permet de valider soit une valeur simple, soit l'objet responsive
+// --- HELPERS ---
 const responsiveProp = (type: Joi.Schema) => Joi.alternatives().try(
     type,
     Joi.object({
@@ -14,39 +12,71 @@ const responsiveProp = (type: Joi.Schema) => Joi.alternatives().try(
     })
 );
 
-// Schéma pour les styles communs
-const commonStylesSchema = Joi.object({
-    marginTop: responsiveProp(Joi.alternatives().try(Joi.number(), Joi.string())),
-    marginBottom: responsiveProp(Joi.alternatives().try(Joi.number(), Joi.string())),
-    padding: responsiveProp(Joi.alternatives().try(Joi.number(), Joi.string())),
-    bg: responsiveProp(Joi.string()),
-    rounded: responsiveProp(Joi.string()),
-    shadow: responsiveProp(Joi.string()),
-    opacity: responsiveProp(Joi.number()),
-    display: responsiveProp(Joi.string().valid('hidden', 'block', 'flex', 'grid'))
+// --- SCHÉMAS DES SOURCES (IPropsSchemaField) ---
+const StaticFieldSchema = Joi.object({
+    source: Joi.string().valid(ValueSource.STATIC).required(),
+    value: Joi.alternatives().try(Joi.string(), Joi.number()).required()
 });
 
+const ImageFieldSchema = Joi.object({
+    source: Joi.string().valid(ValueSource.IMAGE).required(),
+    src: Joi.string().required(),
+    id: Joi.number().optional()
+});
 
+const ContenusFieldSchema = Joi.object({
+    source: Joi.string().valid(ValueSource.CONTENUS).required(),
+    contentTypeId: Joi.number().required(),
+    config: Joi.alternatives().try(
+        // IContenusSingle
+        Joi.object({
+            mode: Joi.string().valid('single').required(),
+            entryId: Joi.number().required(),
+            mappingField: Joi.string().optional()
+        }),
+        // IContenusQuery
+        Joi.object({
+            mode: Joi.string().valid('query').required(),
+            limit: Joi.number().optional(),
+            sortBy: Joi.string().optional(),
+            order: Joi.string().valid('asc', 'desc').optional(),
+            taxonomyFilters: Joi.array().items(Joi.object({
+                taxonomyId: Joi.number().required(),
+                termIds: Joi.array().items(Joi.number()).required(),
+                operator: Joi.string().valid('AND', 'OR').required()
+            })).optional()
+        })
+    ).required()
+});
+
+const ParentFieldSchema = Joi.object({
+    source: Joi.string().valid(ValueSource.PARENT).required(),
+    parentParamName: Joi.string().required(),
+    parentKey: Joi.string().optional(),
+    targetType: Joi.string().valid(ValueSource.STATIC, ValueSource.IMAGE).optional()
+});
+
+const PropsSchemaField = Joi.alternatives().try(
+    StaticFieldSchema,
+    ImageFieldSchema,
+    ContenusFieldSchema,
+    ParentFieldSchema
+);
+
+// --- COMPONENT STRUCTURE ---
+
+const ComponentParamsSchema = Joi.object({
+    name: Joi.string().required(),
+    label: Joi.string().required(),
+    type: PropsSchemaField.required(),
+    required: Joi.boolean().required()
+});
 
 const componentPropsSchema = Joi.object({
-    styles: commonStylesSchema.keys({
-        // Container
-        columns: responsiveProp(Joi.number()),
-        gap: responsiveProp(Joi.number()),
-        direction: responsiveProp(Joi.string().valid('horizontal', 'vertical')),
-        justify: responsiveProp(Joi.string().valid('start', 'center', 'end', 'between')),
-        align: responsiveProp(Joi.string().valid('start', 'center', 'end', 'between')),
-        border: responsiveProp(Joi.string()),
-        // Static
-        fontSize: responsiveProp(Joi.string()),
-        fontWeight: responsiveProp(Joi.string()),
-        textAlign: responsiveProp(Joi.string().valid('left', 'center', 'right')),
-        textColor: responsiveProp(Joi.string()),
-        // Interactive
-        variant: Joi.string(),
-        size: Joi.string()
-    }),
-    data: Joi.object().unknown(true)
+    styles: Joi.object().unknown(true), // On garde l'ouverture pour les différents styles types
+    params: Joi.array().items(ComponentParamsSchema).optional(),
+    data: Joi.object().unknown(true).optional(),
+    children: Joi.array().items(Joi.link('...')).optional() // Récursivité si nécessaire
 });
 
 const registerComponentSchema = Joi.object({
@@ -57,15 +87,13 @@ const registerComponentSchema = Joi.object({
     supportedActions: Joi.array()
         .items(Joi.string().valid('NAVIGATE_TO', 'SHOW_ALERT', 'OPEN_MODAL'))
         .required(),
-    default_props: componentPropsSchema.required()
+    defaultProps: componentPropsSchema.required()
 });
 
-// Schéma pour le tableau (Register)
 const ComponentListSchema = Joi.array().items(registerComponentSchema);
-
 
 export {
     registerComponentSchema,
     ComponentListSchema,
     componentPropsSchema
-}
+};

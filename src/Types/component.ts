@@ -1,3 +1,4 @@
+import type { IComponentParams } from "./params.ts";
 import type { AllStyles, BaseStyles, ContainerStyles, InteractiveStyles, StaticStyles } from "./style.ts";
 
 // Actions (Discriminated Unions)
@@ -16,6 +17,7 @@ const FAMILY_CAPABILITIES: Record<ComponentFamily, { canHaveChildren: boolean }>
   complex: { canHaveChildren: true },
   input: { canHaveChildren: false },
 };
+
 
 const ACTIONS_BY_FAMILY: Record<ComponentFamily, CliquableAction['action'][]> = {
   static: [],
@@ -38,6 +40,7 @@ type JsonValue =
 
 interface ComponentProps<T = BaseStyles> {
   styles?: T;
+  params?: IComponentParams[];
   data?: Record<string, unknown>;
   children?: AnyComponentInstance[];
 }
@@ -52,6 +55,8 @@ interface Component <T = BaseStyles> {
   defaultProps:  ComponentProps<T>;
 }
 
+
+
 type AnyComponent = 
   | Component<ContainerStyles>
   | Component<StaticStyles>
@@ -63,6 +68,7 @@ type AnyComponent =
 interface AnyComponentInstance extends Omit<Component<AllStyles>, 'defaultProps'> {
   id: string;
   styles: AllStyles;
+  params: IComponentParams[]
   data: Record<string, unknown>;
   children: AnyComponentInstance[]; // <--- C'est ici que la magie opère !
 }

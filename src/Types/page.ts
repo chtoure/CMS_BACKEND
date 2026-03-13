@@ -11,6 +11,7 @@ interface Page {
     userId?: number;
     user?: User;
     pageRevisions?: PageRevision[];
+    navItem?: any; // To avoid circular dependency initially, or import NavItem
 }
 
 

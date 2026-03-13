@@ -8,6 +8,7 @@ import { seedAddRole } from "./SeedRole.ts";
 import { seedAddRolePermission } from "./SeedRolePermission.ts";
 import { seedAddSection } from "./SeedSection.ts";
 import { seedAddUser } from "./SeedUser.ts";
+import { seedNavItems } from "./SeedNavItems.ts";
 
 async function main() {
     try {
@@ -20,6 +21,7 @@ async function main() {
         await seedAddPage();
         await seedAddPageRevision();
         await seedAddSection();
+        await seedNavItems();
     } catch (error) {
         console.error("Erreur lors de l'execution du seed :", error);
     }

@@ -13,4 +13,6 @@ export  function pageRoutes(app:Express,validateBody:Function) : void {
     app.get("/page/:id", AuthMiddleware, pageController.getPageById.bind(pageController));
     app.put("/page/:id", AuthMiddleware, validateBody(updatePageSchema), pageController.updatePage.bind(pageController));
     app.delete("/page/:id", AuthMiddleware, pageController.deletePage.bind(pageController));
+    app.get("/renderPage/:slug", pageController.renderFullPage.bind(pageController));
+    app.get("/renderPage", pageController.renderFullPage.bind(pageController));
 }

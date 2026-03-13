@@ -117,7 +117,6 @@ export default class AuthController {
                     console.log("Email Invalide");
                     return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides ou utilisateur archivé ou en attente de confirmation.' });
                 }
-                console.log("Utilisateur trouvé:", user);
                 const isPasswordValid = await userService.comparePassword(password,user.password_hash);
                 if (!isPasswordValid) {
                      console.log("Password Invalide");

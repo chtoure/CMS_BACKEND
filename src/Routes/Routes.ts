@@ -19,6 +19,7 @@ import { sectionRoutes } from "./SectionRoute.ts";
 import { blocTemplateRoutes } from "./BlocTemplateRoute.ts";
 import { pageRevisionRoutes } from "./PageRevisionRoute.ts";
 import { pageRoutes } from "./PageRoute.ts";
+import { navItemRoutes } from "./NavItemRoute.ts";
 
 
 
@@ -55,5 +56,6 @@ export default (app:Express): void  => {
     blocTemplateRoutes(app, validateBody);
     pageRevisionRoutes(app, validateBody);
     pageRoutes(app, validateBody);
+    navItemRoutes(app);
 
 }

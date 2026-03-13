@@ -8,7 +8,8 @@ import type {
 } from "../Types/ContentEntry.ts";
 import type { IFieldDefinition } from "../Types/InputField.ts";
 import { Paginator } from "../Utils/Paginator.ts";
-import type { QueryFilters } from "../Utils/queryFilter.ts";
+import type { contenusQueryFilters, QueryFilters } from "../Utils/queryFilter.ts";
+import type { IContenusQuery } from "../Types/params.ts";
 
 export default class ContentEntryService {
 
@@ -257,4 +258,29 @@ export default class ContentEntryService {
             return this.updateStatus(id, "DRAFT");
         }
     }
+
+
+
+    public async getEntriesByContentTypeIdControl(contentTypeId: number, filters?: contenusQueryFilters) {
+        // On prépare la base de la requête
+        const queryOptions: any = {
+            where: {
+                contentTypeId: contentTypeId
+            },
+            orderBy: {
+                [filters?.sortBy || 'createdAt']: filters?.order || 'desc'
+            },
+            select: {
+                data_json: true,
+            }
+        };
+
+        // On n'ajoute 'take' que si filters.limit existe (évite le undefined conflictuel)
+        if (filters?.limit) {
+            queryOptions.take = Number(filters.limit);
+        }
+
+        return prisma.contentEntry.findMany(queryOptions);
+    }
+
 }

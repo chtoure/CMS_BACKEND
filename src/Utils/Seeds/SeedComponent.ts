@@ -1,6 +1,7 @@
 
 
 import { ACTIONS_BY_FAMILY, type AnyComponent } from "../../Types/component.ts";
+import { ValueSource } from "../../Types/params.ts";
 import prisma from "../../Utils/PrismaClient.ts";
 import type { Prisma } from "../../generated/prisma/client.ts";
 
@@ -20,6 +21,17 @@ const componentsData: AnyComponent[] = [
         // bg: { type: "static", value: "#007bff" },
         padding: { type: "static", value: 10 },
       },
+      params: [
+        {
+          name: "content",
+          label: "Contenu",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Cliquez ici"
+          },
+          required: true,
+        }
+      ],
       data: {
         content: { type: "static", value: "Cliquez ici" },
         cliquable: {
@@ -44,6 +56,7 @@ const componentsData: AnyComponent[] = [
         align: { type: "static", value: "center" },
         justify: { type: "static", value: "between" }
       },
+      params:[],
       data: {},
       children: []
     }
@@ -61,6 +74,17 @@ const componentsData: AnyComponent[] = [
         textAlign: { type: "static", value: "left" },
         marginBottom: { type: "static", value: 4 }
       },
+      params: [
+        {
+          name: "content",
+          label: "Contenu",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Ceci est un texte par défaut"
+          },
+          required: true,
+        }
+      ],
       data: {
         content: { type: "static", value: "Ceci est un texte par défaut" },
         tag: { type: "static", value: "p" }
@@ -78,6 +102,26 @@ const componentsData: AnyComponent[] = [
       styles: {
         display: { type: "static", value: "block" },
       },
+      params: [
+        {
+          name: "src",
+          label: "Source",
+          type: {
+            source: ValueSource.IMAGE,
+            src:"https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=2912&auto=format&fit=crop"
+          },
+          required: true,
+        },
+        {
+          name: "alt",
+          label: "Alt",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Image de démonstration"
+          },
+          required: true,
+        }
+      ],
       data: {
         src: { type: "static", value: "/image.jpg" },
         alt: { type: "static", value: "Image de démonstration" },
@@ -97,6 +141,17 @@ const componentsData: AnyComponent[] = [
         textColor: { type: "static", value: "#e2e2e2ff" },
         marginBottom: { type: "static", value: 2 }
       },
+      params: [
+        {
+          name: "icon",
+          label: "Icône",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Star"
+          },
+          required: true,
+        }
+      ],
       data: {
         icon: { type: "static", value: "Star" },
         size: { type: "static", value: 32 },
@@ -105,26 +160,56 @@ const componentsData: AnyComponent[] = [
       children: []
     }
   },
+  // {
+  //   name: "Champ Saisie",
+  //   tag: "InputBuilder",
+  //   icon: "FormInput",
+  //   family: "input",
+  //   supportedActions: ACTIONS_BY_FAMILY['input'],
+  //   defaultProps: {
+  //     styles: {
+  //       padding: { type: "static", value: 2 }
+  //     },
+  //     params: [
+  //       {
+  //         name: "label",
+  //         label: "Label",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "Votre nom"
+  //         },
+  //         required: true,
+  //       },
+  //       {
+  //         name: "placeholder",
+  //         label: "Placeholder",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "Entrez votre nom..."
+  //         },
+  //         required: true,
+  //       },
+  //       {
+  //         name: "name",
+  //         label: "Name",
+  //         type: {
+  //           source: ValueSource.STATIC,
+  //           value: "username"
+  //         },
+  //         required: true,
+  //       }
+  //     ],
+  //     data: {
+  //       type: { type: "static", value: "text" },
+  //       label: { type: "static", value: "Votre nom" },
+  //       placeholder: { type: "static", value: "Entrez votre nom..." },
+  //       name: { type: "static", value: "username" },
+  //       required: { type: "static", value: true }
+  //     },
+  //     children: []
+  //   }
+  // },
   {
-    name: "Champ Saisie",
-    tag: "InputBuilder",
-    icon: "FormInput",
-    family: "input",
-    supportedActions: ACTIONS_BY_FAMILY['input'],
-    defaultProps: {
-      styles: {
-        padding: { type: "static", value: 2 }
-      },
-      data: {
-        type: { type: "static", value: "text" },
-        label: { type: "static", value: "Votre nom" },
-        placeholder: { type: "static", value: "Entrez votre nom..." },
-        name: { type: "static", value: "username" },
-        required: { type: "static", value: true }
-      },
-      children: []
-    }
-  },{
     name: "Slider",
     tag: "SliderBuilder",
     icon: "SquarePlay",
@@ -132,7 +217,7 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['complex'],
     defaultProps: {
       styles: {
-        padding: { type: "static", value: 0 },
+        padding: { type: "static", value: 10 },
         bg: { type: "static", value: "transparent" },
         rounded: { type: "static", value: "none" }
       },
@@ -172,6 +257,26 @@ const componentsData: AnyComponent[] = [
         textColor: {type:"static", value:"#3b82f6"},
         textAlign: {type:"static", value:"left"}
       },
+      params: [
+        {
+          name: "text",
+          label: "Texte du lien",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Lien personnalisé"
+          },
+          required: true,
+        },
+        {
+          name: "url",
+          label: "URL",
+          type: {
+            source: ValueSource.STATIC,
+            value: ""
+          },
+          required: true,
+        }
+      ],
       data: {
         text: "Lien personnalisé",
         url: "",

@@ -10,6 +10,23 @@ interface QueryFilters {
   type?: string[];
 }
 
+
+
+
+interface contenusQueryFilters {
+    mode?: 'query' | 'single';
+    limit?: number | undefined;
+    sortBy?: string | undefined;
+    order?: 'asc' | 'desc' | undefined;
+    taxonomyFilters?: {
+      taxonomyId?: number | undefined;
+      termIds?: number[] | undefined;
+      operator?: 'AND' | 'OR' | undefined;
+    } | undefined;
+}
+
+
+
 class RequestHelper {
   static getFilters(req: Request): QueryFilters {
     const filters: QueryFilters = {};
@@ -26,9 +43,23 @@ class RequestHelper {
 
     return filters;
   }
+
+
+  static getContenusFilters(req: Request): contenusQueryFilters {
+    const filters: contenusQueryFilters = {};
+
+    if (req.query.mode) filters.mode = req.query.mode as 'query' | 'single';
+    if (req.query.limit) filters.limit = Number(req.query.limit);
+    if (req.query.sortBy) filters.sortBy = req.query.sortBy as string;
+    if (req.query.order) filters.order = req.query.order as 'asc' | 'desc';
+    if (req.query.taxonomyFilters) filters.taxonomyFilters = req.query.taxonomyFilters as any;
+
+    return filters;
+  }
 }
 
 export {
     RequestHelper,
-    type QueryFilters
+    type QueryFilters,
+    type contenusQueryFilters
 }

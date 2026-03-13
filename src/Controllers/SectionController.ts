@@ -48,16 +48,16 @@ export default class SectionController {
     }
 
     // Rendu d'une page complete
-    public async getFullPage(req: Request, res: Response){
-        try {
-            const section = await this.sectionService.renderPage(Number(req.params.id));
-            return res.status(HTTP_STATUS_OK).json(section);
-        } catch (error) {
-            console.log(error);
-            const errorMessage = handlePrismaError(error);
-            return res.status(getErrorStatus(error)).json({ message: errorMessage });
-        }
-    }
+    // public async getFullPage(req: Request, res: Response){
+    //     try {
+    //         const section = await this.sectionService.renderPage(Number(req.params.id));
+    //         return res.status(HTTP_STATUS_OK).json(section);
+    //     } catch (error) {
+    //         console.log(error);
+    //         const errorMessage = handlePrismaError(error);
+    //         return res.status(getErrorStatus(error)).json({ message: errorMessage });
+    //     }
+    // }
 
     public async getSectionById(req: Request, res: Response){
         try {

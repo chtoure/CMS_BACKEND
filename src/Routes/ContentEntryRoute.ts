@@ -32,4 +32,7 @@ export function contentEntryRoutes(app: Express): void {
 
     // Suppression définitive
     app.delete("/content-entries/:id", AuthMiddleware, entryController.deleteEntry.bind(entryController));
+
+    // Récupérer les entrées d'un type précis par son ID (avec pagination/filtres optionnels)
+    app.get("/content-entries/id/:id", AuthMiddleware, entryController.getEntriesByContentTypeIdControl.bind(entryController));
 }
