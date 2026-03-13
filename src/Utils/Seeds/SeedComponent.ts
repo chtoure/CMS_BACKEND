@@ -23,8 +23,8 @@ const componentsData: AnyComponent[] = [
       data: {
         content: { type: "static", value: "Cliquez ici" },
         cliquable: {
-          action: "SHOW_ALERT",
-          action_params: { message: { type: "static", value: "Cliquez ici" } }
+          action: "TOGGLE_VISIBILITY",
+          action_params: { blockId: { type: "static", value: "" } }
         }
       },
       children: []
