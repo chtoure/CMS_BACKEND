@@ -239,10 +239,31 @@ const componentsData: AnyComponent[] = [
     supportedActions: ACTIONS_BY_FAMILY['complex'],
     defaultProps: {
       styles: { marginBottom: { type: "static", value: 4 } },
+      params: [
+        {
+          name: "title",
+          label: "Titre",
+          type: {
+            source: ValueSource.STATIC,
+            value: "Nouvelle Question"
+          },
+          required: true,
+        },
+        {
+          name:"reponse",
+          label:"Reponse",
+          type:{
+            source:ValueSource.STATIC,
+            value:""
+          },
+          required:true
+        }
+      ],
       data: { 
         title: { type: "static", value: "Nouvelle Question" }, 
         isOpen: { type: "static", value: false }, 
-        transitionSpeed: { type: "static", value: 300 } 
+        transitionSpeed: { type: "static", value: 300 },
+        reponse: { type: "static", value: "" } 
       },
       children: []
     }
