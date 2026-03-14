@@ -147,11 +147,26 @@ export default class BlocTemplateService {
 
     public async getBlocTemplatesCustom(): Promise<BlocTemplate[]> {
         const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { is_custom: true },
+            where: { 
+                is_custom: true,
+                parentId: null
+            },
             include: {
                 component: true,
                 model: true,
-                children: true
+                children: {
+                    include: {
+                        component: true,
+                        model: true,
+                        children: {
+                            include: {
+                                component: true,
+                                model: true,
+                                children: true
+                            }
+                        }
+                    }
+                }
             },
             orderBy: { createdAt: 'asc' },
         });
@@ -176,7 +191,7 @@ export default class BlocTemplateService {
 
     public async updateBlocTemplate(id: number, data: UpdateBlocTemplate): Promise<BlocTemplate> {
 
-        console.log('mis ajour du bloc', data);
+        // console.log('mis ajour du bloc', data);
         
         const { sectionId, parentId, componentId, props, ...rest } = data;
 

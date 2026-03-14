@@ -80,6 +80,7 @@ export default class BlocTemplateController {
 
     public async updateBlocTemplate(req: Request, res: Response){
         try {
+            console.log(req.body);
             const blocTemplate = await this.blocTemplateService.updateBlocTemplate(Number(req.params.id), req.body);
             return res.status(HTTP_STATUS_OK).json(blocTemplate);
         } catch (error) {

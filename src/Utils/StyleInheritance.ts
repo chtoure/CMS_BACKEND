@@ -1,12 +1,28 @@
-import merge from 'lodash/merge.js';
+import mergeWith from 'lodash/mergeWith.js';
 
 export class StyleInheritance {
+    /**
+     * Personnalisation du merge pour lodash.
+     * Les VariableProperty et les tableaux sont remplacés entièrement, pas fusionnés en profondeur.
+     */
+    static customMerge(objValue: any, srcValue: any): any {
+        if (Array.isArray(srcValue)) {
+            return srcValue; // Remplace les tableaux
+        }
+        if (srcValue !== null && typeof srcValue === 'object' && 'type' in srcValue && 'value' in srcValue) {
+            if (srcValue.type === 'static' || srcValue.type === 'variable') {
+                return srcValue; // Remplace les VariableProperty
+            }
+        }
+        return undefined; // Laisse lodash faire le merge par défaut
+    }
+
     /**
      * Fusionne les propriétés du modèle avec les propriétés de l'instance.
      * L'instance a priorité sur le modèle.
      */
     static merge(modelProps: any, instanceProps: any): any {
-        return merge({}, modelProps ?? {}, instanceProps ?? {});
+        return mergeWith({}, modelProps ?? {}, instanceProps ?? {}, this.customMerge);
     }
 
     /**
@@ -42,6 +58,13 @@ export class StyleInheritance {
     }
 
     /**
+     * Vérifie si un objet est une VariableProperty usuelle
+     */
+    static isVariableProperty(obj: any): boolean {
+        return obj !== null && typeof obj === 'object' && 'type' in obj && 'value' in obj && (obj.type === 'static' || obj.type === 'variable');
+    }
+
+    /**
      * Calcule uniquement les propriétés qui diffèrent entre le modèle et les propriétés soumises.
      * C'est une opération de "diff" profond.
      */
@@ -53,11 +76,16 @@ export class StyleInheritance {
             const modelVal = modelProps[key];
             const submittedVal = submittedProps[key];
 
-            // Si les valeurs sont des objets (mais pas des tableaux), on fait une comparaison récursive
-            if (
+            // Si c'est un tableau ou une VariableProperty, on compare globalement et on remplace entièrement
+            if (this.isVariableProperty(submittedVal) || Array.isArray(submittedVal)) {
+                if (JSON.stringify(modelVal) !== JSON.stringify(submittedVal)) {
+                    diff[key] = submittedVal;
+                }
+            }
+            // Si les valeurs sont des objets classiques, on fait une comparaison récursive
+            else if (
                 typeof submittedVal === 'object' && 
                 submittedVal !== null && 
-                !Array.isArray(submittedVal) &&
                 typeof modelVal === 'object' && 
                 modelVal !== null
             ) {
@@ -66,7 +94,7 @@ export class StyleInheritance {
                     diff[key] = nestedDiff;
                 }
             } 
-            // Sinon on compare les valeurs directement (égalité simple pour les types primitifs ou tableaux)
+            // Sinon on compare les valeurs directement (égalité simple pour les types primitifs)
             else if (JSON.stringify(modelVal) !== JSON.stringify(submittedVal)) {
                 diff[key] = submittedVal;
             }
