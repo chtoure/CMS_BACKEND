@@ -81,6 +81,13 @@ type VariableProperty<T> = {
   value: string; 
 };
 
+// Référence à un fichier Media (image ou vidéo) de la médiathèque
+type MediaProperty = {
+  type: 'media';
+  mediaId: number;    // ID de l'entité Media en base
+  url?: string;       // Résolu par le backend lors du GET, jamais stocké
+};
+
 export type {
   NavigateAction,
   AlertAction,
@@ -92,7 +99,8 @@ export type {
   AnyComponent,
   AnyComponentInstance,
   ComponentProps,
-  VariableProperty
+  VariableProperty,
+  MediaProperty
 }
 
 export {
