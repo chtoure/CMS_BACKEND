@@ -9,9 +9,11 @@ export class StyleInheritance {
         if (Array.isArray(srcValue)) {
             return srcValue; // Remplace les tableaux
         }
-        if (srcValue !== null && typeof srcValue === 'object' && 'type' in srcValue && 'value' in srcValue) {
-            if (srcValue.type === 'static' || srcValue.type === 'variable') {
-                return srcValue; // Remplace les VariableProperty
+        if (srcValue !== null && typeof srcValue === 'object' && 'type' in srcValue) {
+            const t = srcValue.type;
+            // Remplacement atomique des VariableProperty et MediaProperty
+            if (t === 'static' || t === 'variable' || t === 'media') {
+                return srcValue;
             }
         }
         return undefined; // Laisse lodash faire le merge par défaut
@@ -58,10 +60,13 @@ export class StyleInheritance {
     }
 
     /**
-     * Vérifie si un objet est une VariableProperty usuelle
+     * Vérifie si un objet est une propriété atomique (VariableProperty ou MediaProperty).
+     * Ces objets doivent être remplacés entièrement, jamais fusionnés en profondeur.
      */
-    static isVariableProperty(obj: any): boolean {
-        return obj !== null && typeof obj === 'object' && 'type' in obj && 'value' in obj && (obj.type === 'static' || obj.type === 'variable');
+    static isAtomicProperty(obj: any): boolean {
+        if (obj === null || typeof obj !== 'object') return false;
+        if (!('type' in obj)) return false;
+        return obj.type === 'static' || obj.type === 'variable' || obj.type === 'media';
     }
 
     /**
@@ -76,8 +81,8 @@ export class StyleInheritance {
             const modelVal = modelProps[key];
             const submittedVal = submittedProps[key];
 
-            // Si c'est un tableau ou une VariableProperty, on compare globalement et on remplace entièrement
-            if (this.isVariableProperty(submittedVal) || Array.isArray(submittedVal)) {
+            // Si c'est un tableau ou une propriété atomique (Variable/Media), on remplace entièrement
+            if (this.isAtomicProperty(submittedVal) || Array.isArray(submittedVal)) {
                 if (JSON.stringify(modelVal) !== JSON.stringify(submittedVal)) {
                     diff[key] = submittedVal;
                 }
