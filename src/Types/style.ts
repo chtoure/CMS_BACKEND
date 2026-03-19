@@ -1,6 +1,6 @@
 import type { VariableProperty } from "./component.ts";
 
-type ResponsiveProp<T = string> = T | {
+export type ResponsiveProp<T = string> = T | {
   default: T;    
   sm?: T;        
   md?: T;        
