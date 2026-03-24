@@ -8,6 +8,7 @@ interface QueryFilters {
   status?: string | undefined;
   archive?: boolean | undefined;
   type?: string[];
+  
 }
 
 

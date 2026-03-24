@@ -42,7 +42,7 @@ export default class AuthController {
                     id: user.id,
                     full_name: user.full_name,
                     email: user.email,
-                    role: user.role?.name ?? null,
+                    role: user.role,
                     isLoggedIn: user.isLoggedIn                   
                 }
             });

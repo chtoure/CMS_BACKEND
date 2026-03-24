@@ -1,5 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.ts";
-import type { Media, MediaPayload } from "../Types/Media.ts"
+import type { Media, MediaPayload, MediaUpdatePayload } from "../Types/Media.ts"
 import { Paginator } from "../Utils/Paginator.ts";
 import prisma from "../Utils/PrismaClient.ts"
 import type { QueryFilters } from "../Utils/queryFilter.ts";
@@ -14,7 +14,9 @@ export default class MediaService {
         if (filters?.search?.trim()) {
             const query = filters.search.trim();
             where.OR = [
-                { file_path: { contains: query } }
+                { file_path: { contains: query } },
+                { alt: { contains: query } },
+                { type: { contains: query } },
             ];
         }
 
@@ -27,7 +29,7 @@ export default class MediaService {
         });
     }
 
-    public async updateMedia(id: number, media: MediaPayload): Promise<Media | null> {
+    public async updateMedia(id: number, media: MediaPayload | MediaUpdatePayload): Promise<Media | null> {
         return prisma.media.update({
             where: { id },
             data: media

@@ -85,7 +85,13 @@ export default class UserService {
     public async getUserByEmailNonArchive(email: string): Promise<User | null> {
         return prisma.user.findUnique({
             where:{email,archive:false,status:"ACTIVE"},
-            include:{role:true} 
+            include:{
+                role:{
+                    include : {
+                        permissions:true
+                    }
+                }
+            } 
         });
     }
 

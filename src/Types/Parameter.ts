@@ -3,6 +3,7 @@ interface ParameterPayload {
     title: string;
     mediaId: number;
     description?: string;
+    family_name?: string;
 }
 
 export type {
