@@ -1,7 +1,7 @@
 const validateValueByType = (type: string, value: string | number | boolean): boolean => {
     switch (type) {
         case 'COLOR':
-            return /^#?([0-9A-F]{3}){1,2}$/i.test(String(value));
+            return /^#?([0-9A-F]{3,4}|[0-9A-F]{6}|[0-9A-F]{8})$/i.test(String(value));
         case 'NUMBER':
             return !isNaN(parseFloat(String(value))) && isFinite(Number(value));
         case 'BOOLEAN':

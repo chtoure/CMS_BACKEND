@@ -199,4 +199,24 @@ export default class PermissionService {
         // On transforme le tableau d'objets en tableau de nombres
         return permissions.map(p => p.id);
     }
+
+    public async getPermissionsByRoleId(roleId:number): Promise<Permission[]> {
+        const permissions = await prisma.permission.findMany({
+            where: {
+                roles: {
+                    some: {
+                        roleId: roleId
+                    }
+                }
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        });
+        return PermissionService.mapPermissions(permissions);
+    }
 }

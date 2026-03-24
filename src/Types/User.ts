@@ -15,6 +15,7 @@ export interface User {
     createdAt: Date;
     updatedAt: Date;
     role?:Role | null;
+    role_id?:number | null;
     isLoggedIn: boolean;
     resetCode?: string | null;
     codeExpiration?: Date | null;
