@@ -108,7 +108,7 @@ const componentsData: AnyComponent[] = [
           label: "Source",
           type: {
             source: ValueSource.IMAGE,
-            src:"https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=2912&auto=format&fit=crop"
+            src:"/image.jpg"
           },
           required: true,
         },
