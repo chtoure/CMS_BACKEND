@@ -49,6 +49,62 @@ export default class BlocTemplateService {
         return items.map(item => BlocTemplateService.castingBlocTemplate(item));
     }
 
+    /**
+     * Parcourt récursivement un objet de props pour collecter tous les mediaId distincts.
+     */
+    static collectMediaIds(obj: any, ids: Set<number> = new Set()): Set<number> {
+        if (!obj || typeof obj !== 'object') return ids;
+        if (obj.type === 'media' && typeof obj.mediaId === 'number') {
+            ids.add(obj.mediaId);
+            return ids;
+        }
+        for (const val of Object.values(obj)) {
+            BlocTemplateService.collectMediaIds(val, ids);
+        }
+        return ids;
+    }
+
+    /**
+     * Injecte les `url` dans toutes les MediaProperty d'un objet de props.
+     * Ne modifie que les clés { type: 'media' }, laisse tout le reste intact.
+     */
+    static injectMediaUrls(obj: any, urlMap: Map<number, string>): any {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (obj.type === 'media' && typeof obj.mediaId === 'number') {
+            return { ...obj, url: urlMap.get(obj.mediaId) ?? null };
+        }
+        if (Array.isArray(obj)) return obj.map(v => BlocTemplateService.injectMediaUrls(v, urlMap));
+        const result: any = {};
+        for (const [k, v] of Object.entries(obj)) {
+            result[k] = BlocTemplateService.injectMediaUrls(v, urlMap);
+        }
+        return result;
+    }
+
+    /**
+     * Résout tous les mediaId présents dans une liste de BlocTemplates (en une seule requête SQL).
+     * Retourne les BlocTemplates avec les urls Media injectées dans leurs props.
+     */
+    static async resolveMediaProps(blocs: BlocTemplate[]): Promise<BlocTemplate[]> {
+        const ids = new Set<number>();
+        for (const bloc of blocs) {
+            BlocTemplateService.collectMediaIds(bloc.props, ids);
+        }
+        if (ids.size === 0) return blocs;
+
+        const medias = await mediaService.getMediaByIds([...ids]);
+        const urlMap = new Map(medias.map(m => [m.id, m.file_path]));
+
+        return blocs.map(bloc => ({
+            ...bloc,
+            props: BlocTemplateService.injectMediaUrls(bloc.props, urlMap),
+            children: bloc.children
+                ? (BlocTemplateService.resolveMediaProps(bloc.children as any) as any)
+                : undefined,
+        }));
+    }
+
+
 
     private buildWhereClause(filter?: QueryFilters): Prisma.BlocTemplateWhereInput {
         const where: Prisma.BlocTemplateWhereInput = {};
@@ -141,7 +197,8 @@ export default class BlocTemplateService {
             orderBy: { order: 'asc' },
         });
 
-        return BlocTemplateService.castingBlocTemplates(blocTemplates);
+        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+        return BlocTemplateService.resolveMediaProps(casted);
     }
 
 
@@ -170,7 +227,8 @@ export default class BlocTemplateService {
             },
             orderBy: { createdAt: 'asc' },
         });
-        return BlocTemplateService.castingBlocTemplates(blocTemplates);
+        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+        return BlocTemplateService.resolveMediaProps(casted);
     }
 
 
@@ -185,7 +243,10 @@ export default class BlocTemplateService {
 
         if (!item) return null;
 
-        return BlocTemplateService.castingBlocTemplate(item);
+        const casted = BlocTemplateService.castingBlocTemplate(item);
+        const resolved = await BlocTemplateService.resolveMediaProps([casted]);
+        return resolved[0] ?? null;
+
     }
 
 

@@ -92,4 +92,23 @@ export default class PermissionController {
         }
     }
 
+    
+
+    async getPermissionsByRoleId(req:Request,res:Response){
+        try {
+
+            console.log(req.params.id);
+            
+            const permissions =await permissionService.getPermissionsByRoleId(Number(req.params.id));
+
+            console.log('permissions', permissions);
+            
+            res.status(HTTP_STATUS_OK).json(permissions);
+        } catch (error) {
+            console.log('Erreur lors de la récupération des permissions:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
+
 }

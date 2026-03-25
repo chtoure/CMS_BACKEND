@@ -13,9 +13,9 @@ import { seedNavItems } from "./SeedNavItems.ts";
 async function main() {
     try {
         await seedAddParameter();
-        await seedAddUser();
-        await seedAddRole();
         await seedAddPermission();
+        await seedAddRole();
+        await seedAddUser();
         await seedAddRolePermission();
         await seedAddComponent();
         await seedAddPage();

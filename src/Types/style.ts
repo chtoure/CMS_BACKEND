@@ -1,4 +1,4 @@
-import type { VariableProperty } from "./component.ts";
+import type { MediaProperty, VariableProperty } from "./component.ts";
 
 export type ResponsiveProp<T = string> = T | {
   default: T;    
@@ -25,6 +25,13 @@ export interface BaseStyles {
   display?: VariableProperty<ResponsiveProp<'hidden' | 'block' | 'flex' | 'grid'>>;
   width?: VariableProperty<ResponsiveProp<string | number>>;
   height?: VariableProperty<ResponsiveProp<string | number>>;
+
+  // Arrière-plan média (image ou vidéo depuis la médiathèque)
+  bgImage?: MediaProperty | VariableProperty<string>;
+  bgVideo?: MediaProperty;
+  bgSize?: VariableProperty<ResponsiveProp<'cover' | 'contain' | 'auto'>>;
+  bgPosition?: VariableProperty<ResponsiveProp<string>>;
+  bgRepeat?: VariableProperty<ResponsiveProp<'repeat' | 'no-repeat' | 'repeat-x' | 'repeat-y'>>;
 }
 
 // Famille : Container

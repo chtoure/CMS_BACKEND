@@ -1,5 +1,9 @@
 import Joi from "joi";
-
+const supportedFonts = [
+  'Inter', 'Roboto', 'Poppins', 'Montserrat', 'Open Sans', 
+  'Playfair Display', 'Lora', 'Merriweather', 
+  'JetBrains Mono', 'Fira Code', 'Bebas Neue'
+];
 const parameterSchema = Joi.object({
     entity_name: Joi.string().required().max(100).messages({
         'string.base': "Le nom de l'entité doit être une chaîne de caractères.",
@@ -19,7 +23,14 @@ const parameterSchema = Joi.object({
 
     description: Joi.string().allow(null, '').max(500).messages({
         'string.max': "La description ne doit pas dépasser 500 caractères."
-    })
+    }),
+
+    family_name: Joi.string()
+        .valid(...supportedFonts)
+        .optional()
+        .messages({
+        'any.only': 'La police sélectionnée n\'est pas supportée.',
+        }),
 });
 
 export { parameterSchema };

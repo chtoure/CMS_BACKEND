@@ -97,6 +97,8 @@ export default class VariableController {
             const updated = await this.variableService.updateVariable(id, { name, value });
             return res.status(HTTP_STATUS_OK).json(updated);
         } catch (error) {
+            console.log(error);
+            
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ error: "Erreur mise à jour", details: error });
         }
     }
