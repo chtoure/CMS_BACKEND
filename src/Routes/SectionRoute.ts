@@ -13,7 +13,7 @@ export function sectionRoutes(app: Express,validateBody:Function){
     app.post("/section",AuthMiddleware, requirePermission("create_page_revision"), validateBody(registerSectionSchema),sectionController.createSection.bind(sectionController));
     app.put("/section/:id",AuthMiddleware, requirePermission("update_page_revision"), sectionController.updateSection.bind(sectionController));
     app.get("/section/:id", sectionController.getSectionById.bind(sectionController));
-    app.get("/section/revision/:id", requirePermission("read_page_revision"), sectionController.getSectionByRevisionId.bind(sectionController));
+    app.get("/section/revision/:id", sectionController.getSectionByRevisionId.bind(sectionController));
     app.delete("/section/:id",AuthMiddleware, requirePermission("delete_page_revision"), sectionController.deleteSection.bind(sectionController));
 
 }
