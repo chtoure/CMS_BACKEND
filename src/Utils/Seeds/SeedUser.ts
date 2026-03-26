@@ -19,7 +19,7 @@ async function  seedAddUser() {
             full_name: 'TOURE Chabane',
             password_hash: password_hash,
             status: "ACTIVE",
-            role_id:2,
+            role_id:3,
             isLoggedIn: false,
             isActiveAt:new Date() 
         }, // Si l'utilisateur existe déjà, on ne fait rien
@@ -28,7 +28,7 @@ async function  seedAddUser() {
             full_name: 'TOURE Chabane',
             password_hash: password_hash,
             status: "ACTIVE",
-            role_id:2,
+            role_id:3,
             isLoggedIn: false,
             isActiveAt:new Date() 
         },
@@ -56,7 +56,7 @@ async function  seedAddUser() {
         },
     });
 
-    console.log({ user, user1 });
+    // console.log({ user, user1 });
     console.log('Utilisateur créé avec succès !');
 
 }

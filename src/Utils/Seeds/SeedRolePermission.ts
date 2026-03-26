@@ -46,9 +46,23 @@ const relations = [
     { roleId: 1, permissionId: 38 },
     { roleId: 1, permissionId: 39 },
     { roleId: 1, permissionId: 40 },
+    { roleId: 1, permissionId: 41 },
+    { roleId: 1, permissionId: 42 },
+    { roleId: 1, permissionId: 43 },
+    { roleId: 1, permissionId: 44 },
     { roleId: 2, permissionId: 2 },
     { roleId: 2, permissionId: 3 },
     { roleId: 3, permissionId: 2 },
+    { roleId: 3, permissionId: 6 },
+    { roleId: 3, permissionId: 10 },
+    { roleId: 3, permissionId: 14 },
+    { roleId: 3, permissionId: 18 },
+    { roleId: 3, permissionId: 22 },
+    { roleId: 3, permissionId: 26 },
+    { roleId: 3, permissionId: 29 },
+    { roleId: 3, permissionId: 36 },
+    { roleId: 3, permissionId: 38 },
+    { roleId: 3, permissionId: 42 },
 ];
 
 export async function  seedAddRolePermission() {

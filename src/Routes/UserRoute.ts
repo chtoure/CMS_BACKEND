@@ -20,6 +20,6 @@ export  function userRoutes(app:Express,validateBody:Function) : void {
     app.put("/users/:id", AuthMiddleware, requirePermission("update_user"), validateBody(userUpdateSchema), userController.updateUser.bind(userController));
     app.put("/archiveUsers/:id", AuthMiddleware, requirePermission("update_user"), userController.archivedUser.bind(userController));
     app.put("/restoreUers/:id", AuthMiddleware, requirePermission("update_user"), userController.restoreUser.bind(userController));
-    app.put("/change-password/:id", AuthMiddleware, requirePermission("update_user"), validateBody(changePasswordSchema), userController.changePassword.bind(userController));
+    app.put("/change-password/:id", validateBody(changePasswordSchema), userController.changePassword.bind(userController));
     app.delete("/deleteUsers/:id", AuthMiddleware, requirePermission("delete_user"), userController.deleteDefinitivelyUser.bind(userController));
 }
