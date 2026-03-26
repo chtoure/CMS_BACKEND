@@ -44,6 +44,10 @@ const permissionsData = [
     { id: 38, name: "read_collection", description: "Lecture des collections" },
     { id: 39, name: "update_collection", description: "Modifier les collections" },
     { id: 40, name: "delete_collection", description: "Supprimer les collections" },
+    { id: 41, name: "create_page_revision", description: "Creation des revisions de page" },
+    { id: 42, name: "read_page_revision", description: "Lecture des revisions de page" },
+    { id: 43, name: "update_page_revision", description: "Modifier les revisions de page" },
+    { id: 44, name: "delete_page_revision", description: "Supprimer les revisions de page" },
 ];
 
 
