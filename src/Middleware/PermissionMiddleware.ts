@@ -4,7 +4,7 @@ import { HTTP_STATUS_FORBIDDEN } from "../Utils/Constantes/ConstantesHttp.ts";
 
 const permissionService = new PermissionService();
 
-export const requirePermission = (permissionName: string) => {
+export const requirePermission = (permissionName: string | string[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
 
         const roleId = req.user?.role?.id;
@@ -15,9 +15,13 @@ export const requirePermission = (permissionName: string) => {
             });
         }
 
-        // Utilise PermissionService.getPermissionsByRoleId() — déjà existant
+        const permissionsToCheck = Array.isArray(permissionName) ? permissionName : [permissionName];
+
         const permissions = await permissionService.getPermissionsByRoleId(roleId);
-        const hasPermission = permissions.some(p => p.name === permissionName);
+
+        const userPermissions = permissions?.map(p => p.name) || [];
+
+        const hasPermission = permissionsToCheck.some(p => userPermissions.includes(p));
 
         if (!hasPermission) {
             return res.status(HTTP_STATUS_FORBIDDEN).json({
