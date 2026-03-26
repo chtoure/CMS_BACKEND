@@ -40,6 +40,10 @@ const permissionsData = [
     { id: 34, name: "create_variable", description: "Creation des variables" },
     { id: 35, name: "delete_variable", description: "Supprimer les variables" },
     { id: 36, name: "read_variable", description: "Lecture des variables" },
+    { id: 37, name: "create_collection", description: "Creation des collections" },
+    { id: 38, name: "read_collection", description: "Lecture des collections" },
+    { id: 39, name: "update_collection", description: "Modifier les collections" },
+    { id: 40, name: "delete_collection", description: "Supprimer les collections" },
 ];
 
 
