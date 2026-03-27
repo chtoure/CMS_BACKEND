@@ -10,9 +10,9 @@ export function contentEntryRoutes(app: Express): void {
     
     const entryController = new ContentEntryController();
 
-    app.get("/content-entries/slug/:slug", requirePermission("read_content_entry"), entryController.getAllEntriesBySlug.bind(entryController));
+    app.get("/content-entries/slug/:slug",AuthMiddleware, requirePermission("read_content_entry"), entryController.getAllEntriesBySlug.bind(entryController));
     
-    app.get("/content-entries/:id", requirePermission("read_content_entry"), entryController.getEntryById.bind(entryController));
+    app.get("/content-entries/:id",AuthMiddleware, requirePermission("read_content_entry"), entryController.getEntryById.bind(entryController));
     
     app.get("/content-entries-archived", AuthMiddleware, requirePermission("read_content_entry"), entryController.getArchivedEntries.bind(entryController));
     app.post("/content-entries/:slug", AuthMiddleware, requirePermission("create_content_entry"), validateDynamicContent, entryController.createEntry.bind(entryController));
