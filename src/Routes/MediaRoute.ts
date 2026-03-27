@@ -15,7 +15,7 @@ export  function mediaRoutes(app:Express) : void {
     app.get("/media/:id", AuthMiddleware, requirePermission("read_media"), mediaController.getMedia.bind(mediaController));
     app.delete("/media/", AuthMiddleware, requirePermission("delete_media"), validateBody(mediaDeleteSchema), mediaController.deleteMedia.bind(mediaController));
     app.delete("/media/:id", AuthMiddleware, requirePermission("delete_media"), mediaController.deleteMedia.bind(mediaController));
-    app.post("/media", AuthMiddleware, requirePermission("create_media"), validateBody(mediaSchema), upload.single("file"), multerErrorHandler, mediaController.createMedia.bind(mediaController));
+    app.post("/media", AuthMiddleware, requirePermission("upload_media"), validateBody(mediaSchema), upload.single("file"), multerErrorHandler, mediaController.createMedia.bind(mediaController));
     app.put("/media/image/:id", AuthMiddleware, requirePermission("edit_image"), validateBody(imageEditSchema), mediaController.editImage.bind(mediaController))
     app.put("/media/update/:id", AuthMiddleware, requirePermission("update_media"), validateBody(mediaUpdateSchema), mediaController.updateMedia.bind(mediaController))
 
