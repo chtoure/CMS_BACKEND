@@ -14,7 +14,12 @@ import { contentTypeRoutes } from "./ContentTypeRoute.ts";
 import { contentEntryRoutes } from "./ContentEntryRoute.ts";
 import { taxonomyRoutes } from "./TaxonomyRoute.ts";
 import { taxonomyTermRoutes } from "./TaxonomyTermRoute.ts";
-
+import { componentRoutes } from "./ComponentRoute.ts";
+import { sectionRoutes } from "./SectionRoute.ts";
+import { blocTemplateRoutes } from "./BlocTemplateRoute.ts";
+import { pageRevisionRoutes } from "./PageRevisionRoute.ts";
+import { pageRoutes } from "./PageRoute.ts";
+import { navItemRoutes } from "./NavItemRoute.ts";
 
 
 
@@ -43,5 +48,14 @@ export default (app:Express): void  => {
     // Module Taxonomy
     taxonomyRoutes(app, validateBody);
     taxonomyTermRoutes(app, validateBody);
+
+
+    // Module Builder
+    componentRoutes(app, validateBody);
+    sectionRoutes(app, validateBody);
+    blocTemplateRoutes(app, validateBody);
+    pageRevisionRoutes(app, validateBody);
+    pageRoutes(app, validateBody);
+    navItemRoutes(app);
 
 }

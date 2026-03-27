@@ -5,6 +5,9 @@ import { deleteFile } from "../Utils/file.ts";
 import path from "path";
 import sharp from "sharp";
 import { RequestHelper } from "../Utils/queryFilter.ts";
+import { getExtendedMetadata, type FileMetadata } from "../Utils/fileMetaData.ts";
+
+import fs from "fs";
 
 export default class MediaController {
 
@@ -55,7 +58,7 @@ export default class MediaController {
             return res.status(HTTP_STATUS_OK).json(paginateData);
 
         } catch (error) {
-            
+            console.log(error);
             res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors de la récupération des médias", 
                 details: error 
@@ -99,61 +102,67 @@ export default class MediaController {
         }
     }
 
-async createMedia(req: Request, res: Response) {
-    try {
-        if (!req.file) {
-            return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Aucun fichier téléchargé" });
+    async createMedia(req: Request, res: Response) {
+        try {
+            if (!req.file) {
+                return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Aucun fichier téléchargé" });
+            }
+
+            const mediaPayload = req.body;
+            const mimetype = req.file.mimetype;
+            const filename = req.file.filename;
+
+            if (mimetype.startsWith('image/')) {
+                mediaPayload.file_path = `media/uploads/images/${filename}`;
+                mediaPayload.type = 'image';
+            } 
+            else if (mimetype.startsWith('video/')) {
+                mediaPayload.file_path = `media/uploads/videos/${filename}`;
+                mediaPayload.type = 'video';
+            } 
+            else if (
+                mimetype.includes('pdf') || 
+                mimetype.includes('msword') || 
+                mimetype.includes('officedocument') ||
+                mimetype.startsWith('text/')
+            ) {
+                mediaPayload.file_path = `media/uploads/documents/${filename}`;
+                mediaPayload.type = 'document';
+            } 
+            else if (
+                mimetype.includes('zip') || 
+                mimetype.includes('x-rar') || 
+                mimetype.includes('tar') || 
+                mimetype.includes('compressed')
+            ) {
+                mediaPayload.file_path = `media/uploads/archives/${filename}`;
+                mediaPayload.type = 'archive';
+            } 
+            else {
+                // Sécurité pour les fichiers non classés (dossier 'others' dans Multer)
+                mediaPayload.file_path = `media/uploads/others/${filename}`;
+                mediaPayload.type = 'other';
+            }
+
+            const meta: FileMetadata = await getExtendedMetadata(req.file, mediaPayload.type);
+
+            mediaPayload.size = meta.size;
+            mediaPayload.width = meta.width;
+            mediaPayload.height = meta.height;
+            mediaPayload.duration = meta.duration;
+            mediaPayload.pageCount = meta.pageCount;
+            const newMedia = await this.mediaService.createMedia(mediaPayload);
+            
+            return res.status(HTTP_STATUS_OK).json(newMedia);
+
+        } catch (error) {
+            console.error("CreateMedia Error:", error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors de la création du média", 
+                details: error instanceof Error ? error.message : error 
+            });
         }
-
-        const mediaPayload = req.body;
-        const mimetype = req.file.mimetype;
-        const filename = req.file.filename;
-
-        if (mimetype.startsWith('image/')) {
-            mediaPayload.file_path = `media/uploads/images/${filename}`;
-            mediaPayload.type = 'image';
-        } 
-        else if (mimetype.startsWith('video/')) {
-            mediaPayload.file_path = `media/uploads/videos/${filename}`;
-            mediaPayload.type = 'video';
-        } 
-        else if (
-            mimetype.includes('pdf') || 
-            mimetype.includes('msword') || 
-            mimetype.includes('officedocument') ||
-            mimetype.startsWith('text/')
-        ) {
-            mediaPayload.file_path = `media/uploads/documents/${filename}`;
-            mediaPayload.type = 'document';
-        } 
-        else if (
-            mimetype.includes('zip') || 
-            mimetype.includes('x-rar') || 
-            mimetype.includes('tar') || 
-            mimetype.includes('compressed')
-        ) {
-            mediaPayload.file_path = `media/uploads/archives/${filename}`;
-            mediaPayload.type = 'archive';
-        } 
-        else {
-            // Sécurité pour les fichiers non classés (dossier 'others' dans Multer)
-            mediaPayload.file_path = `media/uploads/others/${filename}`;
-            mediaPayload.type = 'other';
-        }
-
-        // Sauvegarde en base de données
-        const newMedia = await this.mediaService.createMedia(mediaPayload);
-        
-        return res.status(HTTP_STATUS_OK).json(newMedia);
-
-    } catch (error) {
-        console.error("CreateMedia Error:", error);
-        return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
-            error: "Erreur lors de la création du média", 
-            details: error instanceof Error ? error.message : error 
-        });
     }
-}
 
     async editImage(req: Request, res: Response) {
         try {
@@ -197,10 +206,27 @@ async createMedia(req: Request, res: Response) {
 
             await pipeline.toFile(newAbsolutePath);
 
+            const stats = await fs.promises.stat(newAbsolutePath);
+
+            const meta: FileMetadata = await getExtendedMetadata(
+                { 
+                    path: newAbsolutePath, 
+                    size: stats.size,
+                    mimetype: `image/${fileExt.replace('.', '')}`,
+                    originalname: newFileName 
+                } as any, 
+                'image'
+            );
+
             const newMedia = await this.mediaService.createMedia({
-                alt: `Edited ${media.alt || 'image'}`,
+                alt: media.alt,
                 file_path: newRelativePath,
-                type: 'image'
+                type: 'image',
+                size: meta.size,
+                width: meta.width || null,
+                height: meta.height || null,
+                duration: meta.duration || null,
+                pageCount: meta.pageCount || null,
             });
 
             return res.status(HTTP_STATUS_OK).json({ 
@@ -212,6 +238,25 @@ async createMedia(req: Request, res: Response) {
             console.error("Erreur EditImage:", error);
             return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
                 error: "Erreur lors du traitement de l'image" 
+            });
+        }
+    }
+
+    async updateMedia(req: Request, res: Response) {
+        try {
+            const id = Number(req.params.id);
+            const { alt } = req.body;
+
+            if (!alt) {
+                return res.status(HTTP_STATUS_BAD_REQUEST).json({ error: "Alt manquant" });
+            }
+
+            const updatedMedia = await this.mediaService.updateMedia(id, { alt });
+            return res.status(HTTP_STATUS_OK).json(updatedMedia);
+        } catch (error) {
+            console.error("Erreur UpdateMedia:", error);
+            return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+                error: "Erreur lors de la mise à jour du média" 
             });
         }
     }

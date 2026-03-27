@@ -6,8 +6,12 @@ import * as bcrypt from 'bcrypt';
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { QueryFilters } from "../Utils/queryFilter.ts";
 import { Paginator } from "../Utils/Paginator.ts";
+import crypto from "crypto";
+import { EmailService } from "./EmailService.ts";
+import { AppError } from "../Utils/ErrorPrisma.ts";
 
 const SALT_ROUNDS = 10; // Niveau de complexité du hachage (standard)
+
 
  
 
@@ -80,8 +84,14 @@ export default class UserService {
     // Récupère un utilisateur non archivé par email
     public async getUserByEmailNonArchive(email: string): Promise<User | null> {
         return prisma.user.findUnique({
-            where:{email,archive:false},
-            include:{role:true} 
+            where:{email,archive:false,status:"ACTIVE"},
+            include:{
+                role:{
+                    include : {
+                        permissions:true
+                    }
+                }
+            } 
         });
     }
 
@@ -112,7 +122,9 @@ export default class UserService {
             where:{id, archive:false},
             data:{
                 archive:true,
-                archivedAt: new Date()
+                archivedAt: new Date(),
+                isActiveAt:null,
+                status:"INACTIVE"            
             },
             include:{role:true}
         })
@@ -125,7 +137,9 @@ export default class UserService {
             where:{id, archive:true},
             data:{
                 archive:false,
-                archivedAt:null
+                archivedAt:null,
+                isActiveAt:new Date(),
+                status:"ACTIVE"
             },
             include:{role:true}
         })
@@ -165,5 +179,93 @@ export default class UserService {
             include: { role: true }
         });
     }
+
+
+    public generateTemporaryPassword(): string {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+        let password = "Default-"; // Préfixe pour personnaliser au nom de votre app
+        
+        // Génère 8 caractères aléatoires parmi la liste sécurisée
+        for (let i = 0; i < 8; i++) {
+            const randomIndex = crypto.randomInt(0, chars.length);
+            password += chars.charAt(randomIndex);
+            
+            // Ajoute un tiret au milieu pour la lisibilité
+            if (i === 3) password += "-";
+        }
+        
+        return password;
+    }
+
+
+    public async resendConfirmationEmail(userId: number): Promise<boolean> {
+    try {
+        const newToken = crypto.randomBytes(32).toString('hex');
+        
+        const user = await prisma.user.update({
+            where: { 
+                id: userId,
+                status: "EN_ATTENTE" 
+            },
+            data: { confirmationToken: newToken }
+        });
+
+        return await EmailService.sendVerificationEmail(user.email, newToken);
+
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            throw new Error("Impossible de renvoyer l'email : le compte est déjà validé ou inexistant.");
+        }
+        throw error; 
+    }
+}
+
+
+    public async confirmEmail(token: string, email: string): Promise<{user:User,password:string} | null> {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
+        if (user.confirmationToken !== token) return null;
+
+        const password = this.generateTemporaryPassword();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                status:"ACTIVE",
+                confirmationToken:null,
+                isPendingAt:null,
+                isActiveAt:new Date(),
+                password_hash:await this.hashPassword(password) 
+            } 
+        });
+        return {user,password};
+    }
+
+
+
+    public async deleteDefinitivelyUser(id:number): Promise<User>{
+        const user = await prisma.user.findUnique({
+            where: { id },
+            include:{
+                role:true,
+                _count:{
+                    select:{
+                        entries:true,
+                        contentTypes:true,
+                        taxonomies:true
+                    }
+                }
+            } 
+        });
+        
+        if (!user) throw new AppError("Utilisateur non trouvé ou non archivé.");
+        if (user.archive === false || user.status === "ACTIVE") throw new AppError("Utilisateur non archivé ou non en attente.");
+        if (user.role?.name) throw new AppError("Impossible de supprimer : l'utilisateur a un Rôle.");
+        if (user._count.entries > 0) throw new AppError("Impossible de supprimer : l'utilisateur a créé des entrées.");
+        if (user._count.contentTypes > 0) throw new AppError("Impossible de supprimer : l'utilisateur a créé des types.");
+        
+        return await prisma.user.delete({
+            where:{id}
+        })
+    }       
 
 }

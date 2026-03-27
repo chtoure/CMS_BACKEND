@@ -15,8 +15,11 @@ export interface User {
     createdAt: Date;
     updatedAt: Date;
     role?:Role | null;
+    role_id?:number | null;
     isLoggedIn: boolean;
     resetCode?: string | null;
     codeExpiration?: Date | null;
-    archive : boolean;   
+    archive : boolean;
+    status : string;
+    confirmationToken?: string | null;  
 }

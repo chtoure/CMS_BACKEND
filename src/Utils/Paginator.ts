@@ -14,7 +14,7 @@ class Paginator {
 
     const isPaginated = page !== undefined && limit !== undefined;
     const skip = isPaginated ? (page - 1) * limit : undefined;
-    const take = isPaginated ? limit : undefined;
+    const take: number | undefined= isPaginated ? limit : undefined;
 
     const [results, count] = await Promise.all([
       model.findMany({

@@ -7,9 +7,9 @@ import AuthService from "../Services/AuthService.ts";
 import setAuthCookies, { SetAccesCookie } from "../Utils/Scripts/SetAuthCookies.ts";
 import type { User } from "../Types/User.ts";
 import RoleService from "../Services/RoleService.ts";
-import { MailboxLayerService } from "../Utils/VerifyExistenceEmail.ts";
 import { EmailService } from "../Services/EmailService.ts";
 import { getErrorStatus, handlePrismaError } from "../Utils/ErrorPrisma.ts";
+import crypto from "crypto";
 
 // Instanciation des services
 const userService = new UserService();
@@ -42,7 +42,7 @@ export default class AuthController {
                     id: user.id,
                     full_name: user.full_name,
                     email: user.email,
-                    role: user.role?.name ?? null,
+                    role: user.role,
                     isLoggedIn: user.isLoggedIn                   
                 }
             });
@@ -53,9 +53,8 @@ export default class AuthController {
         // Register ( Creation De Compte )
         public async register(req:Request,res:Response): Promise<Response> {
 
-            const { full_name, email, password, role }=req.body;
+            const { full_name, email, role }=req.body;
             let roleData = null;
-            let passwordFinal = password;
             try {
                 
                 // Verification de l'existance de l'utilisateur
@@ -64,23 +63,7 @@ export default class AuthController {
                     return res.status(HTTP_STATUS_CONFLICT).json({ message: 'Cet email est déjà utilisé.' });
                 }
 
-                // Validation de l'email via MailboxLayer
-                const isEmailValid = await MailboxLayerService.checkExistence(email);
-                if (!isEmailValid.success) {
-                    console.log("Email non valide:", isEmailValid.message);
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: isEmailValid.message });
-                }
-
-                // Si le mot de passe n'est pas fourni, générer un mot de passe par défaut                
-                if (!passwordFinal) {
-                    passwordFinal = "defaultPassword123"; // Valeur par défaut si aucun mot de passe n'est fourni
-                }  
-
-                // Hachage du password
-                const password_hash = await userService.hashPassword(passwordFinal);
-                if (!password_hash) {
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({message:'Hachage du password echouer'});
-                }
+                const confirmToken = crypto.randomBytes(32).toString('hex');
 
                 // Partier de Role :
                 if (role) {
@@ -94,21 +77,22 @@ export default class AuthController {
                 const newUser = await userService.createUser({
                     full_name:full_name,
                     email:email,
-                    password_hash:password_hash,
+                    password_hash:"PENDING_PASSWORD_NOT_SET",
                     role_id: roleData? roleData.id : null,
-                    isLoggedIn: false
+                    isLoggedIn: false,
+                    confirmationToken: confirmToken
                 });
 
 
-                // Envoie du password par defaut a l'utilisateur
-                const isSend = await EmailService.sendVerificationCode(newUser.email,passwordFinal);
+                // Envoie du message de confirmation
+                const isSend = await EmailService.sendVerificationEmail(newUser.email,confirmToken);
 
                 if (!isSend) {
                     return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Erreur interne lors de la création de l\'utilisateur.' });
                 }
 
                 // Message de Retour 
-                const message="Inscription réussie .";
+                const message="Inscription réussie. Vérifier votre mail pour activer votre compte.";
                 // Function : Creation de Tokens et Retour
                 return AuthController.handleAuthentification(res, newUser,message,HTTP_STATUS_CREATED) ;
 
@@ -131,9 +115,8 @@ export default class AuthController {
                 const user = await userService.getUserByEmailNonArchive(email);
                 if (!user) {
                     console.log("Email Invalide");
-                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides ou utilisateur archivé.' });
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Identifiants invalides ou utilisateur archivé ou en attente de confirmation.' });
                 }
-                console.log("Utilisateur trouvé:", user);
                 const isPasswordValid = await userService.comparePassword(password,user.password_hash);
                 if (!isPasswordValid) {
                      console.log("Password Invalide");
@@ -246,5 +229,67 @@ export default class AuthController {
                 return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
         }
+
+
+        // Renvoyer l'email de confirmation
+        public async sendConfirmationEmail(req: Request, res: Response): Promise<Response> {
+            try {
+                const result = await userService.resendConfirmationEmail(Number(req.params.id));
+                if (!result) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: "Échec de l'envoi ou compte déjà validé." });
+                }
+                return res.status(HTTP_STATUS_OK).json({ message: 'Email de confirmation envoyé avec succès.' });
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
+            }
+        }
+
+
+        // Confirmer si le message a été bien envoyé
+        public async confirmEmailReceipt(req: Request, res: Response): Promise<Response> {
+            const { token,email } = req.query;
+            try {
+                if(!token || !email) return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Paramètres de confirmation invalide.' });
+                const result = await userService.confirmEmail(token as string,email as string);
+
+                if (!result || !result.password) {
+                    return res.status(HTTP_STATUS_BAD_REQUEST).json({ message: 'Erreur lors de la confirmation de l\'email.' });
+                }
+                 
+                await EmailService.sendWelcome(result.user.email,result.password);
+
+                return res.send(`
+                    <!DOCTYPE html>
+                    <html lang="fr">
+                        <head>
+                            <meta charset="UTF-8"> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                        </head>
+                        <body style="font-family: sans-serif;">
+                            <div style="text-align:center; padding:50px; font-family: sans-serif;">
+                                <div style="font-size: 50px;">📧</div>
+                                <h1 style="color: #312782;">Vérification réussie !</h1>
+                                <p style="font-size: 18px; color: #4b5563;">
+                                    Votre compte est maintenant actif.
+                                </p>
+                                <p style="background: #f3f4f6; padding: 15px; border-radius: 8px; display: inline-block;">
+                                    <strong>Veuillez consulter votre boîte de réception :</strong><br>
+                                    Nous venons de vous envoyer vos identifiants de connexion.
+                                </p>
+                                <div style="margin-top: 20px;">
+                                    <small>Vous pouvez fermer cette fenêtre.</small>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+                `);
+            } catch (error) {
+                console.error('Erreur lors de la confirmation de l\'email:', error);
+                const errorMessage = handlePrismaError(error);
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
+            }
+        }
+
 
 }

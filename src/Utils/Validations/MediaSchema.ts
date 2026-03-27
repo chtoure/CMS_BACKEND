@@ -39,4 +39,10 @@ const imageEditSchema = Joi.object({
     bgRemoved: Joi.boolean().optional()
 }).min(1);
 
-export { mediaSchema, mediaDeleteSchema, imageEditSchema};
+const mediaUpdateSchema = Joi.object({
+    alt: Joi.string().allow(null, '').max(255).messages({
+        'string.max': "Le texte alternatif ne doit pas dépasser 255 caractères."
+    }),
+});
+
+export { mediaSchema, mediaDeleteSchema, imageEditSchema, mediaUpdateSchema};

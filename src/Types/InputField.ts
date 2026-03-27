@@ -104,6 +104,17 @@ type IFieldDefinition =
   | (IBaseField & IRichTextConfig)
   | (IBaseField & IRelationConfig);
 
+
+type IPropsConfigDefinition = 
+  | ITextConfig
+  | INumberConfig
+  | IMediaConfig
+  | ITaxonomyConfig
+  | ISelectConfig
+  | IBooleanConfig
+  | IRichTextConfig
+  | IRelationConfig;
+
 export {
   FieldType,
   type IFieldDefinition,
@@ -116,5 +127,6 @@ export {
   type IBooleanConfig,
   type IRichTextConfig,
   type IRelationConfig,
+  type IPropsConfigDefinition,
   TypesMedia
 }

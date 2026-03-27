@@ -26,6 +26,7 @@ export interface RegisterContentType {
     slug: string,
     description?: string,
     fields_schema: IFieldDefinition[] | Prisma.InputJsonValue,
+    userId: number
 }
 
 

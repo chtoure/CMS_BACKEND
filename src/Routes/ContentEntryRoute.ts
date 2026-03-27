@@ -4,32 +4,26 @@ import ContentEntryController from "../Controllers/ContentEntryController.ts";
 import { switchStatusSchema, toggleArchiveSchema } from "../Utils/Validations/ContentEntrySchema.ts";
 import { validateDynamicContent } from "../Middleware/ValidateDynamicContent.ts";
 import validateBody from "../Middleware/ValidateBoody.ts";
+import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 export function contentEntryRoutes(app: Express): void {
     
     const entryController = new ContentEntryController();
 
-    // Récupérer les entrées d'un type précis par son SLUG (avec pagination/filtres optionnels)
-    app.get("/content-entries/slug/:slug", AuthMiddleware, entryController.getAllEntriesBySlug.bind(entryController));
+    app.get("/content-entries/slug/:slug",AuthMiddleware, requirePermission("read_content_entry"), entryController.getAllEntriesBySlug.bind(entryController));
     
-    // Récupérer une entrée spécifique par son ID
-    app.get("/content-entries/:id", AuthMiddleware, entryController.getEntryById.bind(entryController));
+    app.get("/content-entries/:id",AuthMiddleware, requirePermission("read_content_entry"), entryController.getEntryById.bind(entryController));
     
-    // Liste globale des archives
-    app.get("/content-entries-archived", AuthMiddleware, entryController.getArchivedEntries.bind(entryController));
+    app.get("/content-entries-archived", AuthMiddleware, requirePermission("read_content_entry"), entryController.getArchivedEntries.bind(entryController));
+    app.post("/content-entries/:slug", AuthMiddleware, requirePermission("create_content_entry"), validateDynamicContent, entryController.createEntry.bind(entryController));
+    
+    app.put("/content-entries/:id/:slug", AuthMiddleware, requirePermission("update_content_entry"), validateDynamicContent, entryController.updateEntry.bind(entryController));
 
-    // Créer une nouvelle entrée pour un type donné
-    app.post("/content-entries/:slug", AuthMiddleware, validateDynamicContent, entryController.createEntry.bind(entryController));
-    
-    // Mise à jour complète d'une entrée
-    app.put("/content-entries/:id/:slug", AuthMiddleware, validateDynamicContent, entryController.updateEntry.bind(entryController));
-
-    // Changer le statut (PUBLISHED, DRAFT...)
     app.patch("/content-entries/:id/status", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController));
     
-    // Archiver ou Restaurer (on passe { "archive": true/false } dans le body)
     app.put("/content-entries/:id/archive", AuthMiddleware, entryController.toggleArchive.bind(entryController));
 
-    // Suppression définitive
-    app.delete("/content-entries/:id", AuthMiddleware, entryController.deleteEntry.bind(entryController));
+    app.delete("/content-entries/:id", entryController.deleteEntry.bind(entryController));
+
+    app.get("/content-entries/id/:id", entryController.getEntriesByContentTypeIdControl.bind(entryController));
 }
