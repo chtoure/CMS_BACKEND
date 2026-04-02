@@ -6,6 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm --clean",
+    "start": "node dist/index.js",
     "generate": "npx prisma generate",
     "migrate": "npx prisma migrate dev ",
     "reset": "npx prisma migrate reset",
@@ -30,6 +32,7 @@
     "nodemon": "^3.1.11",
     "prisma": "^7.1.0",
     "ts-node": "^10.9.2",
+    "tsup": "^8.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },

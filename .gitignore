@@ -18,5 +18,6 @@ media/uploads/videos/*
 media/uploads/documents/*
 media/uploads/archives/*
 
+./dist/*
 
 
