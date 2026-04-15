@@ -181,53 +181,83 @@ export default class BlocTemplateService {
 
 
     public async getTreeSection(sectionId: number): Promise<BlocTemplate[]> {
-        const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { sectionId, parentId: null }, // On ne prend que les racines pour l'arbre
+        const allNodes = await prisma.blocTemplate.findMany({
+            where: { sectionId },
             include: {
                 component: true,
                 model: true,
-                children: {
-                    include: {
-                        component: true,
-                        model: true,
-                        children: true // On pourrait avoir besoin d'une récursion plus profonde
-                    }
-                }
             },
             orderBy: { order: 'asc' },
         });
 
-        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+        const nodeMap = new Map<number, any>();
+        const roots: any[] = [];
+
+        for (const node of allNodes) {
+            (node as any).children = [];
+            nodeMap.set(node.id, node);
+        }
+
+        for (const node of allNodes) {
+            if (node.parentId) {
+                const parent = nodeMap.get(node.parentId);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        }
+
+        for (const node of allNodes) {
+            (node as any).children.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+        }
+        roots.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+        const casted = BlocTemplateService.castingBlocTemplates(roots);
         return BlocTemplateService.resolveMediaProps(casted);
     }
 
 
     public async getBlocTemplatesCustom(): Promise<BlocTemplate[]> {
-        const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { 
-                is_custom: true,
-                parentId: null
-            },
+        const allNodes = await prisma.blocTemplate.findMany({
+            where: { is_custom: true },
             include: {
                 component: true,
                 model: true,
-                children: {
-                    include: {
-                        component: true,
-                        model: true,
-                        children: {
-                            include: {
-                                component: true,
-                                model: true,
-                                children: true
-                            }
-                        }
-                    }
-                }
             },
             orderBy: { createdAt: 'asc' },
         });
-        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+
+        const nodeMap = new Map<number, any>();
+        const roots: any[] = [];
+
+        for (const node of allNodes) {
+            (node as any).children = [];
+            nodeMap.set(node.id, node);
+        }
+
+        for (const node of allNodes) {
+            if (node.parentId) {
+                const parent = nodeMap.get(node.parentId);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        }
+
+        for (const node of allNodes) {
+            (node as any).children.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+        }
+        roots.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+        const casted = BlocTemplateService.castingBlocTemplates(roots);
         return BlocTemplateService.resolveMediaProps(casted);
     }
 
