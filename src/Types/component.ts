@@ -78,7 +78,7 @@ type VariableProperty<T> = {
   value: T;
 } | {
   type: 'variable';
-  value: string; 
+  value: number; 
 };
 
 // Référence à un fichier Media (image ou vidéo) de la médiathèque

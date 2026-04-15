@@ -181,53 +181,83 @@ export default class BlocTemplateService {
 
 
     public async getTreeSection(sectionId: number): Promise<BlocTemplate[]> {
-        const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { sectionId, parentId: null }, // On ne prend que les racines pour l'arbre
+        const allNodes = await prisma.blocTemplate.findMany({
+            where: { sectionId },
             include: {
                 component: true,
                 model: true,
-                children: {
-                    include: {
-                        component: true,
-                        model: true,
-                        children: true // On pourrait avoir besoin d'une récursion plus profonde
-                    }
-                }
             },
             orderBy: { order: 'asc' },
         });
 
-        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+        const nodeMap = new Map<number, any>();
+        const roots: any[] = [];
+
+        for (const node of allNodes) {
+            (node as any).children = [];
+            nodeMap.set(node.id, node);
+        }
+
+        for (const node of allNodes) {
+            if (node.parentId) {
+                const parent = nodeMap.get(node.parentId);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        }
+
+        for (const node of allNodes) {
+            (node as any).children.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+        }
+        roots.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+        const casted = BlocTemplateService.castingBlocTemplates(roots);
         return BlocTemplateService.resolveMediaProps(casted);
     }
 
 
     public async getBlocTemplatesCustom(): Promise<BlocTemplate[]> {
-        const blocTemplates = await prisma.blocTemplate.findMany({
-            where: { 
-                is_custom: true,
-                parentId: null
-            },
+        const allNodes = await prisma.blocTemplate.findMany({
+            where: { is_custom: true },
             include: {
                 component: true,
                 model: true,
-                children: {
-                    include: {
-                        component: true,
-                        model: true,
-                        children: {
-                            include: {
-                                component: true,
-                                model: true,
-                                children: true
-                            }
-                        }
-                    }
-                }
             },
             orderBy: { createdAt: 'asc' },
         });
-        const casted = BlocTemplateService.castingBlocTemplates(blocTemplates);
+
+        const nodeMap = new Map<number, any>();
+        const roots: any[] = [];
+
+        for (const node of allNodes) {
+            (node as any).children = [];
+            nodeMap.set(node.id, node);
+        }
+
+        for (const node of allNodes) {
+            if (node.parentId) {
+                const parent = nodeMap.get(node.parentId);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        }
+
+        for (const node of allNodes) {
+            (node as any).children.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+        }
+        roots.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+        const casted = BlocTemplateService.castingBlocTemplates(roots);
         return BlocTemplateService.resolveMediaProps(casted);
     }
 
@@ -254,19 +284,29 @@ export default class BlocTemplateService {
 
         // console.log('mis ajour du bloc', data);
         
-        const { sectionId, parentId, componentId, props, ...rest } = data;
+        const { sectionId, parentId, componentId, modelId, props, ...rest } = data;
 
         const updateData: Prisma.BlocTemplateUpdateInput = {
             ...rest,
         };
 
+        if (modelId === null) {
+            updateData.model = { disconnect: true };
+        } else if (modelId !== undefined) {
+            updateData.model = { connect: { id: modelId } };
+        }
+
         if (rest.is_custom === true) {
             updateData.section = { disconnect: true };
-        }else if (sectionId) {
+        } else if (sectionId === null) {
+            updateData.section = { disconnect: true };
+        } else if (sectionId !== undefined) {
             updateData.section = { connect: { id: sectionId } };
         }
 
-        if (parentId) {
+        if (parentId === null) {
+            updateData.parent = { disconnect: true };
+        } else if (parentId !== undefined) {
             updateData.parent = { connect: { id: parentId } };
         }
 
@@ -466,6 +506,7 @@ export default class BlocTemplateService {
             // Construction du bloc hydraté
             hydratedBlocks.push({
                 id: block.id,
+                blocTemplateId: block.id,
                 name: block.name,
                 order: block.order,
                 tag: block.component?.tag || '',
@@ -477,6 +518,7 @@ export default class BlocTemplateService {
                     // On injecte les items si c'est une requête de collection
                     ...(blockInjectedData?.items ? { items: blockInjectedData.items, is_collection: true } : {})
                 },
+                componentDefinitionId: block.componentId,
                 // Récursivité : on descend en passant le contexte actuel aux enfants
                 children: await this.buildRecursiveTree(blocks, block.id, blockInjectedData)
             });
