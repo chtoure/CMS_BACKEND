@@ -27,7 +27,7 @@ export const handlePrismaError = (error: any): string => {
       return `Doublon détecté : Un enregistrement avec le même "${target}" existe déjà. Veuillez modifier cette valeur.`;
 
     case 'P2025':
-      return "Opération impossible : L'élément que vous tentez de modifier ou supprimer est introuvable (il a peut-être déjà été supprimé).";
+      return "Opération impossible : L'élément que vous tentez de modifier ou supprimer est introuvable (il a peut-être déjà été supprimé). Détail: " + (error.meta?.cause || JSON.stringify(error.meta));
 
     case 'P2003':
       // Très important pour l'utilisateur : expliquer POURQUOI il ne peut pas supprimer
@@ -46,7 +46,8 @@ export const handlePrismaError = (error: any): string => {
 
   // On masque le stack trace ici
   if (error.name === 'PrismaClientValidationError' || error instanceof Prisma.PrismaClientValidationError) {
-    return "La structure des données est invalide. Vérifiez les types envoyés.";
+    console.error("Prisma Validation Error Trace:", error.message);
+    return "La structure des données est invalide. Vérifiez les types envoyés. Détail : " + error.message;
   }
 
   // Par défaut
