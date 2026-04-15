@@ -15,5 +15,6 @@ export  function pageRevisionRoutes(app:Express,validateBody:Function) : void {
     app.get("/page-revision/:id", AuthMiddleware, requirePermission("read_page_revision"), pageRevisionController.getPageRevisionById.bind(pageRevisionController));
     app.get("/page-revisions/page/:id", AuthMiddleware, requirePermission("read_page_revision"), pageRevisionController.getPageRevisionsByPageId.bind(pageRevisionController));
     app.put("/page-revision/:id", AuthMiddleware, requirePermission("update_page_revision"), validateBody(updatePageRevisionSchema), pageRevisionController.updatePageRevision.bind(pageRevisionController));
+    app.post("/page-revision/:id/sync", AuthMiddleware, requirePermission("update_page_revision"), pageRevisionController.syncPageRevisionTree.bind(pageRevisionController));
     app.delete("/page-revision/:id", AuthMiddleware, requirePermission("delete_page_revision"), pageRevisionController.deletePageRevision.bind(pageRevisionController));
 }

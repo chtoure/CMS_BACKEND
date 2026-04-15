@@ -254,19 +254,29 @@ export default class BlocTemplateService {
 
         // console.log('mis ajour du bloc', data);
         
-        const { sectionId, parentId, componentId, props, ...rest } = data;
+        const { sectionId, parentId, componentId, modelId, props, ...rest } = data;
 
         const updateData: Prisma.BlocTemplateUpdateInput = {
             ...rest,
         };
 
+        if (modelId === null) {
+            updateData.model = { disconnect: true };
+        } else if (modelId !== undefined) {
+            updateData.model = { connect: { id: modelId } };
+        }
+
         if (rest.is_custom === true) {
             updateData.section = { disconnect: true };
-        }else if (sectionId) {
+        } else if (sectionId === null) {
+            updateData.section = { disconnect: true };
+        } else if (sectionId !== undefined) {
             updateData.section = { connect: { id: sectionId } };
         }
 
-        if (parentId) {
+        if (parentId === null) {
+            updateData.parent = { disconnect: true };
+        } else if (parentId !== undefined) {
             updateData.parent = { connect: { id: parentId } };
         }
 
@@ -466,6 +476,7 @@ export default class BlocTemplateService {
             // Construction du bloc hydraté
             hydratedBlocks.push({
                 id: block.id,
+                blocTemplateId: block.id,
                 name: block.name,
                 order: block.order,
                 tag: block.component?.tag || '',
@@ -477,6 +488,7 @@ export default class BlocTemplateService {
                     // On injecte les items si c'est une requête de collection
                     ...(blockInjectedData?.items ? { items: blockInjectedData.items, is_collection: true } : {})
                 },
+                componentDefinitionId: block.componentId,
                 // Récursivité : on descend en passant le contexte actuel aux enfants
                 children: await this.buildRecursiveTree(blocks, block.id, blockInjectedData)
             });

@@ -81,4 +81,18 @@ export default class PageRevisionController {
             return res.status(getErrorStatus(error)).json({ message: errorMessage });
         }
     }
+
+    public async syncPageRevisionTree(req: Request, res: Response) {
+        try {
+            const pageRevisionId = Number(req.params.id);
+            const data = req.body;
+            // The service will return the newly updated sections exactly like `getTreeSection` built it
+            const syncedSections = await this.pageRevisionService.syncPageRevisionTree(pageRevisionId, data);
+            return res.status(HTTP_STATUS_OK).json(syncedSections);
+        } catch (error) {
+            console.error('Erreur lors de la synchronisation en masse:', error);
+            const errorMessage = handlePrismaError(error);
+            return res.status(getErrorStatus(error)).json({ message: errorMessage });
+        }
+    }
 }
