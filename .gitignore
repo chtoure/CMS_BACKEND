@@ -8,9 +8,10 @@ node_modules
 
 ./dev.db
 
+prisma/dev.db
+
 prisma/migrations
 
-prisma/dev.db
 .vscode
 media/uploads/images/*
 media/uploads/videos/*
