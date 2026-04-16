@@ -20,24 +20,67 @@ export class StyleInheritance {
     }
 
     /**
-     * Fusionne les propriétés du modèle avec les propriétés de l'instance.
+     * Fusionne les styles (props) du modèle avec ceux de l'instance.
      * L'instance a priorité sur le modèle.
+     * Utilise le customMerge pour traiter correctement les VariableProperty et les tableaux.
      */
     static merge(modelProps: any, instanceProps: any): any {
         return mergeWith({}, modelProps ?? {}, instanceProps ?? {}, this.customMerge);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // DATA INHERITANCE
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Personnalisation du merge pour les données (data).
+     * Les VariableProperty ({ type: 'static'|'variable'|'media' }) et les tableaux
+     * sont remplacés entièrement depuis l'instance, jamais fusionnés en profondeur.
+     */
+    static customDataMerge(objValue: any, srcValue: any): any {
+        // Remplacement atomique des VariableProperty et des tableaux
+        if (Array.isArray(srcValue)) return srcValue;
+        if (
+            srcValue !== null &&
+            typeof srcValue === 'object' &&
+            'type' in srcValue &&
+            (srcValue.type === 'static' || srcValue.type === 'variable' || srcValue.type === 'media')
+        ) {
+            return srcValue;
+        }
+        return undefined; // Laisse lodash faire le merge par défaut
+    }
+
+    /**
+     * Fusionne le data du modèle avec le data de l'instance.
+     * L'instance a priorité sur le modèle.
+     */
+    static mergeData(modelData: any, instanceData: any): any {
+        return mergeWith({}, modelData ?? {}, instanceData ?? {}, this.customDataMerge);
+    }
+
     /**
      * Applique l'héritage de manière récursive sur un arbre de blocs.
+     * Fusionne à la fois les `styles` (props) et le `data` du modèle vers l'instance.
      */
     static applyInheritance(bloc: any): any {
         if (!bloc) return bloc;
 
         let effectiveProps = bloc.props || {};
 
-        // Si le bloc a un modèle chargé, on fusionne
+        // Si le bloc a un modèle chargé, on fusionne les styles ET le data
         if (bloc.model?.props) {
-            effectiveProps = this.merge(bloc.model.props, effectiveProps);
+            const modelProps = bloc.model.props;
+
+            // Merge des styles (logique existante)
+            effectiveProps = this.merge(modelProps, effectiveProps);
+
+            // Merge du data : le data du modèle sert de base, l'instance surcharge
+            const mergedData = this.mergeData(
+                modelProps.data ?? {},
+                effectiveProps.data ?? {}
+            );
+            effectiveProps = { ...effectiveProps, data: mergedData };
         }
 
         // On traite les enfants récursivement
@@ -51,12 +94,23 @@ export class StyleInheritance {
     }
 
     /**
-     * Calcule les propriétés effectives totales d'un bloc (Modèle + Instance).
+     * Calcule les propriétés (styles) effectives totales d'un bloc (Modèle + Instance).
      */
     static computeEffectiveProps(bloc: any): any {
         if (!bloc) return {};
         const baseProps = bloc.model?.props ? this.computeEffectiveProps(bloc.model) : {};
         return this.merge(baseProps, bloc.props);
+    }
+
+    /**
+     * Calcule le data effectif total d'un bloc (Modèle + Instance).
+     */
+    static computeEffectiveData(bloc: any): any {
+        if (!bloc) return {};
+        const baseData = bloc.model?.props?.data
+            ? this.computeEffectiveData(bloc.model)
+            : {};
+        return this.mergeData(baseData, bloc.props?.data ?? {});
     }
 
     /**
@@ -70,8 +124,8 @@ export class StyleInheritance {
     }
 
     /**
-     * Calcule uniquement les propriétés qui diffèrent entre le modèle et les propriétés soumises.
-     * C'est une opération de "diff" profond.
+     * Calcule uniquement les propriétés (styles) qui diffèrent entre le modèle et les propriétés soumises.
+     * C'est une opération de "diff" profond utilisée pour ne stocker que les surcharges en base.
      */
     static computeOverrides(modelProps: any, submittedProps: any): any {
         if (!modelProps) return submittedProps;
@@ -106,5 +160,13 @@ export class StyleInheritance {
         });
 
         return diff;
+    }
+
+    /**
+     * Calcule uniquement les champs data qui diffèrent entre le modèle et le data soumis.
+     * Utilisé pour ne stocker que les surcharges de data en base (même logique que computeOverrides).
+     */
+    static computeDataOverrides(modelData: any, submittedData: any): any {
+        return this.computeOverrides(modelData ?? {}, submittedData ?? {});
     }
 }
