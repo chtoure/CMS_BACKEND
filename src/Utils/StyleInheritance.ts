@@ -131,17 +131,23 @@ export class StyleInheritance {
         if (!modelProps) return submittedProps;
         const diff: any = {};
 
-        Object.keys(submittedProps).forEach(key => {
+        const allKeys = new Set([...Object.keys(modelProps || {}), ...Object.keys(submittedProps || {})]);
+
+        allKeys.forEach(key => {
             const modelVal = modelProps[key];
             const submittedVal = submittedProps[key];
 
-            // Si c'est un tableau ou une propriété atomique (Variable/Media), on remplace entièrement
-            if (this.isAtomicProperty(submittedVal) || Array.isArray(submittedVal)) {
+            // 1. Clé supprimée par l'instance
+            if (submittedVal === undefined && modelVal !== undefined) {
+                diff[key] = null;
+            }
+            // 2. Propriété atomique ou tableau
+            else if (this.isAtomicProperty(submittedVal) || Array.isArray(submittedVal)) {
                 if (JSON.stringify(modelVal) !== JSON.stringify(submittedVal)) {
                     diff[key] = submittedVal;
                 }
             }
-            // Si les valeurs sont des objets classiques, on fait une comparaison récursive
+            // 3. Objets imbriqués
             else if (
                 typeof submittedVal === 'object' && 
                 submittedVal !== null && 
@@ -153,7 +159,7 @@ export class StyleInheritance {
                     diff[key] = nestedDiff;
                 }
             } 
-            // Sinon on compare les valeurs directement (égalité simple pour les types primitifs)
+            // 4. Primitives
             else if (JSON.stringify(modelVal) !== JSON.stringify(submittedVal)) {
                 diff[key] = submittedVal;
             }

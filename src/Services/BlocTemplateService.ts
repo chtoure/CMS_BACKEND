@@ -331,9 +331,9 @@ export default class BlocTemplateService {
                 const currentFullStyle = StyleInheritance.computeEffectiveProps(current);
                 
                 // On fusionne avec les nouvelles propriétés envoyées (si présentes)
-                // Note : si props est {}, on considère que c'est une volonté de vider les styles ? 
-                // Généralement, le front envoie l'objet complet qu'il voit.
-                const newFullStyle = props ? StyleInheritance.merge(currentFullStyle, props) : currentFullStyle;
+                // Note : le frontend envoie toujours l'objet complet des styles et data. 
+                // On utilise donc directement props comme nouvel état complet.
+                const newFullStyle = props ? props : currentFullStyle;
 
                 if (isNowCustom) {
                     // APLATISSEMENT : On enregistre le style COMPLET et on déconnecte
