@@ -98,6 +98,7 @@ export default class ContentEntryController {
 
     public async toggleArchive(req: Request, res: Response) {
         try {
+            
             const { id } = req.params;
             const result = await contentEntryService.toggleArchive(Number(id));
 

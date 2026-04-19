@@ -8,10 +8,20 @@ export type ResponsiveProp<T = string> = T | {
 };
 
 export interface BaseStyles {
-  // Propriétés de mise en page
+    // Propriétés de mise en page
   marginTop?: VariableProperty<ResponsiveProp<number | string>>;
   marginBottom?: VariableProperty<ResponsiveProp<number | string>>;
   padding?: VariableProperty<ResponsiveProp<number | string>>;
+  paddingX?: VariableProperty<ResponsiveProp<number | string>>;
+  paddingY?: VariableProperty<ResponsiveProp<number | string>>;
+
+  // Positionnement
+  position?: VariableProperty<ResponsiveProp<'static' | 'relative' | 'absolute' | 'fixed' | 'sticky'>>;
+  top?: VariableProperty<ResponsiveProp<number | string>>;
+  right?: VariableProperty<ResponsiveProp<number | string>>;
+  bottom?: VariableProperty<ResponsiveProp<number | string>>;
+  left?: VariableProperty<ResponsiveProp<number | string>>;
+  zIndex?: VariableProperty<ResponsiveProp<number>>;
   
   // Propriétés d'apparence
   bg?: VariableProperty<ResponsiveProp<string>>;
@@ -54,6 +64,7 @@ export interface StaticStyles extends BaseStyles {
   textAlign?: VariableProperty<ResponsiveProp<'left' | 'center' | 'right'>>;
   textColor?: VariableProperty<ResponsiveProp<string>>;
   textDecoration?: VariableProperty<ResponsiveProp<'none' | 'underline'>>;
+  bg?: VariableProperty<ResponsiveProp<string>>;
 }
 
 // Famille : Interactive (Boutons, liens)
