@@ -13,6 +13,7 @@ export default class PageController {
     }
 
     public async createPage(req:Request,res:Response){
+        console.log("Creation de page", req.body);
         try {
             const data = req.body;
             const page = await this.pageService.createPage({
@@ -74,12 +75,14 @@ export default class PageController {
 
 
     public async renderFullPage(req:Request,res:Response){
+        
         const { slug } = req.params
         try {
             if (!slug) {
                 const pageRender = await this.pageService.renderPage("/");
                 return res.status(HTTP_STATUS_OK).json(pageRender);
             }
+            console.log("Render Full Page HHHHHHHHH", slug)
             const pageRender = await this.pageService.renderPage("/"+slug);
             return res.status(HTTP_STATUS_OK).json(pageRender);
         } catch (error) {
