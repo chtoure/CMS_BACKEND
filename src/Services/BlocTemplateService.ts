@@ -33,7 +33,7 @@ export default class BlocTemplateService {
 
     // Fusionne les props par defaut du composant avec les props par defaut du bloc template
     static mergeDefaultJson(blocTemplate: BlocTemplate & { model?: any }): Component['defaultProps'] {
-        console.log('blocTemplate', blocTemplate);
+        // console.log('blocTemplate', blocTemplate);
         const mergedProps = merge(
             {},
             blocTemplate.component?.defaultProps,
@@ -41,9 +41,7 @@ export default class BlocTemplateService {
             blocTemplate.props
         );
         
-        
-        
-        
+        // console.log("Merge Props", mergedProps);
         return mergedProps;
 
     } 

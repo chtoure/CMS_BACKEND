@@ -75,14 +75,12 @@ export default class PageController {
 
 
     public async renderFullPage(req:Request,res:Response){
-        
         const { slug } = req.params
         try {
             if (!slug) {
                 const pageRender = await this.pageService.renderPage("/");
                 return res.status(HTTP_STATUS_OK).json(pageRender);
             }
-            console.log("Render Full Page HHHHHHHHH", slug)
             const pageRender = await this.pageService.renderPage("/"+slug);
             return res.status(HTTP_STATUS_OK).json(pageRender);
         } catch (error) {

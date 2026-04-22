@@ -12,7 +12,6 @@ build
 *.db
 *.db-journal
 prisma/dev.db
-prisma/migrations/*
 prisma/dev.db-journal
 
 # Tests et Couverture

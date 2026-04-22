@@ -36,18 +36,21 @@ ENV NODE_ENV=production
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
+COPY --from=builder /app/prisma.config.ts ./
 # Installation des dépendances de PROD uniquement
 # (Réinstalle bcrypt/sharp pour Linux Alpine proprement)
 RUN npm install --only=production
 
-# Création du dossier pour ta base SQLite
-RUN mkdir -p /app/data
+# Variables d'environnement de production
+ENV DATABASE_URL="file:/app/data/dev.db"
+
+# Création des dossiers pour les volumes SQLite et Medias
+RUN mkdir -p /app/data /app/media
 
 EXPOSE 3000
 
 # Lancement : 
 # 1. On déploie les migrations sur le fichier SQLite
-# 2. On démarre le serveur (dist/index.js via node)
-CMD npx prisma migrate deploy && node dist/index.js
+# 2. On exécute les seeders via le fichier compilé
+# 3. On démarre le serveur (dist/index.js via node)
+CMD npx prisma migrate deploy && node dist/Utils/Seeds/Seed.js && node dist/index.js
