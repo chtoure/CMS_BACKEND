@@ -222,11 +222,11 @@ const componentsData: AnyComponent[] = [
         rounded: { type: "static", value: "none" }
       },
       data: { 
-        autoPlay: { type: "static", value: true }, 
+        autoPlay: { type: "static", value: false }, 
         speed: { type: "static", value: 3000 }, 
-        showPagination: { type: "static", value: true }, 
-        showArrows: { type: "static", value: true }, 
-        loop: { type: "static", value: true } 
+        showPagination: { type: "static", value: false }, 
+        showArrows: { type: "static", value: false }, 
+        loop: { type: "static", value: false } 
       },
       children: []
     }
