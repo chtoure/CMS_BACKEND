@@ -18,10 +18,10 @@ async function main() {
         await seedAddUser();
         await seedAddRolePermission();
         await seedAddComponent();
-        // await seedAddPage();
-        // await seedAddPageRevision();
-        // await seedAddSection();
-        // await seedNavItems();
+        await seedAddPage();
+        await seedAddPageRevision();
+        await seedAddSection();
+        await seedNavItems();
     } catch (error) {
         console.error("Erreur lors de l'execution du seed :", error);
     }

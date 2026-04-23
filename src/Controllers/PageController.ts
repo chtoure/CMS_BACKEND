@@ -13,6 +13,7 @@ export default class PageController {
     }
 
     public async createPage(req:Request,res:Response){
+        console.log("Creation de page", req.body);
         try {
             const data = req.body;
             const page = await this.pageService.createPage({

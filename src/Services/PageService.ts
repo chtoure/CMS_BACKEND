@@ -110,7 +110,7 @@ export default class PageService {
                         sections: {
                             include: {
                                 blocTemplates: {
-                                    include: { component: true } // Important pour le tag
+                                    include: { component: true, model: true } // Important pour le tag
                                 }
                             }
                         }

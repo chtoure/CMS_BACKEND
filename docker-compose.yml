@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: compositor_backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./media:/app/media
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - compositor_network
+
+  frontend:
+    build:
+      context: ../ENELOG_SITE_FRONT
+      dockerfile: Dockerfile
+    container_name: compositor_frontend
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - compositor_network
+
+networks:
+  compositor_network:
+    driver: bridge
