@@ -50,6 +50,7 @@ export default class UserController {
 
 
     async updateUser(req:Request,res:Response){
+        
         const { password , email , role } = req.body;
         let roleData = null;
         
