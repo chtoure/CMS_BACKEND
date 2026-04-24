@@ -8,9 +8,9 @@ node_modules
 
 ./dev.db
 
-prisma/dev.db
+./prisma/dev.db
 
-prisma/migrations
+./prisma/migrations
 
 .vscode
 media/uploads/images/*
