@@ -569,13 +569,23 @@ var AuthService = class _AuthService {
 // src/Middleware/AuthMiddleware.ts
 var authService = new AuthService();
 var AuthMiddleware = (req, res, next) => {
-  const accessToken = req.cookies.access_token;
+  let accessToken = req.cookies.access_token;
   if (!accessToken) {
-    return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: "Access Token manquant." });
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      accessToken = authHeader.substring(7);
+    }
+  }
+  if (!accessToken) {
+    return res.status(HTTP_STATUS_UNAUTHORIZED).json({
+      message: "Access Token manquant."
+    });
   }
   const payload = authService.verifyAccesToken(accessToken);
   if (!payload) {
-    return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: "Access Token expir\xE9.", code: "TOKEN_EXPIRED" });
+    return res.status(HTTP_STATUS_UNAUTHORIZED).json({
+      message: "Access Token expir\xE9."
+    });
   }
   req.user = payload;
   next();
@@ -1117,21 +1127,24 @@ function variableRoutes(app2) {
 // src/Utils/Scripts/SetAuthCookies.ts
 var ACCESS_COOKIE_MAXAGE = 15 * 60 * 1e3;
 var REFRESH_COOKIE_MAXAGE = 7 * 24 * 60 * 60 * 1e3;
-var isProd = process.env.NODE_ENV === "production";
 function SetAccesCookie(res, accessToken) {
+  const isSecure = res.req.secure || res.req.get("x-forwarded-proto") === "https";
   res.cookie("access_token", accessToken, {
     httpOnly: true,
-    secure: isProd,
+    secure: isSecure,
     maxAge: ACCESS_COOKIE_MAXAGE,
-    sameSite: "strict"
+    // Si c'est sécurisé, on met 'none' pour le cross-domain
+    // Si c'est HTTP, on met 'lax' (sinon le cookie sera rejeté)
+    sameSite: isSecure ? "none" : "lax"
   });
 }
 function SetRefreshCookie(res, refreshToken) {
+  const isSecure = res.req.secure || res.req.get("x-forwarded-proto") === "https";
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: isProd,
+    secure: isSecure,
     maxAge: REFRESH_COOKIE_MAXAGE,
-    sameSite: "strict"
+    sameSite: isSecure ? "none" : "lax"
   });
 }
 function setAuthCookies(res, accessToken, refreshToken) {
@@ -1397,6 +1410,9 @@ var AuthController = class _AuthController {
     setAuthCookies(res, accessToken, refreshToken);
     return res.status(status).json({
       message,
+      // Tokens aussi dans le JSON pour le fallback Bearer (si cookies bloqués en HTTP)
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         full_name: user.full_name,
@@ -1465,7 +1481,7 @@ var AuthController = class _AuthController {
   }
   // Refresh Token Access
   async refreshToken(req, res) {
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies.refresh_token || req.body?.refreshToken;
     try {
       if (!refreshToken) {
         return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: "Refresh Token manquant." });
@@ -1480,16 +1496,19 @@ var AuthController = class _AuthController {
       const { payloadRefresh, user } = decodedPayload;
       const newAccessToken = authService2.createAccesToken(payloadRefresh.sub, user.full_name, user.role ?? null);
       SetAccesCookie(res, newAccessToken);
-      return res.status(HTTP_STATUS_OK).json({ message: "Access Token renouvel\xE9." });
+      return res.status(HTTP_STATUS_OK).json({
+        message: "Access Token renouvel\xE9.",
+        accessToken: newAccessToken
+      });
     } catch (error) {
-      console.error("Erreur lors de la renouvellation du token access", error);
+      console.error("Erreur lors de la renouvellement du token access", error);
       const errorMessage = handlePrismaError(error);
       return res.status(getErrorStatus(error)).json({ message: errorMessage });
     }
   }
-  // Logout : Deconnexion 
+  // Logout : Deconnexion
   async logout(req, res) {
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies.refresh_token || req.body?.refreshToken;
     try {
       if (refreshToken) {
         await authService2.revokeRefreshToken(refreshToken).catch((err) => {
@@ -2133,7 +2152,7 @@ function permissionRoutes(app2, validateBody3) {
   const permissionController = new PermissionController();
   app2.get("/permissions", AuthMiddleware, requirePermission("read_permission"), permissionController.getPermissions.bind(permissionController));
   app2.get("/permissions/:id", AuthMiddleware, requirePermission("read_permission"), permissionController.getPermsById.bind(permissionController));
-  app2.get("/permissionsByRoleId/:id", AuthMiddleware, permissionController.getPermissionsByRoleId.bind(permissionController));
+  app2.get("/permissionsByRoleId/:id", permissionController.getPermissionsByRoleId.bind(permissionController));
   app2.post("/permissions", AuthMiddleware, requirePermission("create_permission"), validateBody3(permissionSchema), permissionController.createPermission.bind(permissionController));
   app2.put("/permissions/:id", AuthMiddleware, requirePermission("update_permission"), validateBody3(permissionSchema), permissionController.upadatePerms.bind(permissionController));
   app2.put("/archivePermissions/:id", AuthMiddleware, requirePermission("delete_permission"), permissionController.deletePerms.bind(permissionController));
@@ -4947,6 +4966,7 @@ var port = parseInt(process.env.PORT || "3000", 10);
 var app = express();
 app.use(express.json());
 app.use(cors(corsOptions));
+app.set("trust proxy", 1);
 app.use(cookieParser());
 app.use("/media", express.static(path4.join(process.cwd(), "media")));
 Routes_default(app);

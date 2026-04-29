@@ -20,6 +20,9 @@ app.use(express.json());
 // Implementation de cors
 app.use(cors(corsOptions)); 
 
+// Indispensable pour détecter le HTTPS derrière un proxy/load-balancer
+app.set('trust proxy', 1);
+
 //lire les cookies 
 app.use(cookieParser());
 
