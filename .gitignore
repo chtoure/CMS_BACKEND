@@ -19,5 +19,6 @@ media/uploads/documents/*
 media/uploads/archives/*
 
 ./dist/*
+/dist/*
 
 
