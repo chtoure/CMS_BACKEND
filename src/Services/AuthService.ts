@@ -1,5 +1,5 @@
 
-import type { AccessTokenPayload, RefreshTokenPayload } from "../Types/Auth.ts";
+import type { AccessTokenPayload, RefreshTokenPayload, RolePayload } from "../Types/Auth.ts";
 import type { Role } from "../Types/Role.ts";
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,8 +35,13 @@ export default class AuthService{
             expiresIn: ACCESS_EXPIRY as any
         };
 
+        // Réduction du rôle : on n'embarque que id + name dans le token
+        const rolePayload: RolePayload | null = role
+            ? { id: role.id, name: role.name }
+            : null;
+
         //  Définition de Payload
-        const accessPayload: AccessTokenPayload = { sub: userId, full_name, role };
+        const accessPayload: AccessTokenPayload = { sub: userId, full_name, role: rolePayload };
 
         //  Création de JWT
         const accessToken = jwt.sign(accessPayload, ACCESS_SECRET , accessOptions);

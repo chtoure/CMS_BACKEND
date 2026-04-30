@@ -38,12 +38,15 @@ export default class AuthController {
             // Réponse de succès
             return res.status(status).json({
                 message: message,
+                // Tokens aussi dans le JSON pour le fallback Bearer (si cookies bloqués en HTTP)
+                accessToken: accessToken,
+                refreshToken: refreshToken,
                 user: {
                     id: user.id,
                     full_name: user.full_name,
                     email: user.email,
                     role: user.role,
-                    isLoggedIn: user.isLoggedIn                   
+                    isLoggedIn: user.isLoggedIn
                 }
             });
 
@@ -142,10 +145,11 @@ export default class AuthController {
 
 
         // Refresh Token Access
-        public async refreshToken(req: Request, res: Response): Promise<Response> {         
-            const refreshToken = req.cookies.refresh_token as string;
+        public async refreshToken(req: Request, res: Response): Promise<Response> {
+            // Stratégie hybride : cookie en priorité, sinon body JSON (fallback Bearer)
+            const refreshToken: string = req.cookies.refresh_token || req.body?.refreshToken;
             try {
-                
+
                 if (!refreshToken) {
                     return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Refresh Token manquant.' });
                 }
@@ -160,28 +164,33 @@ export default class AuthController {
                     return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Session invalide ou expirée. Veuillez vous reconnecter.' });
                 }
 
-                const {payloadRefresh,user} = decodedPayload;
+                const {payloadRefresh, user} = decodedPayload;
 
-                // Création du nouvel Access Token (les Claims peuvent être lus du payload du refresh token)
-                const newAccessToken = authService.createAccesToken(payloadRefresh.sub,user.full_name,user.role ?? null);
-               
-                // Envoi du nouvel Access Token par cookie
-                SetAccesCookie(res,newAccessToken);
+                // Création du nouvel Access Token
+                const newAccessToken = authService.createAccesToken(payloadRefresh.sub, user.full_name, user.role ?? null);
 
-                return res.status(HTTP_STATUS_OK).json({ message: 'Access Token renouvelé.' });
+                // Envoi du nouvel Access Token par cookie (HTTPS)
+                SetAccesCookie(res, newAccessToken);
+
+                // Retourner aussi le token dans le JSON pour le fallback Bearer (HTTP)
+                return res.status(HTTP_STATUS_OK).json({
+                    message: 'Access Token renouvelé.',
+                    accessToken: newAccessToken
+                });
 
             } catch (error) {
-                console.error('Erreur lors de la renouvellation du token access', error);
+                console.error('Erreur lors de la renouvellement du token access', error);
                 const errorMessage = handlePrismaError(error);
-                return res.status(getErrorStatus(error)).json({ message: errorMessage }); 
+                return res.status(getErrorStatus(error)).json({ message: errorMessage });
             }
         }
 
 
 
-        // Logout : Deconnexion 
+        // Logout : Deconnexion
         public async logout(req: Request, res: Response): Promise<Response> {
-            const refreshToken = req.cookies.refresh_token as string;
+            // Stratégie hybride : cookie en priorité, sinon body JSON (fallback Bearer)
+            const refreshToken: string = req.cookies.refresh_token || req.body?.refreshToken;
             try {
 
                 if (refreshToken) {

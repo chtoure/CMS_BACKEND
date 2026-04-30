@@ -40,6 +40,7 @@ interface UpdateBlocTemplate <T = BaseStyles>{
   componentId?: number;
   order?: number;
   is_custom: boolean;
+  modelId?: number | null;
   parentId?: number | null;
   sectionId?: number | null;
   props?: ComponentProps<T>;

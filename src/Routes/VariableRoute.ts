@@ -30,7 +30,7 @@ export function variableRoutes(app: Express): void {
 
     app.delete("/variables/:id", AuthMiddleware, requirePermission("delete_variable"), variableController.deleteVariables.bind(variableController));
 
-    app.get("/variables", AuthMiddleware, requirePermission("read_variable"), variableController.getAllVariables.bind(variableController));
+    app.get("/variables",  variableController.getAllVariables.bind(variableController));
 
-    app.get("/variables/:id", AuthMiddleware, requirePermission("read_variable"), variableController.getVariableById.bind(variableController));
+    app.get("/variables/:id", variableController.getVariableById.bind(variableController));
 }

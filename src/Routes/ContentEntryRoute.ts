@@ -21,7 +21,7 @@ export function contentEntryRoutes(app: Express): void {
 
     app.patch("/content-entries/:id/status", AuthMiddleware, validateBody(switchStatusSchema), entryController.updateStatus.bind(entryController));
     
-    app.put("/content-entries/:id/archive", AuthMiddleware, entryController.toggleArchive.bind(entryController));
+    app.put("/content-entries-archive/:id/", AuthMiddleware, requirePermission("delete_content_entry"), entryController.toggleArchive.bind(entryController));
 
     app.delete("/content-entries/:id", entryController.deleteEntry.bind(entryController));
 
