@@ -86,11 +86,7 @@ export default class UserService {
         return prisma.user.findUnique({
             where:{email,archive:false,status:"ACTIVE"},
             include:{
-                role:{
-                    include : {
-                        permissions:true
-                    }
-                }
+                role: true  // Seuls id + name du rôle sont nécessaires pour le token
             } 
         });
     }
