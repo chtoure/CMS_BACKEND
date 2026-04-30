@@ -12,11 +12,17 @@ export interface TokenPayload {
 }
 
 
+// Payload minimal du rôle embarqué dans le token (évite les objets imbriqués volumineux)
+export interface RolePayload {
+    id: number;
+    name: string;
+}
+
 //  Interface pour le Jeton d'Accès (Access Token)
 // Contient les informations pour l'autorisation immédiate.
 
 export interface AccessTokenPayload extends TokenPayload {
-    role?: Role | null; // Rôle de l'utilisateur
+    role?: RolePayload | null; // Rôle de l'utilisateur (minimal)
     full_name: string; // Nom d'utilisateur (pour l'affichage)
 }
 
