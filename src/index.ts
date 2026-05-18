@@ -31,6 +31,7 @@ app.use('/media', express.static(path.join(process.cwd(), 'media')))
 
 
 // Routes
+
 Routes(app);
       
 app.listen(port, "0.0.0.0", () => {

@@ -1,5 +1,5 @@
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import SectionController from "../Controllers/SectionController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { registerSectionSchema, updateSectionSchema } from "../Utils/Validations/SectionSchama.ts";
@@ -7,7 +7,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
 
-export function sectionRoutes(app: Express,validateBody:Function){
+export function sectionRoutes(app: IRouter,validateBody:Function){
     const sectionController = new SectionController();
     
     app.post("/section",AuthMiddleware, requirePermission("create_page_revision"), validateBody(registerSectionSchema),sectionController.createSection.bind(sectionController));

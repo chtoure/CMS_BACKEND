@@ -13,16 +13,16 @@ import {
   UserService,
   getErrorStatus,
   handlePrismaError
-} from "./chunk-T4HQAV4F.js";
+} from "./chunk-Z4ADNAGU.js";
 import {
   SectionService
-} from "./chunk-PMVX3PTM.js";
+} from "./chunk-TFYJBRNE.js";
 import {
   BlocTemplateService,
   ComponentService,
   ContentEntryService,
   MediaService
-} from "./chunk-SERHJ7EL.js";
+} from "./chunk-ACSIS7VD.js";
 import {
   Paginator,
   PrismaClient_default
@@ -31,6 +31,9 @@ import {
 // src/index.ts
 import express from "express";
 import dotenv2 from "dotenv";
+
+// src/Routes/Routes.ts
+import { Router as Router2 } from "express";
 
 // src/Middleware/ValidateBoody.ts
 var validateBody = (schema) => {
@@ -476,7 +479,8 @@ var AuthService = class _AuthService {
     const accessOptions = {
       expiresIn: ACCESS_EXPIRY
     };
-    const accessPayload = { sub: userId, full_name, role };
+    const rolePayload = role ? { id: role.id, name: role.name } : null;
+    const accessPayload = { sub: userId, full_name, role: rolePayload };
     const accessToken = jwt.sign(accessPayload, ACCESS_SECRET, accessOptions);
     return accessToken;
   }
@@ -2152,7 +2156,7 @@ function permissionRoutes(app2, validateBody3) {
   const permissionController = new PermissionController();
   app2.get("/permissions", AuthMiddleware, requirePermission("read_permission"), permissionController.getPermissions.bind(permissionController));
   app2.get("/permissions/:id", AuthMiddleware, requirePermission("read_permission"), permissionController.getPermsById.bind(permissionController));
-  app2.get("/permissionsByRoleId/:id", permissionController.getPermissionsByRoleId.bind(permissionController));
+  app2.get("/permissionsByRoleId/:id", AuthMiddleware, permissionController.getPermissionsByRoleId.bind(permissionController));
   app2.post("/permissions", AuthMiddleware, requirePermission("create_permission"), validateBody3(permissionSchema), permissionController.createPermission.bind(permissionController));
   app2.put("/permissions/:id", AuthMiddleware, requirePermission("update_permission"), validateBody3(permissionSchema), permissionController.upadatePerms.bind(permissionController));
   app2.put("/archivePermissions/:id", AuthMiddleware, requirePermission("delete_permission"), permissionController.deletePerms.bind(permissionController));
@@ -4331,8 +4335,8 @@ var PageRevisionService = class {
     return pageRevisionDeleted;
   }
   async syncPageRevisionTree(pageRevisionId, data) {
-    const { default: SectionService2 } = await import("./SectionService-W2VJEJ5M.js");
-    const { default: BlocTemplateService2 } = await import("./BlocTemplateService-YICF7VVI.js");
+    const { default: SectionService2 } = await import("./SectionService-V5FNOJ2K.js");
+    const { default: BlocTemplateService2 } = await import("./BlocTemplateService-F334HHWO.js");
     const sectionService = new SectionService2();
     const blocTemplateService2 = new BlocTemplateService2();
     const validSectionIds = [];
@@ -4923,24 +4927,26 @@ var navItemRoutes = (app2) => {
 
 // src/Routes/Routes.ts
 var Routes_default = (app2) => {
-  authRoutes(app2, ValidateBoody_default);
-  userRoutes(app2, ValidateBoody_default);
-  roleRoutes(app2, ValidateBoody_default);
-  permissionRoutes(app2, ValidateBoody_default);
-  mediaRoutes(app2);
-  variableRoutes(app2);
-  parameterRoutes(app2);
-  mockRoutes(app2);
-  contentTypeRoutes(app2, ValidateBoody_default);
-  contentEntryRoutes(app2);
-  taxonomyRoutes(app2, ValidateBoody_default);
-  taxonomyTermRoutes(app2, ValidateBoody_default);
-  componentRoutes(app2, ValidateBoody_default);
-  sectionRoutes(app2, ValidateBoody_default);
-  blocTemplateRoutes(app2, ValidateBoody_default);
-  pageRevisionRoutes(app2, ValidateBoody_default);
-  pageRoutes(app2, ValidateBoody_default);
-  navItemRoutes(app2);
+  const router = Router2();
+  authRoutes(router, ValidateBoody_default);
+  userRoutes(router, ValidateBoody_default);
+  roleRoutes(router, ValidateBoody_default);
+  permissionRoutes(router, ValidateBoody_default);
+  mediaRoutes(router);
+  variableRoutes(router);
+  parameterRoutes(router);
+  mockRoutes(router);
+  contentTypeRoutes(router, ValidateBoody_default);
+  contentEntryRoutes(router);
+  taxonomyRoutes(router, ValidateBoody_default);
+  taxonomyTermRoutes(router, ValidateBoody_default);
+  componentRoutes(router, ValidateBoody_default);
+  sectionRoutes(router, ValidateBoody_default);
+  blocTemplateRoutes(router, ValidateBoody_default);
+  pageRevisionRoutes(router, ValidateBoody_default);
+  pageRoutes(router, ValidateBoody_default);
+  navItemRoutes(router);
+  app2.use("/api", router);
 };
 
 // src/index.ts

@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { IRouter } from "express";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import ContentEntryController from "../Controllers/ContentEntryController.ts";
 import { switchStatusSchema, toggleArchiveSchema } from "../Utils/Validations/ContentEntrySchema.ts";
@@ -6,7 +6,7 @@ import { validateDynamicContent } from "../Middleware/ValidateDynamicContent.ts"
 import validateBody from "../Middleware/ValidateBoody.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
-export function contentEntryRoutes(app: Express): void {
+export function contentEntryRoutes(app: IRouter): void {
     
     const entryController = new ContentEntryController();
 

@@ -1,12 +1,12 @@
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import RoleController from "../Controllers/RoleController.ts";
 import { roleSchema, roleUpdateSchema } from "../Utils/Validations/RoleSchema.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
-export  function roleRoutes(app:Express,validateBody:Function) : void {
+export  function roleRoutes(app:IRouter,validateBody:Function) : void {
 
     const roleController = new RoleController();
 

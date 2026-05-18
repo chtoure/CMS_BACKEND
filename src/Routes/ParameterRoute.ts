@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { IRouter } from "express";
 import ParameterController from "../Controllers/ParameterController.ts";
 import validateBody from "../Middleware/ValidateBoody.ts";
 import { parameterSchema } from "../Utils/Validations/ParameterSchema.ts";
@@ -6,7 +6,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 
 
-export  function parameterRoutes(app:Express) : void {
+export  function parameterRoutes(app:IRouter) : void {
     const parameterController = new ParameterController();
 
     app.get("/parameters", parameterController.getParams.bind(parameterController));

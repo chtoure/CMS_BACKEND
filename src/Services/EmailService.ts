@@ -15,7 +15,7 @@ export class EmailService {
     static async sendVerificationCode(toEmail: string, code: string): Promise<boolean> {
         const htmlContent = TemplateEnvoieEmail.getTemplateEnvoiCode(this.APP_NAME, code);
 
-        // Préparation du payload comme dans ton code Laravel
+        // Préparation du payload
         const payload = {
             subject: `Code de vérification - ${this.APP_NAME}`,
             body: htmlContent, // Le contenu HTML généré plus bas

@@ -5,7 +5,7 @@ import validateBody from "../Middleware/ValidateBoody.ts";
 import { validateDynamicContent } from "../Middleware/ValidateDynamicContent.ts";
 import { getContentEntryMock } from "../mock/contentEntry.ts";
 
-export  function mockRoutes(app:Express) : void {
+export  function mockRoutes(app:IRouter) : void {
 
     app.get("/mock/content-type", (req:Request, res:Response)=>{
         return getContentTypeMock(req, res);

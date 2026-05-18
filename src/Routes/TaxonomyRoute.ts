@@ -1,10 +1,10 @@
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import TaxonomyController from "../Controllers/TaxonomyController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { taxonomySchema, taxonomyUpdateSchema } from "../Utils/Validations/TaxonomySchema.ts";
 
-export function taxonomyRoutes(app: Express, validateBody: Function): void {
+export function taxonomyRoutes(app: IRouter, validateBody: Function): void {
     const taxonomyController = new TaxonomyController();
 
     

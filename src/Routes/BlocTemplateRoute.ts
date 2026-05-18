@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { IRouter } from "express";
 import BlocTemplateController from "../Controllers/BlocTemplateController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { registerBlocTemplateSchema, updateBlocTemplateSchema } from "../Utils/Validations/BlocTemplateSchema.ts";
@@ -6,7 +6,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
 
-export function blocTemplateRoutes(app: Express,validateBody:Function){
+export function blocTemplateRoutes(app: IRouter,validateBody:Function){
     const blocTemplateController = new BlocTemplateController();
 
     app.post("/bloc-template",AuthMiddleware, requirePermission("create_page_revision"), blocTemplateController.createBlocTemplate.bind(blocTemplateController));

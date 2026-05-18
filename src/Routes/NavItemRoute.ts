@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Express } from "express";
+import type { IRouter } from "express";
 import { 
     createNavItem, 
     deleteNavItem, 
@@ -8,7 +8,7 @@ import {
     updateNavItem 
 } from "../Controllers/NavItemController.ts";
 
-export const navItemRoutes = (app: Express) => {
+export const navItemRoutes = (app: IRouter) => {
     const router = Router();
     
     router.post("/", createNavItem);

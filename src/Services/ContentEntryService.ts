@@ -182,7 +182,7 @@ export default class ContentEntryService {
 
     public async getContentEntryById(id: number): Promise<ContentEntry | null> {
         const entry = await prisma.contentEntry.findUnique({
-            where: { id },
+            where: { id ,status:"PUBLISHED"},
             include: { 
                 contentType: true, 
                 user: true,
@@ -265,7 +265,8 @@ export default class ContentEntryService {
         // On prépare la base de la requête
         const queryOptions: any = {
             where: {
-                contentTypeId: contentTypeId
+                contentTypeId: contentTypeId,
+                status: "PUBLISHED"
             },
             orderBy: {
                 [filters?.sortBy || 'createdAt']: filters?.order || 'desc'

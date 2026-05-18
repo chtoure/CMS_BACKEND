@@ -1,13 +1,13 @@
 
 
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import PageRevisionController from "../Controllers/PageRevisionController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { updatePageRevisionSchema } from "../Utils/Validations/PageRevision.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
-export  function pageRevisionRoutes(app:Express,validateBody:Function) : void {
+export  function pageRevisionRoutes(app:IRouter,validateBody:Function) : void {
     const pageRevisionController = new PageRevisionController();
 
     app.get("/page-revision", AuthMiddleware, requirePermission("read_page_revision"), pageRevisionController.getPageRevisions.bind(pageRevisionController));

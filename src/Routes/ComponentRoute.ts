@@ -3,7 +3,7 @@
 
 
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import ComponentController from "../Controllers/ComponentController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { ComponentListSchema } from "../Utils/Validations/ComponentSchema.ts";
@@ -12,7 +12,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
 
-export  function componentRoutes(app:Express,validateBody:Function) : void {
+export  function componentRoutes(app:IRouter,validateBody:Function) : void {
 
     const componentController = new ComponentController();
 

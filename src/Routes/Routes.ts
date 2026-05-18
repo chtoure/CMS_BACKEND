@@ -1,5 +1,6 @@
 
 import type { Express } from "express";
+import { Router } from "express";
 import validateBody from "../Middleware/ValidateBoody.ts";
 
 import { mediaRoutes } from "./MediaRoute.ts";
@@ -23,39 +24,42 @@ import { navItemRoutes } from "./NavItemRoute.ts";
 
 
 
-export default (app:Express): void  => {
+export default (app: Express): void => {
+
+    // Toutes les routes sont préfixées par /api
+    const router = Router();
 
     // Module Authentification
-    authRoutes(app,validateBody);
-    userRoutes(app,validateBody);
-    roleRoutes(app,validateBody);
-    permissionRoutes(app,validateBody);
+    authRoutes(router, validateBody);
+    userRoutes(router, validateBody);
+    roleRoutes(router, validateBody);
+    permissionRoutes(router, validateBody);
 
     // Module Mediatheque && Variable && Parameter
-    mediaRoutes(app);
-    variableRoutes(app);
-    parameterRoutes(app);
+    mediaRoutes(router);
+    variableRoutes(router);
+    parameterRoutes(router);
 
     // Module Mock
-    mockRoutes(app);
+    mockRoutes(router);
 
-    //Moodule ContentType
-    contentTypeRoutes(app,validateBody);
+    // Module ContentType
+    contentTypeRoutes(router, validateBody);
 
     // Module ContentEntry
-    contentEntryRoutes(app);
-
+    contentEntryRoutes(router);
     // Module Taxonomy
-    taxonomyRoutes(app, validateBody);
-    taxonomyTermRoutes(app, validateBody);
-
-
+    taxonomyRoutes(router, validateBody);
+    taxonomyTermRoutes(router, validateBody);
     // Module Builder
-    componentRoutes(app, validateBody);
-    sectionRoutes(app, validateBody);
-    blocTemplateRoutes(app, validateBody);
-    pageRevisionRoutes(app, validateBody);
-    pageRoutes(app, validateBody);
-    navItemRoutes(app);
+    componentRoutes(router, validateBody);
+    sectionRoutes(router, validateBody);
+    blocTemplateRoutes(router, validateBody);
+    pageRevisionRoutes(router, validateBody);
+    pageRoutes(router, validateBody);
+    navItemRoutes(router);
+
+    // Montage du router sur le préfixe /api
+    app.use("/api", router);
 
 }

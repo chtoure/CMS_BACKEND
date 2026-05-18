@@ -1,12 +1,12 @@
 
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import { registerPageSchema, updatePageSchema } from "../Utils/Validations/PageSchema.ts";
 import PageController from "../Controllers/PageController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
-export  function pageRoutes(app:Express,validateBody:Function) : void {
+export  function pageRoutes(app:IRouter,validateBody:Function) : void {
     const pageController = new PageController();
 
     app.get("/pages", AuthMiddleware, requirePermission("read_page"), pageController.getPages.bind(pageController));

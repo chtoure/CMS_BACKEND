@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { IRouter } from "express";
 import MediaController from "../Controllers/MediaController.ts";
 import { multerErrorHandler, upload } from "../Config/multer.config.ts";
 import validateBody from "../Middleware/ValidateBoody.ts";
@@ -7,7 +7,7 @@ import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
-export  function mediaRoutes(app:Express) : void {
+export  function mediaRoutes(app:IRouter) : void {
 
     const mediaController = new MediaController();
 

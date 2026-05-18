@@ -1,6 +1,6 @@
 
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import ContentTypeController from "../Controllers/ContentTypeController.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { contentTypeSchema , contentTypeUpdateSchema } from "../Utils/Validations/ContentTypeSchema.ts";
@@ -9,7 +9,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
 
-export  function contentTypeRoutes(app:Express,validateBody:Function) : void {
+export  function contentTypeRoutes(app:IRouter,validateBody:Function) : void {
 
     const contentTypeController = new ContentTypeController();
 

@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { IRouter } from "express";
 import CollectionController from "../Controllers/CollectionController.ts";
 import VariableController from "../Controllers/VariableController.ts";
 import {  
@@ -11,7 +11,7 @@ import validateBody from "../Middleware/ValidateBoody.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
 import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
-export function variableRoutes(app: Express): void {
+export function variableRoutes(app: IRouter): void {
     
     const collectionController = new CollectionController();
     const variableController = new VariableController();

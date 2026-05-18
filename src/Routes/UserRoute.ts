@@ -1,5 +1,5 @@
 
-import type { Express } from "express";
+import type { IRouter } from "express";
 import UserController from "../Controllers/UserController.ts";
 import { userUpdateSchema } from "../Utils/Validations/UserSchema.ts";
 import { AuthMiddleware } from "../Middleware/AuthMiddleware.ts";
@@ -9,7 +9,7 @@ import { requirePermission } from "../Middleware/PermissionMiddleware.ts";
 
 
 
-export  function userRoutes(app:Express,validateBody:Function) : void {
+export  function userRoutes(app:IRouter,validateBody:Function) : void {
 
     const userController = new UserController();
 
