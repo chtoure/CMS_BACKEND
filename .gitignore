@@ -21,4 +21,4 @@ media/uploads/archives/*
 ./dist/*
 /dist/*
 
-
+.env
